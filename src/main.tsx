@@ -1,10 +1,9 @@
 import { Arimo_400Regular, Arimo_700Bold } from '@expo-google-fonts/arimo'
 import { Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter'
 import { useFonts } from 'expo-font'
-import { StatusBar } from 'expo-status-bar'
 import React from 'react'
-import { StyleSheet, Text } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
+import { StyleSheet } from 'react-native'
+import { Home } from './app/home'
 import colors from './theme/colors'
 
 export default function App() {
@@ -18,16 +17,14 @@ export default function App() {
   if (!fontsLoaded) return null
 
   return (
-    <LinearGradient
-      colors={["#773CBD", "#550DD1", "#4E03D5"]}
-      start={{ x: 0.05, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
-      <Text style={styles.inter}>Inter — exemplo (600)</Text>
-      <Text style={styles.arimo}>Arimo — exemplo (700)</Text>
-      <StatusBar style="auto" />
-    </LinearGradient>
+    // <LinearGradient
+    //   colors={['#773CBD', '#550DD1', '#4E03D5']}
+    //   start={{ x: 0.05, y: 0 }}
+    //   end={{ x: 1, y: 1 }}
+    //   style={styles.container}
+    // >
+    // </LinearGradient>
+    <Home />
   )
 }
 

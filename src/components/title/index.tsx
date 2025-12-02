@@ -18,6 +18,6 @@ const titleStyle = StyleSheet.create({
     fontFamily: 'Inter_600SemiBold',
     fontSize: 16,
     fontWeight: '600',
-    color: colors.text,
+    color: colors.primaryText,
   },
 })

@@ -1,14 +1,13 @@
 import { View } from 'react-native'
-import CreditCardIcon from '../../assets/credit-card.svg'
-import { ButtonIcon } from '../../components/button-icon'
+import CreditCartIcon from '../../assets/credit-card'
 import { Title } from '../../components/title'
+import SvgComponent from './teste'
 
 export function Home() {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-      <ButtonIcon>
-        <CreditCardIcon width={20} height={20} />
-      </ButtonIcon>
+    <View style={{ flexDirection: 'row', gap: 12 }}>
+      <SvgComponent />
+      <CreditCartIcon />
       <Title>Titulo foda</Title>
     </View>
   )
