@@ -16,7 +16,7 @@ export function Title({ children, ...rest }: TitleProps) {
 const titleStyle = StyleSheet.create({
   title: {
     fontFamily: 'Inter_600SemiBold',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: colors.primaryText,
   },

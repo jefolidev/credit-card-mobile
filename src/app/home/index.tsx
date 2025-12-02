@@ -1,14 +1,14 @@
-import { View } from 'react-native'
 import CreditCartIcon from '../../assets/credit-card'
-import { Title } from '../../components/title'
-import SvgComponent from './teste'
+import { Header } from '../../components/header'
+import colors from '../../theme/colors'
 
 export function Home() {
+  const { primaryText } = colors
+
   return (
-    <View style={{ flexDirection: 'row', gap: 12 }}>
-      <SvgComponent />
-      <CreditCartIcon />
-      <Title>Titulo foda</Title>
-    </View>
+    <Header
+      title="Titulo foda"
+      icon={<CreditCartIcon width={22} height={22} strokeColor={primaryText} />}
+    />
   )
 }

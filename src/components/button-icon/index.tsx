@@ -1,3 +1,4 @@
+import { JSX } from 'react'
 import {
   StyleSheet,
   TouchableOpacity,
@@ -6,10 +7,14 @@ import {
 
 interface ButtonIconProps extends TouchableOpacityProps {
   isClickable?: boolean
+  icon: JSX.Element | string
 }
 
-export function ButtonIcon({ isClickable = true, ...rest }: ButtonIconProps) {
-  const { icon } = rest as any
+export function ButtonIcon({
+  isClickable = true,
+  icon,
+  ...rest
+}: ButtonIconProps) {
   const { style: restStyle, ...touchableProps } = rest as any
   delete touchableProps.icon
   delete touchableProps.children
@@ -21,11 +26,15 @@ export function ButtonIcon({ isClickable = true, ...rest }: ButtonIconProps) {
       activeOpacity={isClickable ? 0.7 : 1}
       style={[style.buttonIcon, restStyle]}
     >
-      {icon ?? (rest as any).children}
+      {icon}
     </TouchableOpacity>
   )
 }
 
 const style = StyleSheet.create({
-  buttonIcon: {},
+  buttonIcon: {
+    padding: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 })
