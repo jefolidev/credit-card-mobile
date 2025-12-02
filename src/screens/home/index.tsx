@@ -1,0 +1,25 @@
+import { View } from 'react-native'
+import { CreditCard } from 'src/components/credit-card'
+import CreditCartIcon from '../../assets/credit-card'
+import { Header } from '../../components/header'
+import colors from '../../theme/colors'
+
+export function Home() {
+  const { primaryText } = colors
+
+  return (
+    <View style={{ padding: 12 }}>
+      <Header
+        title="Titulo foda"
+        icon={
+          <CreditCartIcon width={22} height={22} strokeColor={primaryText} />
+        }
+      />
+      <CreditCard
+        cardNumber="6050 8000 6325 7286"
+        cardOwner="Cleiton Campelo da Silva"
+        cardVality="04/2020"
+      />
+    </View>
+  )
+}

@@ -1,5 +1,8 @@
 {
-  "compilerOptions": {},
+  "compilerOptions": {
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0"
+  },
   "extends": "expo/tsconfig.base",
   "paths": {
     "@components/*": [
@@ -16,6 +19,9 @@
     ],
     "@hooks/*": [
       "src/hooks/*"
+    ],
+    "@app/*": [
+      "src/app/*"
     ],
     "@src/*": [
       "src/*"
