@@ -93,7 +93,8 @@ export function CreditCard({
 
 const cardStyles = StyleSheet.create({
   container: {
-    padding: 20,
+    paddingBlock: 30,
+    paddingInline: 25,
     backgroundColor: colors.primaryGradient,
     borderRadius: 12,
   },
