@@ -3,6 +3,7 @@ import { Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter'
 import { useFonts } from 'expo-font'
 import React from 'react'
 import { StyleSheet } from 'react-native'
+import { AmountVisibilityProvider } from './contexts/use-amount-visibility'
 import { Home } from './screens/home'
 import colors from './theme/colors'
 
@@ -24,7 +25,9 @@ export default function App() {
     //   style={styles.container}
     // >
     // </LinearGradient>
-    <Home />
+    <AmountVisibilityProvider>
+      <Home />
+    </AmountVisibilityProvider>
   )
 }
 

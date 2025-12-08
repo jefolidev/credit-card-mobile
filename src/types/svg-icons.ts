@@ -11,6 +11,7 @@ export const STROKE_WIDTHS: Record<
 export type SVGIconProps = {
   width?: number
   height?: number
+  opacity?: number
   strokeWidth?: keyof typeof STROKE_WIDTHS
   strokeColor?: string
 }

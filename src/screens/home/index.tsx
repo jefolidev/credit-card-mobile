@@ -9,7 +9,7 @@ export function Home() {
   const { primaryText } = colors
 
   return (
-    <View style={{ padding: 12 }}>
+    <View style={{ padding: 12, gap: 15 }}>
       <Header
         title="Titulo foda"
         icon={
@@ -21,7 +21,11 @@ export function Home() {
         cardOwner="Cleiton Campelo da Silva"
         cardVality="04/2020"
       />
-      <CashAmount />
+      <CashAmount
+        cardType="bill"
+        iconType="arrow-up"
+        dueDate={new Date(2026, 2, 15)}
+      />
     </View>
   )
 }

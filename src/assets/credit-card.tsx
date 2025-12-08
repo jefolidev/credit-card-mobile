@@ -5,7 +5,8 @@ export default function CreditCardIcon({
   height = 20,
   width = 20,
   strokeWeight = 'regular',
-  strokeColor = 'currentColor',
+  strokeColor = '#fff',
+  opacity = 0.5,
   ...rest
 }: SVGIconProps & { strokeWeight?: keyof typeof STROKE_WIDTHS }) {
   const strokeWidth = STROKE_WIDTHS[strokeWeight]
@@ -16,6 +17,7 @@ export default function CreditCardIcon({
       height={height}
       viewBox="0 0 20 20"
       fill="none"
+      style={{ opacity }}
       {...rest}
     >
       <Path
