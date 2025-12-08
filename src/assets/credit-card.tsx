@@ -1,7 +1,7 @@
 import Svg, { Path } from 'react-native-svg'
 import { STROKE_WIDTHS, SVGIconProps } from '../types/svg-icons'
 
-export default function CreditCartIcon({
+export default function CreditCardIcon({
   height = 20,
   width = 20,
   strokeWeight = 'regular',
