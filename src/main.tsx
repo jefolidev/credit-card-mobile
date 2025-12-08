@@ -1,5 +1,10 @@
 import { Arimo_400Regular, Arimo_700Bold } from '@expo-google-fonts/arimo'
-import { Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter'
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter'
 import { useFonts } from 'expo-font'
 import React from 'react'
 import { StyleSheet } from 'react-native'
@@ -10,7 +15,9 @@ import colors from './theme/colors'
 export default function App() {
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
+    Inter_500Medium,
     Inter_600SemiBold,
+    Inter_700Bold,
     Arimo_400Regular,
     Arimo_700Bold,
   })

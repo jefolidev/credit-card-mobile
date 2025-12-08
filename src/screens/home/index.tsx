@@ -1,5 +1,6 @@
 import { View } from 'react-native'
 import { Banner } from 'src/components/banner'
+import { MonthlyBillCard } from 'src/components/monthly-bill-card'
 import CreditCardIcon from '../../assets/credit-card'
 import { Header } from '../../components/header'
 import colors from '../../theme/colors'
@@ -35,6 +36,34 @@ export function Home() {
       />
       // Apenas mensagem
       <Banner variant="warning" message="Verifique seus dados" />
+      {/* Exemplos do MonthlyBillCard */}
+      <MonthlyBillCard
+        month="dezembro"
+        year={2024}
+        amount={2489.5}
+        dueDate="15/12/2024"
+        closingDate="05/12/2024"
+        status="pending"
+        onPress={() => console.log('Dezembro clicado')}
+      />
+      <MonthlyBillCard
+        month="novembro"
+        year={2024}
+        amount={1876.23}
+        dueDate="15/11/2024"
+        closingDate="05/11/2024"
+        status="paid"
+        onPress={() => console.log('Novembro clicado')}
+      />
+      <MonthlyBillCard
+        month="outubro"
+        year={2024}
+        amount={3245.78}
+        dueDate="15/10/2024"
+        closingDate="05/10/2024"
+        status="overdue"
+        onPress={() => console.log('Outubro clicado')}
+      />
       {/* <CreditCard
         cardNumber="6050 8000 6325 7286"
         cardOwner="Cleiton Campelo da Silva"
