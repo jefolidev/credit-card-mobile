@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { StyleSheet, Text, View } from 'react-native'
 import colors from 'src/theme/colors'
 import { Divisor } from '../divisor'
-import { Dot } from './components/dot'
+import { Dot } from '../dot'
 
 interface CreditCardProps {
   cardNumber: string
@@ -85,7 +85,7 @@ export function CreditCard({
       <View style={(cardStyles.infoGroup, { marginTop: 10 })}>
         <Text style={cardStyles.legend}>
           {cardAssociation} | {cardType}
-        </Text>{' '}
+        </Text>
       </View>
     </LinearGradient>
   )
