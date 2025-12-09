@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { ScrollView, Text, View } from 'react-native'
 import { CreditCardIcon } from 'src/assets/credit-card-icon'
 import { HomeIcon } from 'src/assets/home-icon'
@@ -8,9 +9,12 @@ import { BillInfoCard } from 'src/components/bill-info-card'
 import { Button } from 'src/components/button'
 import { Input } from 'src/components/input'
 import { NavigateBar } from 'src/components/navigate-bar'
+import { RadioGroup } from 'src/components/radio'
 import { colors } from '../../theme/colors'
 
 export function Home() {
+  const [selected, setSelected] = useState('1')
+
   const navigationItems = [
     {
       id: 'summary',
@@ -41,6 +45,14 @@ export function Home() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <RadioGroup
+        options={[
+          { id: '1', label: 'Opção 1', gradient: 'primary' },
+          { id: '2', label: 'Opção 2', gradient: 'secondary' },
+        ]}
+        selectedId={selected}
+        onSelect={setSelected}
+      />
       <ScrollView style={{ flex: 1 }}>
         <View style={{ padding: 12, gap: 20 }}>
           <Text
