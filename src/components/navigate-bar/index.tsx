@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
     paddingTop: 12,
-    paddingBottom: 34,
+    paddingBottom: 12,
     paddingHorizontal: 16,
     borderTopWidth: 1,
     borderTopColor: colors.gray[100],
@@ -165,7 +165,6 @@ const styles = StyleSheet.create({
   qrButtonContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
   },
   qrButton: {
     width: 56,
@@ -183,5 +182,3 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
 })
-
-export default NavigateBar
