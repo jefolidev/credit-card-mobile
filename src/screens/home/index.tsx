@@ -6,6 +6,7 @@ import { QrCodeIcon } from 'src/assets/qr-code-icon'
 import { UserIcon } from 'src/assets/user-icon'
 import { BillInfoCard } from 'src/components/bill-info-card'
 import { Button } from 'src/components/button'
+import { Input } from 'src/components/input'
 import { NavigateBar } from 'src/components/navigate-bar'
 import { colors } from '../../theme/colors'
 
@@ -62,7 +63,12 @@ export function Home() {
           />
         </View>
 
-        <View style={{ gap: 12 }}>
+        <View style={{ gap: 12, paddingInline: 12 }}>
+          <Input
+            placeholder="seu@email.com"
+            leftIcon={<CreditCardIcon />}
+            rightIcon={<CreditCardIcon />}
+          />
           <View style={{ paddingBlock: 8, height: 24 }}>
             <Button> OI</Button>
           </View>
