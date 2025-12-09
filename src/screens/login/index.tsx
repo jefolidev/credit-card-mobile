@@ -23,7 +23,7 @@ export function Login() {
     { id: 'supplier', label: 'Fornecedor', icon: <SupplierIcon /> },
   ]
 
-  const handleContinue = async () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos')
       return
@@ -86,7 +86,7 @@ export function Login() {
         <View style={[styles.buttonWrapper, { marginTop: 5 }]}>
           <Button
             variant={userType === 'supplier' ? 'secondary' : 'primary'}
-            onPress={handleContinue}
+            onPress={handleLogin}
             disabled={isLoading}
           >
             {isLoading ? 'Entrando...' : 'Entrar'}

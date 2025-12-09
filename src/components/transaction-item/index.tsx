@@ -8,7 +8,6 @@ type TransactionType = 'debit' | 'credit' | 'payment' | 'transfer'
 
 interface TransactionItemProps {
   title: string
-  description: string
   amount: number
   date: string
   type: TransactionType
@@ -18,7 +17,6 @@ interface TransactionItemProps {
 
 export function TransactionItem({
   title,
-  description,
   amount,
   date,
   type,
@@ -84,15 +82,6 @@ export function TransactionItem({
           <Text style={styles.title} numberOfLines={1}>
             {title}
           </Text>
-          <Text style={[styles.amount, { color: iconAndColor.amountColor }]}>
-            {formatAmount(amount)}
-          </Text>
-        </View>
-
-        <View style={styles.secondaryInfo}>
-          <Text style={styles.description} numberOfLines={1}>
-            {description}
-          </Text>
           <Text style={styles.date}>
             {new Date(date)
               .toLocaleDateString('pt-BR', {
@@ -105,6 +94,12 @@ export function TransactionItem({
                 (match, day, firstLetter) =>
                   `${day} ${firstLetter.toUpperCase()}`
               )}
+          </Text>
+        </View>
+
+        <View style={styles.secondaryInfo}>
+          <Text style={[styles.amount, { color: iconAndColor.amountColor }]}>
+            {formatAmount(amount)}
           </Text>
         </View>
       </View>
@@ -132,11 +127,11 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     gap: 2,
-  },
-  mainInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+  },
+  mainInfo: {
+    gap: 2,
   },
   title: {
     fontSize: 15,

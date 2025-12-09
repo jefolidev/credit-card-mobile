@@ -1,18 +1,19 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import { StyleSheet, Text, View } from 'react-native'
+import ArrowUpIcon from 'src/assets/arrow-up'
 import CreditCardIcon from 'src/assets/credit-card'
 import { useAmountVisibility } from 'src/contexts/use-amount-visibility'
 import colors from 'src/theme/colors'
 import { ButtonIcon } from '../button-icon'
 import { Dot } from '../dot'
 
-const FICTITIOUS_VALUE = 200000
-
 type IconType = 'arrow-up' | 'credit-card'
 type CardType = 'balance' | 'bill'
 type BillStatus = 'overdue' | 'current' | 'paid'
 
 interface CashAmountProps {
+  amount: number
+  creditLimit: number
   iconType?: IconType
   cardType?: CardType
   billStatus?: BillStatus
@@ -22,6 +23,8 @@ interface CashAmountProps {
 }
 
 export function CashAmount({
+  amount,
+  creditLimit,
   iconType = 'credit-card',
   cardType = 'balance',
   billStatus = 'current',
@@ -87,7 +90,11 @@ export function CashAmount({
       style={cardStyles.container}
     >
       <View style={cardStyles.backgroundIcon}>
-        <CreditCardIcon width={180} height={180} opacity={0.4} />
+        {cardType ? (
+          <ArrowUpIcon width={180} height={180} opacity={0.4} />
+        ) : (
+          <CreditCardIcon width={180} height={180} opacity={0.4} />
+        )}
       </View>
       <View
         style={[
@@ -126,12 +133,34 @@ export function CashAmount({
           }
         >
           {isVisible || cardType === 'bill' ? (
-            <Text style={cardStyles.cashierVisibleAmount}>
-              {FICTITIOUS_VALUE.toLocaleString('pt-BR', {
-                style: 'currency',
-                currency: 'BRL',
-              })}
-            </Text>
+            <View>
+              <Text style={cardStyles.cashierVisibleAmount}>
+                {amount.toLocaleString('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                })}
+              </Text>
+              <View style={cardStyles.limitBar}>
+                <View
+                  style={[
+                    cardStyles.limitUsed,
+                    {
+                      width: `${Math.max(
+                        0,
+                        Math.min(
+                          100,
+                          ((creditLimit - amount) / creditLimit) * 100
+                        )
+                      )}%`,
+                      backgroundColor:
+                        (creditLimit - amount) / creditLimit > 0.8
+                          ? '#EF4444'
+                          : '#3B82F6',
+                    },
+                  ]}
+                />
+              </View>
+            </View>
           ) : (
             Array(5)
               .fill(0)
@@ -240,5 +269,18 @@ const cardStyles = StyleSheet.create({
     color: colors.zinc[50],
     marginTop: 4,
     opacity: 0.8,
+  },
+
+  limitBar: {
+    marginBlock: 8,
+    height: 6,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  limitUsed: {
+    height: '100%',
+    backgroundColor: '#3B82F6',
+    borderRadius: 3,
   },
 })

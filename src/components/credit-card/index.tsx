@@ -97,6 +97,7 @@ const cardStyles = StyleSheet.create({
     paddingInline: 25,
     backgroundColor: colors.primaryGradient,
     borderRadius: 12,
+    width: '100%',
   },
   chipContainer: {
     marginBottom: 8,

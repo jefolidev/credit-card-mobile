@@ -9,7 +9,8 @@ import { useFonts } from 'expo-font'
 import React from 'react'
 import { AmountVisibilityProvider } from './contexts/use-amount-visibility'
 import { AuthProvider } from './contexts/use-auth'
-import { Routes } from './routes'
+import { CardProvider } from './contexts/use-card'
+import { Routes } from './routes/@index'
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -25,9 +26,11 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <AmountVisibilityProvider>
-        <Routes />
-      </AmountVisibilityProvider>
+      <CardProvider>
+        <AmountVisibilityProvider>
+          <Routes />
+        </AmountVisibilityProvider>
+      </CardProvider>
     </AuthProvider>
   )
 }
