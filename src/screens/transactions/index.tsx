@@ -1,12 +1,14 @@
+import { useNavigation } from '@react-navigation/native'
 import { FlatList, StyleSheet, Text, View } from 'react-native'
 import { DocumentIcon } from 'src/assets/document-icon'
 import { Header } from 'src/components/header'
 import MonthlyBillCard from 'src/components/monthly-bill-card'
-import { useCard, Bill } from 'src/contexts/use-card'
+import { Bill, useCard } from 'src/contexts/use-card'
 import { colors } from 'src/theme/colors'
 
 export function Transactions() {
   const { selectedCard, getBills } = useCard()
+  const navigation = useNavigation<any>()
 
   if (!selectedCard) {
     return (
@@ -31,21 +33,24 @@ export function Transactions() {
       dueDate={item.dueDate}
       closingDate={item.closingDate}
       status={item.status}
-      onPress={() => console.log('Ver detalhes da fatura', item.id)}
+      onPress={() => navigation.navigate('BillDetails', { billId: item.id })}
     />
   )
 
   return (
     <View style={styles.container}>
       <Header
-        icon={<DocumentIcon width={20} height={20} color={colors.primaryText} />}
+        icon={
+          <DocumentIcon width={20} height={20} color={colors.primaryText} />
+        }
         title="Fechamentos"
       />
 
       <View style={styles.content}>
         <View style={styles.headerSection}>
           <Text style={styles.cardTitle}>
-            {selectedCard.brand.toUpperCase()} •••• {selectedCard.cardNumber.slice(-4)}
+            {selectedCard.brand.toUpperCase()} ••••{' '}
+            {selectedCard.cardNumber.slice(-4)}
           </Text>
           <Text style={styles.subtitle}>
             Histórico de faturas do seu cartão
@@ -64,7 +69,9 @@ export function Transactions() {
         ) : (
           <View style={styles.emptyBills}>
             <DocumentIcon width={48} height={48} color={colors.gray[300]} />
-            <Text style={styles.emptyBillsTitle}>Nenhuma fatura encontrada</Text>
+            <Text style={styles.emptyBillsTitle}>
+              Nenhuma fatura encontrada
+            </Text>
             <Text style={styles.emptyBillsText}>
               As faturas aparecerão aqui conforme forem sendo geradas
             </Text>
