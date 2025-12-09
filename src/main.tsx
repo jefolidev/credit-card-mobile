@@ -8,7 +8,7 @@ import {
 import { useFonts } from 'expo-font'
 import React from 'react'
 import { AmountVisibilityProvider } from './contexts/use-amount-visibility'
-import { Home } from './screens/home'
+import { Login } from './screens/login'
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -31,7 +31,7 @@ export default function App() {
     // >
     // </LinearGradient>
     <AmountVisibilityProvider>
-      <Home />
+      <Login />
     </AmountVisibilityProvider>
   )
 }

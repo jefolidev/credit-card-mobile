@@ -49,12 +49,7 @@ export function Button({
         {...props}
         disabled={disabled || loading}
         activeOpacity={0.9}
-        style={[
-          styles.base,
-          styles[size],
-          variant === 'secondary' && styles.base,
-          style,
-        ]}
+        style={[styles.base, variant === 'secondary' && styles.base, style]}
       >
         <LinearGradient
           colors={gradientColors}
@@ -125,13 +120,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    width: '100%',
   },
   gradient: {
     borderRadius: 1000,
@@ -146,17 +135,14 @@ const styles = StyleSheet.create({
   },
   small: {
     paddingVertical: 6,
-    paddingHorizontal: 12,
     minHeight: 32,
   },
   medium: {
     paddingVertical: 10,
-    paddingHorizontal: 20,
     minHeight: 44,
   },
   large: {
     paddingVertical: 14,
-    paddingHorizontal: 28,
     minHeight: 52,
   },
   text: {

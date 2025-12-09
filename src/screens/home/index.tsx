@@ -47,8 +47,8 @@ export function Home() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <RadioGroup
         options={[
-          { id: '1', label: 'Opção 1', gradient: 'primary' },
-          { id: '2', label: 'Opção 2', gradient: 'secondary' },
+          { id: '1', label: 'Opção 1', icon: <HomeIcon /> },
+          { id: '2', label: 'Opção 2', icon: <CreditCardIcon /> },
         ]}
         selectedId={selected}
         onSelect={setSelected}
