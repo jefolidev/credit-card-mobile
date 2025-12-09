@@ -10,7 +10,7 @@ interface TransactionItemProps {
   title: string
   description: string
   amount: number
-  date: Date
+  date: string
   type: TransactionType
   category?: string
   onPress?: () => void
