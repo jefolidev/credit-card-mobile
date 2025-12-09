@@ -1,5 +1,16 @@
 import { createContext, ReactNode, useContext, useState } from 'react'
 
+export interface Bill {
+  id: string
+  month: string
+  year: number
+  amount: number
+  dueDate: string
+  closingDate: string
+  status: 'pending' | 'paid' | 'overdue'
+  cardId: string
+}
+
 export interface CreditCard {
   id: string
   cardNumber: string
@@ -12,11 +23,13 @@ export interface CreditCard {
   type: 'credit' | 'debit'
   isActive: boolean
   userId: string
+  // Novas informações para os BillInfoCards
   closingDate: number // dia do fechamento (1-31)
   dueDate: number // dia de vencimento (1-31)
   period: string // competência (ex: "Dez/2024")
   creditReturnDate: number // dia do retorno de crédito (1-31)
   estimatedBilling: number // faturamento previsto
+  bills: Bill[] // histórico de faturas
 }
 
 interface CardContextProps {
@@ -28,9 +41,74 @@ interface CardContextProps {
   authenticateCard: (cardId: string, password: string) => Promise<boolean>
   logoutCard: () => void
   getUserCards: (userId: string) => CreditCard[]
+  getBills: (cardId: string) => Bill[]
 }
 
 const CardContext = createContext<CardContextProps | null>(null)
+
+// Mock data das faturas
+const mockBills: Bill[] = [
+  {
+    id: '1',
+    month: 'dezembro',
+    year: 2024,
+    amount: 1250.0,
+    dueDate: '10/01/2025',
+    closingDate: '15/12/2024',
+    status: 'pending',
+    cardId: '1',
+  },
+  {
+    id: '2',
+    month: 'novembro',
+    year: 2024,
+    amount: 890.5,
+    dueDate: '10/12/2024',
+    closingDate: '15/11/2024',
+    status: 'paid',
+    cardId: '1',
+  },
+  {
+    id: '3',
+    month: 'outubro',
+    year: 2024,
+    amount: 2150.75,
+    dueDate: '10/11/2024',
+    closingDate: '15/10/2024',
+    status: 'paid',
+    cardId: '1',
+  },
+  {
+    id: '4',
+    month: 'setembro',
+    year: 2024,
+    amount: 756.3,
+    dueDate: '10/10/2024',
+    closingDate: '15/09/2024',
+    status: 'overdue',
+    cardId: '1',
+  },
+  {
+    id: '5',
+    month: 'dezembro',
+    year: 2024,
+    amount: 980.5,
+    dueDate: '15/01/2025',
+    closingDate: '20/12/2024',
+    status: 'pending',
+    cardId: '2',
+  },
+  {
+    id: '6',
+    month: 'novembro',
+    year: 2024,
+    amount: 1180.25,
+    dueDate: '15/12/2024',
+    closingDate: '20/11/2024',
+    status: 'paid',
+    cardId: '2',
+  },
+]
 
 // Mock data dos cartões
 const mockCards: CreditCard[] = [
@@ -51,6 +129,7 @@ const mockCards: CreditCard[] = [
     period: 'Dez/2024',
     creditReturnDate: 25,
     estimatedBilling: 1250.0,
+    bills: mockBills.filter((bill) => bill.cardId === '1'),
   },
   {
     id: '2',
@@ -69,6 +148,7 @@ const mockCards: CreditCard[] = [
     period: 'Dez/2024',
     creditReturnDate: 30,
     estimatedBilling: 980.5,
+    bills: mockBills.filter((bill) => bill.cardId === '2'),
   },
   {
     id: '3',
@@ -87,6 +167,7 @@ const mockCards: CreditCard[] = [
     period: 'Dez/2024',
     creditReturnDate: 5,
     estimatedBilling: 560.75,
+    bills: [],
   },
 ]
 
@@ -136,6 +217,10 @@ export function CardProvider({ children }: { children: ReactNode }) {
     return mockCards.filter((card) => card.userId === userId)
   }
 
+  const getBills = (cardId: string): Bill[] => {
+    return mockBills.filter((bill) => bill.cardId === cardId)
+  }
+
   return (
     <CardContext.Provider
       value={{
@@ -147,12 +232,15 @@ export function CardProvider({ children }: { children: ReactNode }) {
         authenticateCard,
         logoutCard,
         getUserCards,
+        getBills,
       }}
     >
       {children}
     </CardContext.Provider>
   )
 }
+
+
 
 export function useCard() {
   const context = useContext(CardContext)
