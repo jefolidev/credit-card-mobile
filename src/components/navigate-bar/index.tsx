@@ -12,11 +12,13 @@ interface NavigationItem {
 }
 
 interface NavigateBarProps {
+  currentTab: 'home' | 'transactions' | 'cards' | 'profile'
   items: NavigationItem[]
   activeItemId?: string
-  onItemPress?: (itemId: string) => void
   qrCodeIcon?: React.ReactNode
   onQrCodePress?: () => void
+  onItemPress?: (itemId: string) => void
+  onTabPress: (tab: 'home' | 'transactions' | 'cards' | 'profile') => void
 }
 
 export function NavigateBar({
@@ -53,7 +55,9 @@ export function NavigateBar({
     <View style={styles.container}>
       {/* Primeira metade dos itens */}
       {leftItems.map((item) => {
-        const isActive = activeItemId ? activeItemId === item.id : item.isActive
+        const isActive = activeItemId
+          ? activeItemId === item.id
+          : item.isActive ?? false
 
         return (
           <TouchableOpacity
@@ -91,7 +95,9 @@ export function NavigateBar({
 
       {/* Segunda metade dos itens */}
       {rightItems.map((item) => {
-        const isActive = activeItemId ? activeItemId === item.id : item.isActive
+        const isActive = activeItemId
+          ? activeItemId === item.id
+          : item.isActive ?? false
 
         return (
           <TouchableOpacity
