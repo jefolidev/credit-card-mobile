@@ -7,10 +7,8 @@ import {
 } from '@expo-google-fonts/inter'
 import { useFonts } from 'expo-font'
 import React from 'react'
-import { StyleSheet } from 'react-native'
 import { AmountVisibilityProvider } from './contexts/use-amount-visibility'
 import { Home } from './screens/home'
-import colors from './theme/colors'
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -37,23 +35,3 @@ export default function App() {
     </AmountVisibilityProvider>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  inter: {
-    fontFamily: 'Inter_600SemiBold',
-    fontSize: 18,
-    marginBottom: 8,
-    color: '#ffffff',
-  },
-  arimo: {
-    fontFamily: 'Arimo_700Bold',
-    fontSize: 18,
-    color: '#ffffff',
-  },
-})
