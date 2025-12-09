@@ -26,7 +26,8 @@ export function Header({
 const headerStyles = StyleSheet.create({
   container: {
     paddingHorizontal: 18,
-    paddingVertical: 24,
+    paddingBlockStart: 24,
+    paddingBlockEnd: 8,
     flexDirection: 'row',
     gap: 8,
     alignItems: 'center',
