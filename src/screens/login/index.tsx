@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Image, StyleSheet, Text, View } from 'react-native'
+import { Alert, Image, StyleSheet, Text, View } from 'react-native'
 import { LetterIcon } from 'src/assets/email'
 import { LockIcon } from 'src/assets/lock-icon'
 import { SupplierIcon } from 'src/assets/supplier-icon'
@@ -7,6 +7,7 @@ import UserIcon from 'src/assets/user-icon'
 import { Button } from 'src/components/button'
 import { Input } from 'src/components/input'
 import { RadioGroup } from 'src/components/radio'
+import { useAuth } from 'src/contexts/use-auth'
 import { EyeIcon } from '../../assets/eye-simple'
 
 export function Login() {
@@ -15,13 +16,34 @@ export function Login() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
+  const { login, isLoading } = useAuth()
+
   const userTypeOptions = [
     { id: 'client', label: 'Cliente', icon: <UserIcon /> },
     { id: 'supplier', label: 'Fornecedor', icon: <SupplierIcon /> },
   ]
 
-  const handleContinue = () => {
-    console.log('Continue with:', { userType, email, password })
+  const handleContinue = async () => {
+    if (!email || !password) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos')
+      return
+    }
+
+    try {
+      const success = await login(email, password, userType)
+
+      if (success) {
+        console.log('Login realizado com sucesso!')
+      } else {
+        Alert.alert(
+          'Erro de Login',
+          'Credenciais inválidas. Tente:\n\nCliente:\nemail: cliente@teste.com\nsenha: 123456\n\nFornecedor:\nemail: fornecedor@teste.com\nsenha: 123456'
+        )
+      }
+    } catch (error) {
+      Alert.alert('Erro', 'Ocorreu um erro durante o login')
+      console.error('Erro no login:', error)
+    }
   }
 
   const logo = require('../../../public/images/logo.png')
@@ -39,7 +61,14 @@ export function Login() {
         <View style={styles.inputWrapper}>
           <View style={{ gap: 8 }}>
             <Text style={styles.label}>E-mail</Text>
-            <Input placeholder="seu@email.com" leftIcon={<LetterIcon />} />
+            <Input
+              placeholder="seu@email.com"
+              leftIcon={<LetterIcon />}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
           </View>
           <View style={{ gap: 8 }}>
             <Text style={styles.label}>Senha</Text>
@@ -55,8 +84,12 @@ export function Login() {
           </View>
         </View>
         <View style={[styles.buttonWrapper, { marginTop: 5 }]}>
-          <Button variant={userType === 'supplier' ? 'secondary' : 'primary'}>
-            Entrar
+          <Button
+            variant={userType === 'supplier' ? 'secondary' : 'primary'}
+            onPress={handleContinue}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Entrando...' : 'Entrar'}
           </Button>
         </View>
       </View>

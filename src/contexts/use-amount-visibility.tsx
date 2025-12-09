@@ -1,4 +1,4 @@
-import { createContext, JSX, useContext, useState } from 'react'
+import { createContext, JSX, ReactNode, useContext, useState } from 'react'
 import EyeClosed from 'src/assets/eye-closed'
 import EyeOpened from 'src/assets/eye-opened'
 
@@ -10,9 +10,14 @@ interface AmountVisibilityContextProps {
 
 const DEFAULT_AMOUNT_VISIBILITY = false
 
-const AmountVisibilityContext = createContext(null)
+const AmountVisibilityContext =
+  createContext<AmountVisibilityContextProps | null>(null)
 
-export function AmountVisibilityProvider({ children }) {
+export function AmountVisibilityProvider({
+  children,
+}: {
+  children: ReactNode
+}) {
   const [isVisible, setIsVisible] = useState(DEFAULT_AMOUNT_VISIBILITY)
 
   const eyeState = isVisible ? <EyeOpened /> : <EyeClosed />

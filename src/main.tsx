@@ -8,7 +8,8 @@ import {
 import { useFonts } from 'expo-font'
 import React from 'react'
 import { AmountVisibilityProvider } from './contexts/use-amount-visibility'
-import { Login } from './screens/login'
+import { AuthProvider } from './contexts/use-auth'
+import { Routes } from './routes'
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -23,15 +24,10 @@ export default function App() {
   if (!fontsLoaded) return null
 
   return (
-    // <LinearGradient
-    //   colors={['#773CBD', '#550DD1', '#4E03D5']}
-    //   start={{ x: 0.05, y: 0 }}
-    //   end={{ x: 1, y: 1 }}
-    //   style={styles.container}
-    // >
-    // </LinearGradient>
-    <AmountVisibilityProvider>
-      <Login />
-    </AmountVisibilityProvider>
+    <AuthProvider>
+      <AmountVisibilityProvider>
+        <Routes />
+      </AmountVisibilityProvider>
+    </AuthProvider>
   )
 }

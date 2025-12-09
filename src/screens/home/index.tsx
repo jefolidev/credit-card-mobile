@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ScrollView, Text, View } from 'react-native'
+import { Alert, ScrollView, Text, View } from 'react-native'
 import { CreditCardIcon } from 'src/assets/credit-card-icon'
 import { HomeIcon } from 'src/assets/home-icon'
 import { LogOutIcon } from 'src/assets/log-out-icon'
@@ -10,10 +10,26 @@ import { Button } from 'src/components/button'
 import { Input } from 'src/components/input'
 import { NavigateBar } from 'src/components/navigate-bar'
 import { RadioGroup } from 'src/components/radio'
+import { useAuth } from 'src/contexts/use-auth'
 import { colors } from '../../theme/colors'
 
 export function Home() {
   const [selected, setSelected] = useState('1')
+  const { user, logout } = useAuth()
+
+  const handleLogout = () => {
+    Alert.alert('Sair', 'Tem certeza que deseja sair?', [
+      {
+        text: 'Cancelar',
+        style: 'cancel',
+      },
+      {
+        text: 'Sair',
+        style: 'destructive',
+        onPress: () => logout(),
+      },
+    ])
+  }
 
   const navigationItems = [
     {
@@ -39,7 +55,7 @@ export function Home() {
       id: 'logout',
       label: 'Sair',
       icon: <LogOutIcon />,
-      onPress: () => console.log('Logout pressed'),
+      onPress: handleLogout,
     },
   ]
 
@@ -55,6 +71,28 @@ export function Home() {
       />
       <ScrollView style={{ flex: 1 }}>
         <View style={{ padding: 12, gap: 20 }}>
+          <View style={{ marginBottom: 10 }}>
+            <Text
+              style={{
+                fontSize: 24,
+                fontFamily: 'Inter_600SemiBold',
+                color: colors.primaryText,
+              }}
+            >
+              Olá, {user?.name || user?.email}!
+            </Text>
+            <Text
+              style={{
+                fontSize: 14,
+                fontFamily: 'Inter_400Regular',
+                color: colors.secondaryText,
+                marginTop: 4,
+              }}
+            >
+              Tipo: {user?.userType === 'client' ? 'Cliente' : 'Fornecedor'}
+            </Text>
+          </View>
+
           <Text
             style={{
               fontSize: 18,
