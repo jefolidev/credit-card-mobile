@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { useAuth } from 'src/contexts/use-auth'
 import { useCard } from 'src/contexts/use-card'
 import { Cards } from 'src/screens/cards'
+import { ProfileSac } from 'src/screens/contacts/PerfilSac'
 import { Login } from 'src/screens/login'
 import {
   AlterarSenhaBottomSheet,
@@ -63,10 +64,7 @@ export function StackRoutes({ isAuthenticated }: StackRoutesProps) {
     >
       <Stack.Screen name="tabs" component={BottomTabRoutes} />
       {/* Aux screens/modal sheets accessible from tabs */}
-      <Stack.Screen
-        name="Contacts"
-        component={require('../screens/contacts').Contacts}
-      />
+      <Stack.Screen name="Contacts" component={ProfileSac} />
       <Stack.Screen
         name="AlterarSenhaBottomSheet"
         component={AlterarSenhaBottomSheet}

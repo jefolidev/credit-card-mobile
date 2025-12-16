@@ -6,7 +6,7 @@ import { ButtonIcon } from '../button-icon'
 import { Title } from '../title'
 
 interface HeaderProps extends ViewProps {
-  icon: JSX.Element | string
+  icon?: JSX.Element | string
   title: string
   isIconClickable?: boolean
   onBackPress?: () => void
@@ -28,7 +28,7 @@ export function Header({
           <ArrowLeftIcon width={24} height={24} color={colors.primaryText} />
         </TouchableOpacity>
       ) : (
-        <ButtonIcon icon={icon} isClickable={isIconClickable} />
+        <ButtonIcon icon={icon ?? <></>} isClickable={isIconClickable} />
       )}
       <Title>{title}</Title>
     </View>
