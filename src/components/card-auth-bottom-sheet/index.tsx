@@ -257,7 +257,8 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   authButton: {
-    height: 0,
+    height: 50,
+    marginBlock: -12,
   },
   helpText: {
     fontSize: 14,

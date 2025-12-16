@@ -10,7 +10,7 @@ import {
 import { colors } from '../../theme/colors'
 
 interface ButtonProps extends TouchableOpacityProps {
-  variant?: 'primary' | 'secondary'
+  variant?: 'primary' | 'secondary' | 'outline' | 'destructive' | 'success'
   children: string
   loading?: boolean
   size?: 'small' | 'medium' | 'large'
@@ -25,91 +25,134 @@ export function Button({
   style,
   ...props
 }: ButtonProps) {
-  const buttonStyle = [
-    styles.base,
-    styles[size],
-    disabled && styles.disabled,
-    style,
-  ]
+  const isGradient = variant === 'primary' || variant === 'secondary'
 
-  const textStyle = [
-    styles.text,
-    styles[`${size}Text`],
-    disabled && styles.disabledText,
-  ]
-
-  if ((variant === 'primary' || variant === 'secondary') && !disabled) {
+  // Variantes com gradiente (primary/secondary)
+  if (isGradient) {
     const gradientColors =
       variant === 'primary'
         ? (['#773CBD', '#550DD1', '#4E03D5'] as const)
         : (['#FF8D28', '#F93332', '#CD086A'] as const)
+
+    // Disabled para variantes com gradiente
+    if (disabled) {
+      return (
+        <TouchableOpacity
+          {...props}
+          disabled={true}
+          activeOpacity={1}
+          style={[styles.base, styles.disabled, style]}
+        >
+          <LinearGradient
+            colors={['#e5e7eb', '#9ca3af', '#9ba3b3'] as const}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradient}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={styles.text}>{children}</Text>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      )
+    }
 
     return (
       <TouchableOpacity
         {...props}
         disabled={disabled || loading}
         activeOpacity={0.9}
-        style={[styles.base, variant === 'secondary' && styles.base, style]}
+        style={[styles.base, style]}
       >
         <LinearGradient
           colors={gradientColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[
-            styles.gradient,
-            styles[size],
-            variant === 'secondary' && styles.gradient,
-          ]}
+          style={styles.gradient}
         >
           {loading ? (
             <ActivityIndicator color="#FFFFFF" size="small" />
           ) : (
-            <Text style={textStyle}>{children}</Text>
+            <Text style={styles.text}>{children}</Text>
           )}
         </LinearGradient>
       </TouchableOpacity>
     )
   }
 
-  // Estado disabled com gradiente cinza
-  if (disabled) {
+  // Variantes sólidas (success / destructive)
+  if (variant === 'destructive' || variant === 'success') {
+    const bg = variant === 'destructive' ? colors.red[600] : colors.emerald[600]
+    const bgDisabled =
+      variant === 'destructive' ? colors.red[300] : colors.emerald[300]
+
     return (
       <TouchableOpacity
         {...props}
-        disabled={true}
-        activeOpacity={1}
-        style={[styles.base, styles[size], styles.disabled, style]}
+        disabled={disabled || loading}
+        activeOpacity={0.8}
+        style={[
+          styles.base,
+          styles.solid,
+          { backgroundColor: disabled ? bgDisabled : bg },
+          style,
+        ]}
       >
-        <LinearGradient
-          colors={['#e5e7eb', '#9ca3af', '#9ba3b3'] as const}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.gradient, styles[size]]}
-        >
-          {loading ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
-          ) : (
-            <Text style={textStyle}>{children}</Text>
-          )}
-        </LinearGradient>
+        {loading ? (
+          <ActivityIndicator color="#FFFFFF" size="small" />
+        ) : (
+          <Text style={styles.text}>{children}</Text>
+        )}
       </TouchableOpacity>
     )
   }
 
+  // Variante outline
+  if (variant === 'outline') {
+    const containerStyle = [
+      styles.base,
+      styles.outline,
+      disabled && styles.outlineDisabled,
+      style,
+    ]
+    const textStyle = [
+      styles.outlineText,
+      disabled && styles.outlineTextDisabled,
+    ]
+    return (
+      <TouchableOpacity
+        {...props}
+        disabled={disabled || loading}
+        activeOpacity={0.7}
+        style={containerStyle}
+      >
+        {loading ? (
+          <ActivityIndicator
+            color={disabled ? colors.gray[500] : colors.primary}
+            size="small"
+          />
+        ) : (
+          <Text style={textStyle}>{children}</Text>
+        )}
+      </TouchableOpacity>
+    )
+  }
+
+  // Fallback (sem gradiente)
+  const containerStyle = [styles.base, style]
   return (
     <TouchableOpacity
       {...props}
       disabled={disabled || loading}
       activeOpacity={0.7}
-      style={buttonStyle}
+      style={containerStyle}
     >
       {loading ? (
-        <ActivityIndicator
-          color={variant === 'secondary' ? colors.primary : '#FFFFFF'}
-          size="small"
-        />
+        <ActivityIndicator color={colors.primary} size="small" />
       ) : (
-        <Text style={textStyle}>{children}</Text>
+        <Text style={styles.text}>{children}</Text>
       )}
     </TouchableOpacity>
   )
@@ -129,40 +172,40 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  solid: {
+    borderRadius: 1000,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+  },
+  outline: {
+    borderWidth: 1,
+    borderColor: colors.gray[300],
+    backgroundColor: 'transparent',
+    paddingVertical: 10,
+    borderRadius: 1000,
+  },
   disabled: {
     shadowOpacity: 0,
     elevation: 0,
-  },
-  small: {
-    paddingVertical: 6,
-    minHeight: 32,
-  },
-  medium: {
-    paddingVertical: 10,
-    minHeight: 44,
-  },
-  large: {
-    paddingVertical: 14,
-    minHeight: 52,
   },
   text: {
     fontFamily: 'Inter_600SemiBold',
     textAlign: 'center',
     color: '#FFFFFF',
   },
-  smallText: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  mediumText: {
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  largeText: {
-    fontSize: 18,
-    lineHeight: 28,
-  },
   disabledText: {
     color: colors.gray[500],
+  },
+  outlineText: {
+    fontFamily: 'Inter_600SemiBold',
+    textAlign: 'center',
+    color: colors.zinc[700],
+  },
+  outlineTextDisabled: {
+    color: colors.gray[500],
+  },
+  outlineDisabled: {
+    borderColor: colors.gray[200],
   },
 })

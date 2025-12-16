@@ -4,6 +4,11 @@ import { useAuth } from 'src/contexts/use-auth'
 import { useCard } from 'src/contexts/use-card'
 import { Cards } from 'src/screens/cards'
 import { Login } from 'src/screens/login'
+import {
+  AlterarSenhaBottomSheet,
+  BloquearCartaoBottomSheet,
+  SegundaViaBottomSheet,
+} from 'src/screens/profile/bottom-sheets'
 import { BottomTabRoutes } from './bottom-tab-routes'
 
 const Stack = createNativeStackNavigator()
@@ -64,23 +69,17 @@ export function StackRoutes({ isAuthenticated }: StackRoutesProps) {
       />
       <Stack.Screen
         name="AlterarSenhaBottomSheet"
-        component={
-          require('../screens/profile/bottom-sheets').AlterarSenhaBottomSheet
-        }
+        component={AlterarSenhaBottomSheet}
         options={{ presentation: 'transparentModal' }}
       />
       <Stack.Screen
         name="BloquearCartaoBottomSheet"
-        component={
-          require('../screens/profile/bottom-sheets').BloquearCartaoBottomSheet
-        }
+        component={BloquearCartaoBottomSheet}
         options={{ presentation: 'transparentModal' }}
       />
       <Stack.Screen
         name="SegundaViaBottomSheet"
-        component={
-          require('../screens/profile/bottom-sheets').SegundaViaBottomSheet
-        }
+        component={SegundaViaBottomSheet}
         options={{ presentation: 'transparentModal' }}
       />
     </Stack.Navigator>
