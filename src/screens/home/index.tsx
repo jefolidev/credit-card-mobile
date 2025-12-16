@@ -10,7 +10,50 @@ import { colors } from '../../theme/colors'
 
 export function Home() {
   const { user, logout } = useAuth()
-  const { selectedCard, logoutCard } = useCard()
+  const { selectedCard, logoutCard, getTransactions, getBills } = useCard()
+
+  // Get current month transactions
+  const getCurrentMonthTransactions = () => {
+    if (!selectedCard) return []
+
+    const bills = getBills(selectedCard.id)
+    const currentBill = bills.find((bill) => bill.status === 'current')
+
+    if (!currentBill) return []
+
+    return getTransactions(currentBill.id)
+  }
+
+  const currentTransactions = getCurrentMonthTransactions()
+
+  // Group transactions by date
+  const transactionsByDate = currentTransactions.reduce((acc, transaction) => {
+    const date = transaction.date
+    if (!acc[date]) {
+      acc[date] = []
+    }
+    acc[date].push(transaction)
+    return acc
+  }, {} as Record<string, typeof currentTransactions>)
+
+  // Sort dates in descending order and get latest 3 transactions
+  const sortedDates = Object.keys(transactionsByDate).sort(
+    (a, b) => new Date(b).getTime() - new Date(a).getTime()
+  )
+
+  const formatDateLegend = (dateString: string) => {
+    const date = new Date(dateString)
+    return date
+      .toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
+      .replace(' de ', ' ')
+  }
+
+  // Get latest transactions with date grouping (limit to show max 2 dates for home screen)
+  const limitedDates = sortedDates.slice(0, 2)
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -116,24 +159,34 @@ export function Home() {
               </View>
 
               <View style={styles.transactionsList}>
-                <TransactionItem
-                  title="Supermercado ABC"
-                  amount={125.5}
-                  date="2024-09-30"
-                  type="transfer"
-                />
-                <TransactionItem
-                  title="Posto de Gasolina"
-                  amount={89.9}
-                  date="2024-10-30"
-                  type="transfer"
-                />
-                <TransactionItem
-                  title="Cashback XYZ"
-                  amount={45.2}
-                  date="2024-09-30"
-                  type="payment"
-                />
+                {limitedDates.length > 0 ? (
+                  limitedDates.map((date) => (
+                    <View key={date} style={styles.transactionWrapper}>
+                      <Text style={styles.dateLegend}>
+                        {formatDateLegend(date)}
+                      </Text>
+                      {transactionsByDate[date].map((transaction) => (
+                        <TransactionItem
+                          key={transaction.id}
+                          title={transaction.title}
+                          amount={transaction.amount}
+                          date={transaction.date}
+                          type={transaction.type}
+                        />
+                      ))}
+                    </View>
+                  ))
+                ) : (
+                  <Text
+                    style={{
+                      color: colors.secondaryText,
+                      textAlign: 'center',
+                      padding: 20,
+                    }}
+                  >
+                    Nenhuma transação encontrada
+                  </Text>
+                )}
               </View>
             </>
           )}
@@ -212,4 +265,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   transactionsList: {},
+  transactionWrapper: {
+    gap: 12,
+    marginBottom: 20,
+  },
+  dateLegend: {
+    color: colors.zinc[300],
+    fontSize: 16,
+  },
 })

@@ -1,13 +1,13 @@
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { AlertTriangleIcon } from 'src/assets/alert-triangle-icon'
 import { CheckIcon } from 'src/assets/check-icon'
 import { DocumentIcon } from 'src/assets/document-icon'
 import { ExclamationIcon } from 'src/assets/exclamation-icon'
 import { BillInfoCard } from 'src/components/bill-info-card'
-import { Button } from 'src/components/button'
+import { CashAmount } from 'src/components/cash-amount'
 import { Header } from 'src/components/header'
+import TransactionItem from 'src/components/transaction-item'
 import { useCard } from 'src/contexts/use-card'
 import { colors } from 'src/theme/colors'
 
@@ -25,7 +25,7 @@ export function BillDetails() {
   const route = useRoute<BillDetailsScreenRouteProp>()
   const navigation = useNavigation<BillDetailsScreenNavigationProp>()
   const { billId } = route.params
-  const { selectedCard, getBills } = useCard()
+  const { selectedCard, getBills, getTransactions } = useCard()
 
   if (!selectedCard) {
     navigation.goBack()
@@ -54,7 +54,7 @@ export function BillDetails() {
           textColor: colors.emerald[700],
           showWarning: false,
         }
-      case 'pending':
+      case 'current':
         return {
           icon: (
             <ExclamationIcon
@@ -75,7 +75,7 @@ export function BillDetails() {
       case 'overdue':
         return {
           icon: (
-            <AlertTriangleIcon width={20} height={20} color={colors.red[600]} />
+            <ExclamationIcon width={20} height={20} color={colors.red[600]} />
           ),
           title: 'Fatura Atrasada',
           subtitle: 'Vencimento em atraso',
@@ -112,6 +112,33 @@ export function BillDetails() {
       style: 'currency',
       currency: 'BRL',
     }).format(value)
+  }
+
+  // Get transactions from context
+  const billTransactions = getTransactions(billId)
+
+  // Group transactions by date
+  const transactionsByDate = billTransactions.reduce((acc, transaction) => {
+    const date = transaction.date
+    if (!acc[date]) {
+      acc[date] = []
+    }
+    acc[date].push(transaction)
+    return acc
+  }, {} as Record<string, typeof billTransactions>) // Sort dates in descending order
+  const sortedDates = Object.keys(transactionsByDate).sort(
+    (a, b) => new Date(b).getTime() - new Date(a).getTime()
+  )
+
+  const formatDateLegend = (dateString: string) => {
+    const date = new Date(dateString)
+    return date
+      .toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
+      .replace(' de ', ' ')
   }
 
   const handlePayBill = () => {
@@ -185,7 +212,7 @@ export function BillDetails() {
           >
             <View style={styles.warningHeader}>
               {bill.status === 'overdue' ? (
-                <AlertTriangleIcon
+                <ExclamationIcon
                   width={16}
                   height={16}
                   color={colors.red[600]}
@@ -218,40 +245,63 @@ export function BillDetails() {
         <View style={styles.billInfoSection}>
           <Text style={styles.sectionTitle}>Informações da Fatura</Text>
 
-          <View style={styles.amountCard}>
-            <Text style={styles.amountLabel}>Valor Total</Text>
-            <Text style={styles.amountValue}>{formatAmount(bill.amount)}</Text>
+          <CashAmount
+            iconType="credit-card"
+            billStatus={bill.status}
+            amount={bill.amount}
+            cardType="bill"
+            dueDate={new Date(bill.dueDate)}
+          />
+
+          <View style={{ marginBlock: 12 }}>
+            <BillInfoCard
+              type="discount"
+              title="Desconto em folha"
+              info={bill.amount.toString()}
+            />
           </View>
 
           <View style={styles.infoGrid}>
             <View style={styles.infoRow}>
               <BillInfoCard
-                title="Competência"
-                info={`${
-                  bill.month.charAt(0).toUpperCase() + bill.month.slice(1)
-                }/${bill.year}`}
+                title="Restante do Limite"
+                info={formatAmount(selectedCard.balance - bill.amount)}
               />
-              <BillInfoCard title="Fechamento" info={bill.closingDate} />
+              <BillInfoCard
+                title="Fechamento"
+                info={new Date(bill.closingDate).toLocaleDateString('pt-BR')}
+              />
             </View>
             <View style={styles.infoRow}>
-              <BillInfoCard title="Vencimento" info={bill.dueDate} />
               <BillInfoCard
-                title="Cartão"
-                info={`•••• ${selectedCard.cardNumber.slice(-4)}`}
+                title="Vencimento"
+                info={new Date(bill.dueDate).toLocaleDateString('pt-BR')}
+              />
+              <BillInfoCard
+                title="Subsídios disponíveis"
+                info={formatAmount(bill.amount * 0.15)}
               />
             </View>
           </View>
         </View>
 
-        {/* Payment Section */}
-        {bill.status !== 'paid' && (
-          <View style={styles.paymentSection}>
-            <Text style={styles.sectionTitle}>Opções de Pagamento</Text>
-            <Button onPress={handlePayBill} style={styles.payButton}>
-              Pagar Fatura
-            </Button>
-          </View>
-        )}
+        <Text style={styles.sectionTitle}>Transações do Período</Text>
+        <View style={styles.transactionsList}>
+          {sortedDates.map((date) => (
+            <View key={date} style={styles.transactionWrapper}>
+              <Text style={styles.dateLegend}>{formatDateLegend(date)}</Text>
+              {transactionsByDate[date].map((transaction) => (
+                <TransactionItem
+                  key={transaction.id}
+                  title={transaction.title}
+                  amount={transaction.amount}
+                  date={transaction.date}
+                  type={transaction.type}
+                />
+              ))}
+            </View>
+          ))}
+        </View>
       </ScrollView>
     </View>
   )
@@ -349,5 +399,16 @@ const styles = StyleSheet.create({
   },
   payButton: {
     marginTop: 16,
+  },
+  transactionWrapper: {
+    gap: 12,
+    marginBottom: 20,
+  },
+  dateLegend: {
+    color: colors.zinc[400],
+    fontSize: 16,
+  },
+  transactionsList: {
+    marginBlock: 1,
   },
 })

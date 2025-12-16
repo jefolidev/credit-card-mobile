@@ -9,11 +9,11 @@ import { Dot } from '../dot'
 
 type IconType = 'arrow-up' | 'credit-card'
 type CardType = 'balance' | 'bill'
-type BillStatus = 'overdue' | 'current' | 'paid'
+export type BillStatus = 'overdue' | 'current' | 'paid'
 
 interface CashAmountProps {
   amount: number
-  creditLimit: number
+  creditLimit?: number
   iconType?: IconType
   cardType?: CardType
   billStatus?: BillStatus
@@ -36,7 +36,7 @@ export function CashAmount({
     useAmountVisibility()
 
   const isOverdue = () => {
-    if (cardType === 'bill' && dueDate) {
+    if (cardType === 'bill' && dueDate && billStatus === 'overdue') {
       const now = new Date()
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
       const dueDateOnly = new Date(
@@ -90,7 +90,7 @@ export function CashAmount({
       style={cardStyles.container}
     >
       <View style={cardStyles.backgroundIcon}>
-        {cardType ? (
+        {cardType === 'balance' ? (
           <ArrowUpIcon width={180} height={180} opacity={0.4} />
         ) : (
           <CreditCardIcon width={180} height={180} opacity={0.4} />
@@ -140,26 +140,29 @@ export function CashAmount({
                   currency: 'BRL',
                 })}
               </Text>
-              <View style={cardStyles.limitBar}>
-                <View
-                  style={[
-                    cardStyles.limitUsed,
-                    {
-                      width: `${Math.max(
-                        0,
-                        Math.min(
-                          100,
-                          ((creditLimit - amount) / creditLimit) * 100
-                        )
-                      )}%`,
-                      backgroundColor:
-                        (creditLimit - amount) / creditLimit > 0.8
-                          ? '#EF4444'
-                          : '#3B82F6',
-                    },
-                  ]}
-                />
-              </View>
+
+              {cardType === 'balance' && (
+                <View style={cardStyles.limitBar}>
+                  <View
+                    style={[
+                      cardStyles.limitUsed,
+                      {
+                        width: `${Math.max(
+                          0,
+                          Math.min(
+                            100,
+                            ((creditLimit! - amount) / creditLimit!) * 100
+                          )
+                        )}%`,
+                        backgroundColor:
+                          (creditLimit! - amount) / creditLimit! > 0.8
+                            ? '#EF4444'
+                            : '#3B82F6',
+                      },
+                    ]}
+                  />
+                </View>
+              )}
             </View>
           ) : (
             Array(5)

@@ -1,6 +1,7 @@
+import { BillStatus } from '..'
+
 type IconType = 'arrow-up' | 'credit-card'
 type VariantType = 'primary' | 'destructive'
-type BillStatusType = 'open' | 'paid' | 'overdue'
 
 type CashAmountBase = {
   iconType?: IconType
@@ -14,7 +15,7 @@ type CashVariantUserBalance = CashAmountBase & {
 
 type CashVariantBill = CashAmountBase & {
   variant: 'bill'
-  creditCardBillStatus: BillStatusType
+  creditCardBillStatus: BillStatus
 }
 
 export type CashAmountProps = CashVariantUserBalance | CashVariantBill

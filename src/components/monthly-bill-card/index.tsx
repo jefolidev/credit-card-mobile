@@ -3,8 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import ChevronRightIcon from 'src/assets/chevron-right-icon'
 import DocumentIcon from 'src/assets/document-icon'
 import colors from 'src/theme/colors'
-
-type BillStatus = 'pending' | 'paid' | 'overdue'
+import { BillStatus } from '../cash-amount'
 
 interface MonthlyBillCardProps {
   month: string
@@ -27,7 +26,7 @@ export function MonthlyBillCard({
 }: MonthlyBillCardProps) {
   const getStatusStyles = () => {
     switch (status) {
-      case 'pending':
+      case 'current':
         return {
           backgroundColor: colors.orange[50],
           borderColor: colors.orange[200],

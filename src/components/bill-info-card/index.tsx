@@ -53,7 +53,7 @@ export function BillInfoCard({
   return (
     <View style={styles.container}>
       <View style={{ gap: 6, paddingBlock: 3 }}>
-        <Text style={[styles.title, isDiscount && styles.discountInfo]}>
+        <Text style={[styles.title, isDiscount && styles.discounTitle]}>
           {title}
         </Text>
         <Text style={[styles.info, isDiscount && styles.discountInfo]}>
@@ -93,9 +93,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.primaryText,
   },
-  discountInfo: {
+  discounTitle: {
     color: colors.primary,
     fontSize: 18,
+  },
+  discountInfo: {
+    color: colors.primary,
+    fontSize: 24,
   },
   iconContainer: {
     padding: 18,

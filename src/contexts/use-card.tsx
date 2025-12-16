@@ -1,4 +1,13 @@
 import { createContext, ReactNode, useContext, useState } from 'react'
+import { BillStatus } from 'src/components/cash-amount'
+
+export interface Transaction {
+  id: string
+  title: string
+  amount: number
+  date: string
+  type: 'transfer' | 'payment'
+}
 
 export interface Bill {
   id: string
@@ -7,8 +16,9 @@ export interface Bill {
   amount: number
   dueDate: string
   closingDate: string
-  status: 'pending' | 'paid' | 'overdue'
+  status: BillStatus
   cardId: string
+  transactions: Transaction[]
 }
 
 export interface CreditCard {
@@ -42,6 +52,7 @@ interface CardContextProps {
   logoutCard: () => void
   getUserCards: (userId: string) => CreditCard[]
   getBills: (cardId: string) => Bill[]
+  getTransactions: (billId: string) => Transaction[]
 }
 
 const CardContext = createContext<CardContextProps | null>(null)
@@ -53,40 +64,160 @@ const mockBills: Bill[] = [
     month: 'dezembro',
     year: 2024,
     amount: 1250.0,
-    dueDate: '10/01/2025',
-    closingDate: '15/12/2024',
-    status: 'pending',
+    dueDate: '2025-01-10',
+    closingDate: '2024-12-12',
+    status: 'current',
     cardId: '1',
+    transactions: [
+      {
+        id: '1',
+        title: 'Supermercado ABC',
+        amount: 125.5,
+        date: '2024-12-05',
+        type: 'transfer',
+      },
+      {
+        id: '2',
+        title: 'Farmácia Central',
+        amount: 67.8,
+        date: '2024-12-05',
+        type: 'transfer',
+      },
+      {
+        id: '3',
+        title: 'Posto de Gasolina',
+        amount: 189.9,
+        date: '2024-12-07',
+        type: 'transfer',
+      },
+      {
+        id: '4',
+        title: 'Cashback XYZ',
+        amount: 45.2,
+        date: '2024-12-07',
+        type: 'payment',
+      },
+      {
+        id: '5',
+        title: 'Restaurante Italiano',
+        amount: 156.3,
+        date: '2024-12-08',
+        type: 'transfer',
+      },
+      {
+        id: '6',
+        title: 'Streaming Service',
+        amount: 29.9,
+        date: '2024-12-09',
+        type: 'transfer',
+      },
+    ],
   },
   {
     id: '2',
     month: 'novembro',
     year: 2024,
     amount: 890.5,
-    dueDate: '10/12/2024',
-    closingDate: '15/11/2024',
+    dueDate: '2024-12-10',
+    closingDate: '2024-11-12',
     status: 'paid',
     cardId: '1',
+    transactions: [
+      {
+        id: '7',
+        title: 'Shopping Center',
+        amount: 245.8,
+        date: '2024-11-03',
+        type: 'transfer',
+      },
+      {
+        id: '8',
+        title: 'Padaria do Bairro',
+        amount: 18.5,
+        date: '2024-11-05',
+        type: 'transfer',
+      },
+      {
+        id: '9',
+        title: 'Netflix',
+        amount: 32.9,
+        date: '2024-11-08',
+        type: 'transfer',
+      },
+      {
+        id: '10',
+        title: 'Mercado Livre',
+        amount: 156.2,
+        date: '2024-11-10',
+        type: 'transfer',
+      },
+    ],
   },
   {
     id: '3',
     month: 'outubro',
     year: 2024,
     amount: 2150.75,
-    dueDate: '10/11/2024',
-    closingDate: '15/10/2024',
+    dueDate: '2024-11-10',
+    closingDate: '2024-10-12',
     status: 'paid',
     cardId: '1',
+    transactions: [
+      {
+        id: '11',
+        title: 'Supermercado Central',
+        amount: 320.5,
+        date: '2024-10-02',
+        type: 'transfer',
+      },
+      {
+        id: '12',
+        title: 'Posto Shell',
+        amount: 180.0,
+        date: '2024-10-05',
+        type: 'transfer',
+      },
+      {
+        id: '13',
+        title: 'Restaurante Japonês',
+        amount: 95.8,
+        date: '2024-10-08',
+        type: 'transfer',
+      },
+    ],
   },
   {
     id: '4',
     month: 'setembro',
     year: 2024,
     amount: 756.3,
-    dueDate: '10/10/2024',
-    closingDate: '15/09/2024',
+    dueDate: '2024-10-10',
+    closingDate: '2024-09-15',
     status: 'overdue',
     cardId: '1',
+    transactions: [
+      {
+        id: '14',
+        title: 'Farmácia São Paulo',
+        amount: 67.5,
+        date: '2024-09-03',
+        type: 'transfer',
+      },
+      {
+        id: '15',
+        title: 'Uber Eats',
+        amount: 42.8,
+        date: '2024-09-07',
+        type: 'transfer',
+      },
+      {
+        id: '16',
+        title: 'Amazon',
+        amount: 156.0,
+        date: '2024-09-12',
+        type: 'transfer',
+      },
+    ],
   },
   {
     id: '5',
@@ -95,8 +226,31 @@ const mockBills: Bill[] = [
     amount: 980.5,
     dueDate: '15/01/2025',
     closingDate: '20/12/2024',
-    status: 'pending',
+    status: 'current',
     cardId: '2',
+    transactions: [
+      {
+        id: '17',
+        title: 'Livraria Cultura',
+        amount: 89.9,
+        date: '2024-12-03',
+        type: 'transfer',
+      },
+      {
+        id: '18',
+        title: 'Cinema Multiplex',
+        amount: 48.0,
+        date: '2024-12-06',
+        type: 'transfer',
+      },
+      {
+        id: '19',
+        title: 'Spotify',
+        amount: 21.9,
+        date: '2024-12-10',
+        type: 'transfer',
+      },
+    ],
   },
   {
     id: '6',
@@ -107,6 +261,29 @@ const mockBills: Bill[] = [
     closingDate: '20/11/2024',
     status: 'paid',
     cardId: '2',
+    transactions: [
+      {
+        id: '20',
+        title: 'Mercado Extra',
+        amount: 234.6,
+        date: '2024-11-04',
+        type: 'transfer',
+      },
+      {
+        id: '21',
+        title: 'Posto Petrobras',
+        amount: 145.8,
+        date: '2024-11-08',
+        type: 'transfer',
+      },
+      {
+        id: '22',
+        title: 'Cashback Programa',
+        amount: 25.5,
+        date: '2024-11-15',
+        type: 'payment',
+      },
+    ],
   },
 ]
 
@@ -221,6 +398,11 @@ export function CardProvider({ children }: { children: ReactNode }) {
     return mockBills.filter((bill) => bill.cardId === cardId)
   }
 
+  const getTransactions = (billId: string): Transaction[] => {
+    const bill = mockBills.find((bill) => bill.id === billId)
+    return bill?.transactions || []
+  }
+
   return (
     <CardContext.Provider
       value={{
@@ -233,14 +415,13 @@ export function CardProvider({ children }: { children: ReactNode }) {
         logoutCard,
         getUserCards,
         getBills,
+        getTransactions,
       }}
     >
       {children}
     </CardContext.Provider>
   )
 }
-
-
 
 export function useCard() {
   const context = useContext(CardContext)

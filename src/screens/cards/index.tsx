@@ -112,6 +112,7 @@ const styles = StyleSheet.create({
     paddingInline: 28,
   },
   header: {
+    marginTop: 10,
     marginBottom: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
