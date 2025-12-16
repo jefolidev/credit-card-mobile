@@ -10,7 +10,10 @@ type UserType = 'client' | 'supplier'
 
 interface User {
   id: string
-  email: string
+  phone: string
+  cpf: string
+  city: string
+  state: string
   userType: UserType
   name?: string
 }
@@ -19,11 +22,7 @@ interface AuthContextProps {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (
-    email: string,
-    password: string,
-    userType: UserType
-  ) => Promise<boolean>
+  login: (cpf: string, password: string, userType: UserType) => Promise<boolean>
   logout: () => void
 }
 
@@ -32,15 +31,21 @@ const AuthContext = createContext<AuthContextProps | null>(null)
 const mockUsers = [
   {
     id: '1',
-    email: 'cliente@teste.com',
+    cpf: '12345678900',
+    phone: '(11) 91234-5678',
     password: '123456',
+    city: 'Fortaleza',
+    state: 'Ceará, CE',
     userType: 'client' as UserType,
     name: 'João Cliente',
   },
   {
     id: '2',
-    email: 'fornecedor@teste.com',
+    cpf: '98765432100',
+    phone: '(21) 99876-5432',
+    city: 'Fortaleza',
     password: '123456',
+    state: 'Ceará, CE',
     userType: 'supplier' as UserType,
     name: 'Maria Fornecedora',
   },
@@ -71,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (
-    email: string,
+    cpf: string,
     password: string,
     userType: UserType
   ): Promise<boolean> => {
@@ -82,16 +87,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const foundUser = mockUsers.find(
         (u) =>
-          u.email === email &&
-          u.password === password &&
-          u.userType === userType
+          u.cpf === cpf && u.password === password && u.userType === userType
       )
 
       if (foundUser) {
         const userData: User = {
           id: foundUser.id,
-          email: foundUser.email,
+          cpf: foundUser.cpf,
+          state: foundUser.state,
+          phone: foundUser.phone,
           userType: foundUser.userType,
+          city: foundUser.city,
           name: foundUser.name,
         }
 

@@ -57,6 +57,32 @@ export function StackRoutes({ isAuthenticated }: StackRoutesProps) {
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="tabs" component={BottomTabRoutes} />
+      {/* Aux screens/modal sheets accessible from tabs */}
+      <Stack.Screen
+        name="Contacts"
+        component={require('../screens/contacts').Contacts}
+      />
+      <Stack.Screen
+        name="AlterarSenhaBottomSheet"
+        component={
+          require('../screens/profile/bottom-sheets').AlterarSenhaBottomSheet
+        }
+        options={{ presentation: 'transparentModal' }}
+      />
+      <Stack.Screen
+        name="BloquearCartaoBottomSheet"
+        component={
+          require('../screens/profile/bottom-sheets').BloquearCartaoBottomSheet
+        }
+        options={{ presentation: 'transparentModal' }}
+      />
+      <Stack.Screen
+        name="SegundaViaBottomSheet"
+        component={
+          require('../screens/profile/bottom-sheets').SegundaViaBottomSheet
+        }
+        options={{ presentation: 'transparentModal' }}
+      />
     </Stack.Navigator>
   )
 }
