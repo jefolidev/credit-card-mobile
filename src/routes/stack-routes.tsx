@@ -9,6 +9,7 @@ import { Login } from 'src/screens/login'
 import { BlockCardBottomSheet } from 'src/screens/profile/components/block-card-bottom-sheet'
 import { ChangePasswordBottomSheet } from 'src/screens/profile/components/change-password-bottom-sheet'
 import { SecondCardBottomSheet } from 'src/screens/profile/components/second-card-bottom-sheet'
+import { SupplierDashboard } from 'src/screens/supplier-dashboard'
 import { BottomTabRoutes } from './bottom-tab-routes'
 
 const Stack = createNativeStackNavigator()
@@ -35,10 +36,10 @@ export function StackRoutes({ isAuthenticated }: StackRoutesProps) {
   if (user?.userType === 'supplier') {
     return (
       <Stack.Navigator
-        initialRouteName="tabs"
+        initialRouteName="supplierDashboard"
         screenOptions={{ headerShown: false }}
       >
-        <Stack.Screen name="tabs" component={BottomTabRoutes} />
+        <Stack.Screen name="supplierDashboard" component={SupplierDashboard} />
       </Stack.Navigator>
     )
   }

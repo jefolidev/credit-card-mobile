@@ -34,7 +34,14 @@ export function Header({
       )}
       <Title>{title}</Title>
       {rightButton && (
-        <View style={headerStyles.rightButton}>{rightButton}</View>
+        <View
+          style={[
+            headerStyles.rightButton,
+            { justifyContent: rightButton ? 'flex-start' : 'space-between' },
+          ]}
+        >
+          {rightButton}
+        </View>
       )}
     </View>
   )
@@ -48,7 +55,6 @@ const headerStyles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     alignItems: 'center',
-    justifyContent: 'space-between',
   },
   backButton: {
     padding: 8,

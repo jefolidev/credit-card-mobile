@@ -72,7 +72,7 @@ export function Home() {
                 color: colors.primaryText,
               }}
             >
-              Olá, {user?.name || user?.email}!
+              Olá, {user?.name || user?.cpf}!
             </Text>
             <Text
               style={{
