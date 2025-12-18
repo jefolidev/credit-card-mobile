@@ -1,13 +1,13 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import { JSX, useState } from 'react'
-import { StyleSheet, View } from 'react-native'
-import { CreditCardIcon } from 'src/assets/credit-card-icon'
+import React, { JSX, useCallback, useState } from 'react'
+import { Alert, StyleSheet, View } from 'react-native'
 import { DocumentIcon } from 'src/assets/document-icon'
 import { HomeIcon } from 'src/assets/home-icon'
+import { LogOutIcon } from 'src/assets/log-out-icon'
 import { QrCodeIcon } from 'src/assets/qr-code-icon'
 import { UserIcon } from 'src/assets/user-icon'
-
 import { NavigateBar } from 'src/components/navigate-bar'
+import { useCard } from 'src/contexts/use-card'
 import { BillDetails } from 'src/screens/bill-details'
 import { Cards } from 'src/screens/cards'
 import { Home } from 'src/screens/home'
@@ -31,8 +31,22 @@ const TransactionsStack = () => {
   )
 }
 
-export const BottomTabRoutes = (): JSX.Element => {
+export function BottomTabRoutes(): JSX.Element {
   const [currentTab, setCurrentTab] = useState<BottomTabParams>('home')
+  const { logoutCard } = useCard()
+
+  const handleExit = useCallback(() => {
+    Alert.alert('Sair', 'Tem certeza que deseja sair para a tela de cartões?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Sim',
+        onPress: () => {
+          logoutCard()
+          setCurrentTab('cards')
+        },
+      },
+    ])
+  }, [logoutCard])
 
   const navigationItems = [
     {
@@ -43,21 +57,21 @@ export const BottomTabRoutes = (): JSX.Element => {
     },
     {
       id: 'transactions',
-      label: 'Fechamentos',
+      label: 'Faturas',
       icon: <DocumentIcon />,
       onPress: () => setCurrentTab('transactions'),
-    },
-    {
-      id: 'cards',
-      label: 'Cartões',
-      icon: <CreditCardIcon />,
-      onPress: () => setCurrentTab('cards'),
     },
     {
       id: 'profile',
       label: 'Perfil',
       icon: <UserIcon />,
       onPress: () => setCurrentTab('profile'),
+    },
+    {
+      id: 'exit',
+      label: 'Sair',
+      icon: <LogOutIcon />,
+      onPress: handleExit,
     },
   ]
 
@@ -79,15 +93,16 @@ export const BottomTabRoutes = (): JSX.Element => {
   return (
     <View style={styles.container}>
       <View style={styles.content}>{renderScreen()}</View>
-
-      <NavigateBar
-        currentTab={currentTab}
-        onTabPress={setCurrentTab}
-        items={navigationItems}
-        activeItemId={currentTab}
-        qrCodeIcon={<QrCodeIcon width={28} height={28} />}
-        onQrCodePress={() => console.log('QR Code pressed')}
-      />
+      {currentTab !== 'cards' && (
+        <NavigateBar
+          currentTab={currentTab}
+          onTabPress={setCurrentTab}
+          items={navigationItems}
+          activeItemId={currentTab}
+          qrCodeIcon={<QrCodeIcon width={28} height={28} />}
+          onQrCodePress={() => console.log('QR Code pressed')}
+        />
+      )}
     </View>
   )
 }

@@ -27,6 +27,7 @@ export function LogOutIcon({
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        fill="none"
       />
       <Path
         d="M16 17L21 12L16 7"
@@ -34,6 +35,7 @@ export function LogOutIcon({
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        fill="none"
       />
       <Path
         d="M21 12H9"
@@ -41,6 +43,7 @@ export function LogOutIcon({
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        fill="none"
       />
     </Svg>
   )

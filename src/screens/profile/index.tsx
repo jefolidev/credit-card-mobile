@@ -216,7 +216,7 @@ export function Profile() {
             <TouchableOpacity
               style={styles.actionCard}
               onPress={() =>
-                navigation.navigate('AlterarSenhaBottomSheet' as never)
+                navigation.navigate('ChangePasswordBottomSheet' as never)
               }
             >
               <View style={styles.actionLeft}>
@@ -238,7 +238,7 @@ export function Profile() {
             <TouchableOpacity
               style={styles.actionCard}
               onPress={() =>
-                navigation.navigate('BloquearCartaoBottomSheet' as never)
+                navigation.navigate('BlockCardBottomSheet' as never)
               }
             >
               <View style={styles.actionLeft}>
@@ -260,7 +260,7 @@ export function Profile() {
             <TouchableOpacity
               style={styles.actionCard}
               onPress={() =>
-                navigation.navigate('SegundaViaBottomSheet' as never)
+                navigation.navigate('SecondCardBottomSheet' as never)
               }
             >
               <View style={styles.actionLeft}>

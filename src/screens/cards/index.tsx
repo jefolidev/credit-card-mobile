@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useNavigation } from '@react-navigation/native'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { useEffect, useState } from 'react'
 import {
   FlatList,
   StyleSheet,
@@ -7,6 +9,7 @@ import {
   View,
 } from 'react-native'
 import CreditCardIcon from 'src/assets/credit-card'
+import { LogOutIcon } from 'src/assets/log-out-icon'
 import { CardAuthBottomSheet } from 'src/components/card-auth-bottom-sheet'
 import { CreditCard } from 'src/components/credit-card'
 import { Header } from 'src/components/header'
@@ -14,16 +17,53 @@ import { useAuth } from 'src/contexts/use-auth'
 import { CreditCard as CreditCardType, useCard } from 'src/contexts/use-card'
 import { colors } from 'src/theme/colors'
 
+type RootStackParamList = {
+  tabs: undefined
+  login: undefined
+  cards: undefined
+}
+
+type CardsScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'cards'
+>
+
 export function Cards() {
-  const { user } = useAuth()
-  const { getUserCards } = useCard()
+  const { user, logout } = useAuth()
+  const { getUserCards, isCardAuthenticated } = useCard()
   const [showBottomSheet, setShowBottomSheet] = useState(false)
   const [cardForAuth, setCardForAuth] = useState<CreditCardType | null>(null)
+  const navigation = useNavigation<CardsScreenNavigationProp>()
+
+  const handleLogout = () => {
+    logout()
+  }
+
+  useEffect(() => {
+    if (isCardAuthenticated) {
+      // Navigate to the main tabs screen after successful card authentication
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'tabs' }],
+      })
+    }
+  }, [isCardAuthenticated, navigation])
 
   if (user?.userType !== 'client') {
     return (
       <View style={styles.container}>
-        <Header icon={<CreditCardIcon />} title="Cartões" />
+        <Header
+          icon={<CreditCardIcon />}
+          title="Cartões"
+          rightButton={
+            <TouchableOpacity
+              onPress={handleLogout}
+              style={styles.logoutButton}
+            >
+              <LogOutIcon width={18} height={18} color="#2b9909" />
+            </TouchableOpacity>
+          }
+        />
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateText}>
             Apenas clientes podem acessar cartões
@@ -65,6 +105,14 @@ export function Cards() {
       <Header
         icon={<CreditCardIcon strokeColor={colors.primaryText} opacity={1} />}
         title="Selecione um cartão"
+        rightButton={
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={[styles.logoutButton, { backgroundColor: 'transparent' }]}
+          >
+            <LogOutIcon width={24} height={24} color={colors.red[500]} />
+          </TouchableOpacity>
+        }
       />
 
       <View style={styles.content}>
@@ -146,5 +194,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.secondaryText,
     textAlign: 'center',
+  },
+  logoutButton: {
+    padding: 8,
+    tintColor: '#ec44ef',
   },
 })

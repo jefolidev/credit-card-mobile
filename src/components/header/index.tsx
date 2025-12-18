@@ -11,6 +11,7 @@ interface HeaderProps extends ViewProps {
   isIconClickable?: boolean
   onBackPress?: () => void
   showBackButton?: boolean
+  rightButton?: JSX.Element
 }
 
 export function Header({
@@ -19,6 +20,7 @@ export function Header({
   isIconClickable = false,
   onBackPress,
   showBackButton = false,
+  rightButton,
   ...rest
 }: HeaderProps) {
   return (
@@ -31,6 +33,9 @@ export function Header({
         <ButtonIcon icon={icon ?? <></>} isClickable={isIconClickable} />
       )}
       <Title>{title}</Title>
+      {rightButton && (
+        <View style={headerStyles.rightButton}>{rightButton}</View>
+      )}
     </View>
   )
 }
@@ -43,9 +48,13 @@ const headerStyles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   backButton: {
     padding: 8,
     marginLeft: -8,
+  },
+  rightButton: {
+    marginLeft: 'auto',
   },
 })

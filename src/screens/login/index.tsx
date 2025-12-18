@@ -1,5 +1,14 @@
 import React, { useState } from 'react'
-import { Alert, Image, StyleSheet, Text, View } from 'react-native'
+import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native'
 import { LetterIcon } from 'src/assets/email'
 import { LockIcon } from 'src/assets/lock-icon'
 import { SupplierIcon } from 'src/assets/supplier-icon'
@@ -49,63 +58,77 @@ export function Login() {
   const logo = require('../../../public/images/logo.png')
 
   return (
-    <View style={styles.container}>
-      <Image source={logo} style={{ width: 227, height: 50 }} />
-      <View style={styles.loginContainer}>
-        <RadioGroup
-          options={userTypeOptions}
-          selectedId={userType}
-          onSelect={(id) => setUserType(id as 'client' | 'supplier')}
-        />
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Image source={logo} style={{ width: 227, height: 50 }} />
+        <View style={styles.loginContainer}>
+          <RadioGroup
+            options={userTypeOptions}
+            selectedId={userType}
+            onSelect={(id) => setUserType(id as 'client' | 'supplier')}
+          />
 
-        <View style={styles.inputWrapper}>
-          <View style={{ gap: 8 }}>
-            <Text style={styles.label}>E-mail</Text>
-            <Input
-              placeholder="seu@email.com"
-              leftIcon={<LetterIcon />}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
+          <View style={styles.inputWrapper}>
+            <View style={{ gap: 8 }}>
+              <Text style={styles.label}>E-mail</Text>
+              <Input
+                placeholder="seu@email.com"
+                leftIcon={<LetterIcon />}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+            <View style={{ gap: 8 }}>
+              <Text style={styles.label}>Senha</Text>
+              <Input
+                placeholder="Digite sua senha"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                leftIcon={<LockIcon />}
+                rightIcon={<EyeIcon closed={!showPassword} color="#99A1AF" />}
+                onRightIconPress={() => setShowPassword(!showPassword)}
+              />
+            </View>
           </View>
-          <View style={{ gap: 8 }}>
-            <Text style={styles.label}>Senha</Text>
-            <Input
-              placeholder="Digite sua senha"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              leftIcon={<LockIcon />}
-              rightIcon={<EyeIcon closed={!showPassword} color="#99A1AF" />}
-              onRightIconPress={() => setShowPassword(!showPassword)}
-            />
+          <View style={[styles.buttonWrapper, { marginTop: 5 }]}>
+            <Button
+              variant={userType === 'supplier' ? 'secondary' : 'primary'}
+              onPress={handleLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Entrando...' : 'Entrar'}
+            </Button>
           </View>
         </View>
-        <View style={[styles.buttonWrapper, { marginTop: 5 }]}>
-          <Button
-            variant={userType === 'supplier' ? 'secondary' : 'primary'}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Entrando...' : 'Entrar'}
-          </Button>
-        </View>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: 'column',
     backgroundColor: '#FAF9F6',
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 32,
     paddingInline: 32,
+    paddingVertical: 20,
   },
   loginContainer: {
     justifyContent: 'center',

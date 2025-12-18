@@ -2,14 +2,13 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 
 import { useAuth } from 'src/contexts/use-auth'
 import { useCard } from 'src/contexts/use-card'
+import { CardAuthenticationBottomSheet } from 'src/screens/card-authentication/components/card-authentication-bottom-sheet'
 import { Cards } from 'src/screens/cards'
 import { ProfileSac } from 'src/screens/contacts/PerfilSac'
 import { Login } from 'src/screens/login'
-import {
-  AlterarSenhaBottomSheet,
-  BloquearCartaoBottomSheet,
-  SegundaViaBottomSheet,
-} from 'src/screens/profile/bottom-sheets'
+import { BlockCardBottomSheet } from 'src/screens/profile/components/block-card-bottom-sheet'
+import { ChangePasswordBottomSheet } from 'src/screens/profile/components/change-password-bottom-sheet'
+import { SecondCardBottomSheet } from 'src/screens/profile/components/second-card-bottom-sheet'
 import { BottomTabRoutes } from './bottom-tab-routes'
 
 const Stack = createNativeStackNavigator()
@@ -66,18 +65,23 @@ export function StackRoutes({ isAuthenticated }: StackRoutesProps) {
       {/* Aux screens/modal sheets accessible from tabs */}
       <Stack.Screen name="Contacts" component={ProfileSac} />
       <Stack.Screen
-        name="AlterarSenhaBottomSheet"
-        component={AlterarSenhaBottomSheet}
+        name="ChangePasswordBottomSheet"
+        component={ChangePasswordBottomSheet}
         options={{ presentation: 'transparentModal' }}
       />
       <Stack.Screen
-        name="BloquearCartaoBottomSheet"
-        component={BloquearCartaoBottomSheet}
+        name="BlockCardBottomSheet"
+        component={BlockCardBottomSheet}
         options={{ presentation: 'transparentModal' }}
       />
       <Stack.Screen
-        name="SegundaViaBottomSheet"
-        component={SegundaViaBottomSheet}
+        name="SecondCardBottomSheet"
+        component={SecondCardBottomSheet}
+        options={{ presentation: 'transparentModal' }}
+      />
+      <Stack.Screen
+        name="CardAuthenticationBottomSheet"
+        component={CardAuthenticationBottomSheet}
         options={{ presentation: 'transparentModal' }}
       />
     </Stack.Navigator>
