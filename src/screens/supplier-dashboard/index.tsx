@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { CancelIcon } from 'src/assets/cancel-icon'
 import { CartIcon } from 'src/assets/cart-icon'
@@ -9,10 +9,28 @@ import { LogOutIcon } from 'src/assets/log-out-icon'
 import { SupplierIcon } from 'src/assets/supplier-icon'
 import { Header } from 'src/components/header'
 import { useAuth } from 'src/contexts/use-auth'
+import { ManualSale } from 'src/screens/manual-sale'
+import { NewSale } from 'src/screens/new-sale'
+import { QrCodeSale } from 'src/screens/qr-code-sale'
 import { colors } from 'src/theme/colors'
+
+type ScreenType = 'dashboard' | 'newSale' | 'manualSale' | 'qrCodeSale'
+
+interface SaleData {
+  value: number
+  installments: number
+  cardNumber: string
+  customerName: string
+}
+
+interface QrSaleData {
+  value: number
+  installments: number
+}
 
 export function SupplierDashboard() {
   const { user, logout } = useAuth()
+  const [currentScreen, setCurrentScreen] = useState<ScreenType>('dashboard')
 
   const handleLogout = () => {
     Alert.alert('Sair', 'Tem certeza que deseja sair?', [
@@ -22,8 +40,7 @@ export function SupplierDashboard() {
   }
 
   const handleNovaVenda = () => {
-    console.log('Nova Venda pressed')
-    // TODO: Implementar navegação para Nova Venda
+    setCurrentScreen('newSale')
   }
 
   const handleConsultaSaldo = () => {
@@ -39,6 +56,68 @@ export function SupplierDashboard() {
   const handleCancelamentoVendas = () => {
     console.log('Cancelamento Vendas pressed')
     // TODO: Implementar navegação para Cancelamento de Vendas
+  }
+
+  const handleSelectManualSale = () => {
+    setCurrentScreen('manualSale')
+  }
+
+  const handleSelectQrCodeSale = () => {
+    setCurrentScreen('qrCodeSale')
+  }
+
+  const handleGoBackToDashboard = () => {
+    setCurrentScreen('dashboard')
+  }
+
+  const handleGoBackToNewSale = () => {
+    setCurrentScreen('newSale')
+  }
+
+  const handleConfirmManualSale = (saleData: SaleData) => {
+    Alert.alert(
+      'Venda Confirmada',
+      `Venda de ${saleData.value.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+      })} em ${saleData.installments}x para ${
+        saleData.customerName
+      } foi registrada com sucesso!`,
+      [{ text: 'OK', onPress: handleGoBackToDashboard }]
+    )
+  }
+
+  const handleConfirmQrSale = (saleData: QrSaleData) => {
+    console.log('QR Code sale confirmed:', saleData)
+  }
+
+  // Render different screens based on current state
+  if (currentScreen === 'newSale') {
+    return (
+      <NewSale
+        onSelectManualSale={handleSelectManualSale}
+        onSelectQrCodeSale={handleSelectQrCodeSale}
+        onGoBack={handleGoBackToDashboard}
+      />
+    )
+  }
+
+  if (currentScreen === 'manualSale') {
+    return (
+      <ManualSale
+        onGoBack={handleGoBackToNewSale}
+        onConfirmSale={handleConfirmManualSale}
+      />
+    )
+  }
+
+  if (currentScreen === 'qrCodeSale') {
+    return (
+      <QrCodeSale
+        onGoBack={handleGoBackToNewSale}
+        onConfirmSale={handleConfirmQrSale}
+      />
+    )
   }
 
   return (
