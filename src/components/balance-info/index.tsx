@@ -1,6 +1,6 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
-import { ClockIcon } from 'src/assets/clock-icon'
+import ClockIcon from 'src/assets/clock-icon'
 import { DollarIcon } from 'src/assets/dollar-icon'
 
 interface BalanceData {

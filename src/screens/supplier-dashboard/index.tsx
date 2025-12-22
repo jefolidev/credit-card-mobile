@@ -9,12 +9,12 @@ import { LogOutIcon } from 'src/assets/log-out-icon'
 import { SupplierIcon } from 'src/assets/supplier-icon'
 import { Header } from 'src/components/header'
 import { useAuth } from 'src/contexts/use-auth'
+import { BalanceInquiry } from 'src/screens/balance-inquiry'
 import { ManualSale } from 'src/screens/manual-sale'
 import { NewSale } from 'src/screens/new-sale'
 import { QrCodeSale } from 'src/screens/qr-code-sale'
 import { SalesCancellation } from 'src/screens/sales-cancellation'
 import { SalesHistory } from 'src/screens/sales-history'
-import { BalanceInquiry } from 'src/screens/balance-inquiry'
 import { colors } from 'src/theme/colors'
 
 type ScreenType =

@@ -1,6 +1,6 @@
 import React from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { EyeSimple } from 'src/assets/eye-simple'
+import { EyeIcon } from 'src/assets/eye-simple'
 import { BalanceInfo } from 'src/components/balance-info'
 
 interface CardData {
@@ -75,7 +75,7 @@ export function CreditCardDisplay({
               </Text>
             </View>
             <TouchableOpacity style={styles.eyeButton}>
-              <EyeSimple width={16} height={16} color="white" />
+              <EyeIcon width={16} height={16} color="white" />
             </TouchableOpacity>
           </View>
 

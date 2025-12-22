@@ -59,6 +59,43 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
   const [foundCards, setFoundCards] = useState<CardData[]>([])
   const [selectedCard, setSelectedCard] = useState<CardData | null>(null)
 
+  // Funções de máscara
+  const applyCpfMask = (value: string) => {
+    const digits = value.replace(/\D/g, '')
+    return digits
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+      .slice(0, 14)
+  }
+
+  const applyCardMask = (value: string) => {
+    const digits = value.replace(/\D/g, '')
+    return digits
+      .replace(/(\d{4})(\d)/, '$1 $2')
+      .replace(/(\d{4})\s(\d{4})(\d)/, '$1 $2 $3')
+      .replace(/(\d{4})\s(\d{4})\s(\d{4})(\d)/, '$1 $2 $3 $4')
+      .slice(0, 19)
+  }
+
+  const handleInputChange = (text: string) => {
+    let maskedText = text
+
+    switch (activeSearchType) {
+      case 'cpf':
+        maskedText = applyCpfMask(text)
+        break
+      case 'card':
+        maskedText = applyCardMask(text)
+        break
+      default:
+        maskedText = text
+        break
+    }
+
+    setSearchText(maskedText)
+  }
+
   const handleSearch = () => {
     if (!searchText.trim()) return
 
@@ -123,7 +160,15 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
             borderColor: isActive ? colors.primary : '#d1d5dc',
           },
         ]}
-        onPress={() => setActiveSearchType(type)}
+        onPress={() => {
+          if (activeSearchType !== type) {
+            setSearchText('')
+            setSearchPerformed(false)
+            setFoundCards([])
+            setSelectedCard(null)
+          }
+          setActiveSearchType(type)
+        }}
       >
         <Text
           style={[
@@ -198,7 +243,8 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
               placeholder={getSearchPlaceholder()}
               placeholderTextColor="#99a1af"
               value={searchText}
-              onChangeText={setSearchText}
+              onChangeText={handleInputChange}
+              keyboardType={activeSearchType === 'cpf' ? 'numeric' : 'numeric'}
             />
           </View>
           <TouchableOpacity
