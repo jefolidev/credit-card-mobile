@@ -19,6 +19,20 @@ import { colors } from 'src/theme/colors'
 
 type SearchType = 'nsu' | 'card' | 'date'
 
+// Mapeamento dos motivos de cancelamento
+const cancellationReasons = [
+  { label: 'Solicitação do cliente', value: 'customer_request' },
+  { label: 'Transação duplicada', value: 'duplicate_transaction' },
+  { label: 'Valor incorreto', value: 'incorrect_amount' },
+  { label: 'Cartão incorreto', value: 'incorrect_card' },
+  { label: 'Outro motivo', value: 'other' },
+]
+
+const getCancellationReasonLabel = (value: string) => {
+  const reason = cancellationReasons.find((r) => r.value === value)
+  return reason ? reason.label : 'Motivo não especificado'
+}
+
 // Mock data - será substituído por dados reais
 const mockSales: CancellableSaleItemProps[] = [
   {
@@ -67,6 +81,7 @@ const mockSales: CancellableSaleItemProps[] = [
     nsu: '000901234',
     authCode: 'AUTH901234',
     status: 'cancelled',
+    cancellationReason: 'Solicitação do cliente',
     onCancel: () => {},
   },
   {
@@ -124,11 +139,17 @@ export function SalesCancellation({ onGoBack }: SalesCancellationProps) {
   const handleConfirmCancellation = (reason: string) => {
     if (!selectedSale) return
 
+    const reasonLabel = getCancellationReasonLabel(reason)
+
     // Update sale status to cancelled
     setSales((prevSales) =>
       prevSales.map((sale) =>
         sale.id === selectedSale.id
-          ? { ...sale, status: 'cancelled' as const }
+          ? {
+              ...sale,
+              status: 'cancelled' as const,
+              cancellationReason: reasonLabel,
+            }
           : sale
       )
     )
@@ -314,7 +335,6 @@ const styles = StyleSheet.create({
     borderColor: '#d1d5dc',
     borderRadius: 14,
     paddingHorizontal: 16,
-    paddingLeft: 40,
     paddingVertical: 12,
     height: 51,
     gap: 12,

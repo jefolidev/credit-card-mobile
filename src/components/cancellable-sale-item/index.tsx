@@ -16,6 +16,7 @@ export interface CancellableSaleItemProps {
   nsu: string
   authCode: string
   status: 'authorized' | 'cancelled'
+  cancellationReason?: string
   onCancel: () => void
 }
 
@@ -29,6 +30,7 @@ export function CancellableSaleItem({
   nsu,
   authCode,
   status,
+  cancellationReason,
   onCancel,
 }: CancellableSaleItemProps) {
   const isDisabled = status === 'cancelled'
@@ -103,6 +105,14 @@ export function CancellableSaleItem({
           <Text style={styles.infoLabel}>Código Auth:</Text>
           <Text style={styles.infoValue}>{authCode}</Text>
         </View>
+        {status === 'cancelled' && cancellationReason && (
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Motivo:</Text>
+            <Text style={[styles.infoValue, styles.cancellationReasonText]}>
+              {cancellationReason}
+            </Text>
+          </View>
+        )}
       </View>
 
       <TouchableOpacity
@@ -195,8 +205,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 12,
     paddingTop: 12,
-    paddingBottom: 0,
-    height: 56,
+    paddingBottom: 12,
   },
   infoRow: {
     flexDirection: 'row',
@@ -216,6 +225,10 @@ const styles = StyleSheet.create({
     color: '#101828',
     fontFamily: 'Arimo_400Regular',
     lineHeight: 16,
+  },
+  cancellationReasonText: {
+    color: '#dc2626',
+    fontWeight: '500',
   },
   cancelButton: {
     backgroundColor: '#e7000b',

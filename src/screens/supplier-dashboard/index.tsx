@@ -12,8 +12,9 @@ import { useAuth } from 'src/contexts/use-auth'
 import { ManualSale } from 'src/screens/manual-sale'
 import { NewSale } from 'src/screens/new-sale'
 import { QrCodeSale } from 'src/screens/qr-code-sale'
-import { SalesHistory } from 'src/screens/sales-history'
 import { SalesCancellation } from 'src/screens/sales-cancellation'
+import { SalesHistory } from 'src/screens/sales-history'
+import { BalanceInquiry } from 'src/screens/balance-inquiry'
 import { colors } from 'src/theme/colors'
 
 type ScreenType =
@@ -23,6 +24,7 @@ type ScreenType =
   | 'qrCodeSale'
   | 'salesHistory'
   | 'salesCancellation'
+  | 'balanceInquiry'
 
 interface SaleData {
   value: number
@@ -52,8 +54,7 @@ export function SupplierDashboard() {
   }
 
   const handleConsultaSaldo = () => {
-    console.log('Consulta Saldo pressed')
-    // TODO: Implementar navegação para Consulta de Saldo
+    setCurrentScreen('balanceInquiry')
   }
 
   const handleHistoricoVendas = () => {
@@ -132,6 +133,10 @@ export function SupplierDashboard() {
 
   if (currentScreen === 'salesCancellation') {
     return <SalesCancellation onGoBack={handleGoBackToDashboard} />
+  }
+
+  if (currentScreen === 'balanceInquiry') {
+    return <BalanceInquiry onGoBack={handleGoBackToDashboard} />
   }
 
   return (

@@ -1,4 +1,3 @@
-import { Picker } from '@react-native-picker/picker'
 import React, { useState } from 'react'
 import {
   Modal,
@@ -9,6 +8,7 @@ import {
   View,
 } from 'react-native'
 import { CancelIcon } from 'src/assets/cancel-icon'
+import { ChevronRightIcon } from 'src/assets/chevron-right-icon'
 import { colors } from 'src/theme/colors'
 
 interface SaleCancellationData {
@@ -41,6 +41,7 @@ export function SaleCancellationSheet({
   onConfirm,
 }: SaleCancellationSheetProps) {
   const [selectedReason, setSelectedReason] = useState('')
+  const [showReasonPicker, setShowReasonPicker] = useState(false)
 
   const handleConfirm = () => {
     if (selectedReason) {
@@ -51,7 +52,18 @@ export function SaleCancellationSheet({
 
   const handleCancel = () => {
     setSelectedReason('')
+    setShowReasonPicker(false)
     onCancel()
+  }
+
+  const handleSelectReason = (reason: string) => {
+    setSelectedReason(reason)
+    setShowReasonPicker(false)
+  }
+
+  const getSelectedReasonLabel = () => {
+    const reason = cancellationReasons.find((r) => r.value === selectedReason)
+    return reason ? reason.label : 'Selecione o motivo'
   }
 
   const getAmountText = () => {
@@ -116,22 +128,24 @@ export function SaleCancellationSheet({
                 {/* Reason Selection */}
                 <View style={styles.reasonContainer}>
                   <Text style={styles.reasonLabel}>Motivo do Cancelamento</Text>
-                  <View style={styles.pickerContainer}>
-                    <Picker
-                      selectedValue={selectedReason}
-                      style={styles.picker}
-                      onValueChange={setSelectedReason}
+                  <TouchableOpacity
+                    style={styles.pickerContainer}
+                    onPress={() => setShowReasonPicker(true)}
+                  >
+                    <Text
+                      style={[
+                        styles.pickerText,
+                        !selectedReason && styles.placeholderText,
+                      ]}
                     >
-                      {cancellationReasons.map((reason) => (
-                        <Picker.Item
-                          key={reason.value}
-                          label={reason.label}
-                          value={reason.value}
-                          enabled={reason.value !== ''}
-                        />
-                      ))}
-                    </Picker>
-                  </View>
+                      {getSelectedReasonLabel()}
+                    </Text>
+                    <ChevronRightIcon
+                      width={20}
+                      height={20}
+                      color={colors.gray[400]}
+                    />
+                  </TouchableOpacity>
                 </View>
 
                 {/* Action Buttons */}
@@ -166,6 +180,42 @@ export function SaleCancellationSheet({
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
+
+      {/* Reason Selection Modal */}
+      <Modal
+        visible={showReasonPicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowReasonPicker(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowReasonPicker(false)}>
+          <View style={styles.reasonModalOverlay}>
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <View style={styles.reasonModalContainer}>
+                <Text style={styles.reasonModalTitle}>
+                  Selecione o motivo do cancelamento
+                </Text>
+                {cancellationReasons
+                  .filter((reason) => reason.value !== '')
+                  .map((reason, index, array) => (
+                    <TouchableOpacity
+                      key={reason.value}
+                      style={[
+                        styles.reasonOption,
+                        index === array.length - 1 && styles.lastReasonOption,
+                      ]}
+                      onPress={() => handleSelectReason(reason.value)}
+                    >
+                      <Text style={styles.reasonOptionText}>
+                        {reason.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </Modal>
   )
 }
@@ -266,16 +316,70 @@ const styles = StyleSheet.create({
     borderColor: '#d1d5dc',
     borderRadius: 14,
     height: 50,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
   },
-  picker: {
-    height: 50,
-    backgroundColor: 'transparent',
+  pickerText: {
+    fontSize: 14,
+    color: '#101828',
+    fontFamily: 'Arimo_400Regular',
+    lineHeight: 20,
+    flex: 1,
+  },
+  placeholderText: {
+    color: '#99a1af',
   },
   buttonContainer: {
     flexDirection: 'row',
     gap: 12,
     height: 52,
+  },
+  // Reason Selection Modal Styles
+  reasonModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  reasonModalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    margin: 32,
+    maxHeight: '70%',
+    width: '85%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  reasonModalTitle: {
+    fontSize: 18,
+    fontFamily: 'Arimo_400Regular',
+    color: '#101828',
+    textAlign: 'center',
+    paddingTop: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+    marginHorizontal: 16,
+  },
+  reasonOption: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  lastReasonOption: {
+    borderBottomWidth: 0,
+  },
+  reasonOptionText: {
+    fontSize: 16,
+    color: '#101828',
+    fontFamily: 'Arimo_400Regular',
+    lineHeight: 20,
   },
   cancelButton: {
     flex: 1,
