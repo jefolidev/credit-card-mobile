@@ -13,6 +13,7 @@ import { ManualSale } from 'src/screens/manual-sale'
 import { NewSale } from 'src/screens/new-sale'
 import { QrCodeSale } from 'src/screens/qr-code-sale'
 import { SalesHistory } from 'src/screens/sales-history'
+import { SalesCancellation } from 'src/screens/sales-cancellation'
 import { colors } from 'src/theme/colors'
 
 type ScreenType =
@@ -21,6 +22,7 @@ type ScreenType =
   | 'manualSale'
   | 'qrCodeSale'
   | 'salesHistory'
+  | 'salesCancellation'
 
 interface SaleData {
   value: number
@@ -59,8 +61,7 @@ export function SupplierDashboard() {
   }
 
   const handleCancelamentoVendas = () => {
-    console.log('Cancelamento Vendas pressed')
-    // TODO: Implementar navegação para Cancelamento de Vendas
+    setCurrentScreen('salesCancellation')
   }
 
   const handleSelectManualSale = () => {
@@ -127,6 +128,10 @@ export function SupplierDashboard() {
 
   if (currentScreen === 'salesHistory') {
     return <SalesHistory onGoBack={handleGoBackToDashboard} />
+  }
+
+  if (currentScreen === 'salesCancellation') {
+    return <SalesCancellation onGoBack={handleGoBackToDashboard} />
   }
 
   return (
