@@ -12,9 +12,15 @@ import { useAuth } from 'src/contexts/use-auth'
 import { ManualSale } from 'src/screens/manual-sale'
 import { NewSale } from 'src/screens/new-sale'
 import { QrCodeSale } from 'src/screens/qr-code-sale'
+import { SalesHistory } from 'src/screens/sales-history'
 import { colors } from 'src/theme/colors'
 
-type ScreenType = 'dashboard' | 'newSale' | 'manualSale' | 'qrCodeSale'
+type ScreenType =
+  | 'dashboard'
+  | 'newSale'
+  | 'manualSale'
+  | 'qrCodeSale'
+  | 'salesHistory'
 
 interface SaleData {
   value: number
@@ -49,8 +55,7 @@ export function SupplierDashboard() {
   }
 
   const handleHistoricoVendas = () => {
-    console.log('Histórico Vendas pressed')
-    // TODO: Implementar navegação para Histórico de Vendas
+    setCurrentScreen('salesHistory')
   }
 
   const handleCancelamentoVendas = () => {
@@ -118,6 +123,10 @@ export function SupplierDashboard() {
         onConfirmSale={handleConfirmQrSale}
       />
     )
+  }
+
+  if (currentScreen === 'salesHistory') {
+    return <SalesHistory onGoBack={handleGoBackToDashboard} />
   }
 
   return (
