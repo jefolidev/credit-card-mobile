@@ -85,7 +85,7 @@ export function ProfileSac() {
               <Text style={styles.channelLabel}>SAC</Text>
               <Text style={styles.channelValue}>0800 987 6543</Text>
               <Text style={styles.channelDesc}>
-                Serviço de Atendimento ao Cliente
+                Serviço de Atendimento ao Portador
               </Text>
             </View>
           </View>

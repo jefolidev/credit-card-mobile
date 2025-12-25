@@ -12,7 +12,7 @@ import { AuthProvider } from './contexts/use-auth'
 import { CardProvider } from './contexts/use-card'
 import { Routes } from './routes/@index'
 
-// TODO: FAZER PAGINA DE CONTATO E FORNECEDOR EM SEGUIDA | MANDAR RELATORIO PRO THENISON
+// TODO: FAZER PAGINA DE CONTATO E LOJISTA EM SEGUIDA | MANDAR RELATORIO PRO THENISON
 
 export default function App() {
   const [fontsLoaded] = useFonts({

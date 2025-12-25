@@ -56,7 +56,7 @@ export function NewSale({
             <View style={styles.optionContent}>
               <Text style={styles.optionTitle}>Venda Manual</Text>
               <Text style={styles.optionDescription}>
-                Digite as informações do cartão do cliente
+                Digite as informações do cartão do portador
               </Text>
             </View>
           </TouchableOpacity>
@@ -72,7 +72,7 @@ export function NewSale({
             <View style={styles.optionContent}>
               <Text style={styles.optionTitle}>Venda com QR Code</Text>
               <Text style={styles.optionDescription}>
-                Gere um QR Code para o cliente escanear
+                Gere um QR Code para o portador escanear
               </Text>
             </View>
           </TouchableOpacity>

@@ -37,7 +37,7 @@ const mockUsers = [
     city: 'Fortaleza',
     state: 'Ceará, CE',
     userType: 'client' as UserType,
-    name: 'João Cliente',
+    name: 'João Portador',
   },
   {
     id: '2',
@@ -47,7 +47,7 @@ const mockUsers = [
     password: '123456',
     state: 'Ceará, CE',
     userType: 'supplier' as UserType,
-    name: 'Maria Fornecedora',
+    name: 'Maria Lojista',
   },
 ]
 

@@ -18,6 +18,7 @@ import { Input } from 'src/components/input'
 import { RadioGroup } from 'src/components/radio'
 import { useAuth } from 'src/contexts/use-auth'
 import { EyeIcon } from '../../assets/eye-simple'
+import { applyCpfMask, cleanCpf } from '../../utils/cpf-mask'
 
 export function Login() {
   const [userType, setUserType] = useState<'client' | 'supplier'>('client')
@@ -27,31 +28,14 @@ export function Login() {
 
   const { login, isLoading } = useAuth()
 
-  const applyCpfMask = (value: string) => {
-    const cleanedValue = value.replace(/\D/g, '')
-
-    if (cleanedValue.length <= 11) {
-      return cleanedValue
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,2})/, '$1-$2')
-    }
-
-    return cleanedValue
-      .slice(0, 11)
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d{1,2})/, '$1-$2')
-  }
-
   const handleCpfChange = (text: string) => {
     const maskedCpf = applyCpfMask(text)
     setCpf(maskedCpf)
   }
 
   const userTypeOptions = [
-    { id: 'client', label: 'Cliente', icon: <UserIcon /> },
-    { id: 'supplier', label: 'Fornecedor', icon: <SupplierIcon /> },
+    { id: 'client', label: 'Portador', icon: <UserIcon /> },
+    { id: 'supplier', label: 'Lojista', icon: <SupplierIcon /> },
   ]
 
   const handleLogin = async () => {
@@ -60,16 +44,17 @@ export function Login() {
       return
     }
 
+    // Remove máscara do CPF antes de enviar para autenticação
+    const cleanedCpf = cleanCpf(cpf)
+    console.log(cleanedCpf, password, userType)
+
     try {
-      const success = await login(cpf, password, userType)
+      const success = await login(cleanedCpf, password, userType)
 
       if (success) {
         console.log('Login realizado com sucesso!')
       } else {
-        Alert.alert(
-          'Erro de Login',
-          'Credenciais inválidas. Tente:\n\nCliente:\ncpf: 123.456.789-01\nsenha: 123456\n\nFornecedor:\ncpf: 987.654.321-09\nsenha: 123456'
-        )
+        Alert.alert('Erro', 'Credenciais inválidos')
       }
     } catch (error) {
       Alert.alert('Erro', 'Ocorreu um erro durante o login')
@@ -108,6 +93,7 @@ export function Login() {
                 onChangeText={handleCpfChange}
                 keyboardType="numeric"
                 autoCapitalize="none"
+                maxLength={14}
               />
             </View>
             <View style={{ gap: 8 }}>
@@ -120,6 +106,8 @@ export function Login() {
                 leftIcon={<LockIcon />}
                 rightIcon={<EyeIcon closed={!showPassword} color="#99A1AF" />}
                 onRightIconPress={() => setShowPassword(!showPassword)}
+                maxLength={6}
+                keyboardType="numeric"
               />
             </View>
           </View>

@@ -202,7 +202,7 @@ export function ManualSale({ onGoBack, onConfirmSale }: ManualSaleProps) {
 
             {/* Customer Name */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.label}>Nome do Cliente</Text>
+              <Text style={styles.label}>Nome do Portador</Text>
               <View style={styles.inputContainer}>
                 <View style={styles.inputIcon}>
                   <UserIcon width={20} height={20} color={colors.gray[400]} />

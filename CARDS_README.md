@@ -14,9 +14,9 @@ Sistema completo de autenticação com suporte a cartões de crédito/débito pa
 - **Senha:** `123456`
 - **Tipo:** Cliente (acesso a cartões)
 
-**Fornecedor:**
+**Lojista:**
 
-- **Email:** `fornecedor@teste.com`
+- **Email:** `lojista@teste.com`
 - **Senha:** `123456`
 - **Tipo:** Fornecedor (sem cartões)
 
@@ -48,7 +48,7 @@ Sistema completo de autenticação com suporte a cartões de crédito/débito pa
 ### ✅ Sistema de Autenticação
 
 - **Login/Logout** com validação de credenciais
-- **Tipos de usuário** diferenciados (Cliente/Fornecedor)
+- **Tipos de usuário** diferenciados (Portador/Lojista)
 - **Navegação condicional** baseada no tipo de usuário
 
 ### ✅ Sistema de Cartões (Clientes)
@@ -60,7 +60,7 @@ Sistema completo de autenticação com suporte a cartões de crédito/débito pa
 
 ### ✅ Navegação Inteligente
 
-- **Fornecedores:** Login → Bottom Tabs direto
+- **Lojistas:** Login → Bottom Tabs direto
 - **Clientes:** Login → Seleção Cartão → Autenticação Cartão → Bottom Tabs
 - **Estados de loading** e validações em cada etapa
 
@@ -73,7 +73,7 @@ Sistema completo de autenticação com suporte a cartões de crédito/débito pa
 
 ## 🎯 Fluxo de Navegação
 
-### Para Fornecedores:
+### Para Lojistas:
 
 1. **Login** → Bottom Tabs (acesso completo)
 
@@ -132,9 +132,9 @@ interface CreditCard {
 
 ## 📱 Como Testar
 
-### Como Fornecedor:
+### Como Lojista:
 
-1. **Login** com credenciais de fornecedor
+1. **Login** com credenciais de lojista
 2. **Acesso direto** às tabs principais
 3. **Não há** gestão de cartões
 
@@ -201,8 +201,8 @@ Visa: '4532 1234 5678 9012' → senha: '123456'
 Master: '5432 9876 5432 1098' → senha: '654321'
 Elo: '6362 1122 3344 5566' → senha: '111222'
 
-// Usuário Fornecedor
-email: 'fornecedor@teste.com'
+// Usuário Lojista
+email: 'lojista@teste.com'
 senha: '123456'
 // Sem cartões associados
 ```

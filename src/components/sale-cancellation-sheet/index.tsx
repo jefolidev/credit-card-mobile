@@ -27,7 +27,7 @@ interface SaleCancellationSheetProps {
 
 const cancellationReasons = [
   { label: 'Selecione o motivo', value: '' },
-  { label: 'Solicitação do cliente', value: 'customer_request' },
+  { label: 'Solicitação do portador', value: 'customer_request' },
   { label: 'Transação duplicada', value: 'duplicate_transaction' },
   { label: 'Valor incorreto', value: 'incorrect_amount' },
   { label: 'Cartão incorreto', value: 'incorrect_card' },

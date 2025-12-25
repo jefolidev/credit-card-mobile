@@ -21,7 +21,7 @@ type SearchType = 'nsu' | 'card' | 'date'
 
 // Mapeamento dos motivos de cancelamento
 const cancellationReasons = [
-  { label: 'Solicitação do cliente', value: 'customer_request' },
+  { label: 'Solicitação do portador', value: 'customer_request' },
   { label: 'Transação duplicada', value: 'duplicate_transaction' },
   { label: 'Valor incorreto', value: 'incorrect_amount' },
   { label: 'Cartão incorreto', value: 'incorrect_card' },
@@ -81,7 +81,7 @@ const mockSales: CancellableSaleItemProps[] = [
     nsu: '000901234',
     authCode: 'AUTH901234',
     status: 'cancelled',
-    cancellationReason: 'Solicitação do cliente',
+    cancellationReason: 'Solicitação do portador',
     onCancel: () => {},
   },
   {
@@ -160,7 +160,7 @@ export function SalesCancellation({ onGoBack }: SalesCancellationProps) {
     // Show success alert
     Alert.alert(
       'Venda Cancelada',
-      `A venda ${selectedSale.id} foi cancelada com sucesso. O valor será estornado automaticamente no cartão do cliente.`,
+      `A venda ${selectedSale.id} foi cancelada com sucesso. O valor será estornado automaticamente no cartão do portador.`,
       [{ text: 'OK' }]
     )
   }
@@ -260,7 +260,7 @@ export function SalesCancellation({ onGoBack }: SalesCancellationProps) {
             <Text style={styles.alertTitle}>Importante</Text>
             <Text style={styles.alertDescription}>
               Você pode cancelar vendas realizadas em até 24 horas. O valor será
-              estornado automaticamente no cartão do cliente.
+              estornado automaticamente no cartão do portador.
             </Text>
           </View>
         </View>

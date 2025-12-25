@@ -66,7 +66,7 @@ export function Cards() {
         />
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateText}>
-            Apenas clientes podem acessar cartões
+            Apenas portadores podem acessar cartões
           </Text>
         </View>
       </View>

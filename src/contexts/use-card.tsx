@@ -292,7 +292,7 @@ const mockCards: CreditCard[] = [
   {
     id: '1',
     cardNumber: '4532 1234 5678 9012',
-    cardholderName: 'JOAO CLIENTE',
+    cardholderName: 'JOAO PORTADOR',
     expiryDate: '12/28',
     cardPassword: '123456',
     balance: 2500.0,
@@ -311,7 +311,7 @@ const mockCards: CreditCard[] = [
   {
     id: '2',
     cardNumber: '5432 9876 5432 1098',
-    cardholderName: 'JOAO CLIENTE',
+    cardholderName: 'JOAO PORTADOR',
     expiryDate: '08/27',
     cardPassword: '654321',
     balance: 1200.3,
@@ -330,7 +330,7 @@ const mockCards: CreditCard[] = [
   {
     id: '3',
     cardNumber: '6362 1122 3344 5566',
-    cardholderName: 'JOAO CLIENTE',
+    cardholderName: 'JOAO PORTADOR',
     expiryDate: '03/29',
     cardPassword: '111222',
     balance: 850.0,

@@ -277,7 +277,7 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
             <Text style={styles.alertTitle}>Informação</Text>
             <Text style={styles.alertDescription}>
               Digite o {activeSearchType === 'cpf' ? 'CPF' : 'número do cartão'}{' '}
-              do cliente para consultar o saldo disponível e informações do
+              do portador para consultar o saldo disponível e informações do
               cartão.
             </Text>
           </View>

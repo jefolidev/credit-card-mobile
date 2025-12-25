@@ -258,7 +258,7 @@ export function SalesHistory({ onGoBack }: SalesHistoryProps) {
             <DocumentIcon width={16} height={16} color={colors.gray[400]} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Buscar por ID, cartão ou cliente..."
+              placeholder="Buscar por ID, cartão ou portador..."
               placeholderTextColor="rgba(16,24,40,0.5)"
               value={searchText}
               onChangeText={setSearchText}

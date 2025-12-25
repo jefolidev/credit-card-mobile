@@ -112,7 +112,7 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
           <View style={styles.titleSection}>
             <Text style={styles.title}>Venda com QR Code</Text>
             <Text style={styles.subtitle}>
-              Aguarde o cliente escanear o QR Code
+              Aguarde o portador escanear o QR Code
             </Text>
           </View>
 
@@ -153,7 +153,7 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
           {/* Instructions */}
           <View style={styles.instructionsContainer}>
             <Text style={styles.instructionsText}>
-              💡 Peça ao cliente para escanear o QR Code com o aplicativo dele
+              💡 Peça ao portador para escanear o QR Code com o aplicativo dele
             </Text>
           </View>
 
