@@ -92,11 +92,7 @@ interface AuthContextProps {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (
-    email: string,
-    password: string,
-    userType: UserType
-  ) => Promise<boolean>
+  login: (cpf: string, password: string, userType: UserType) => Promise<boolean>
   logout: () => void
 }
 ```

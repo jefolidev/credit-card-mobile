@@ -21,11 +21,33 @@ import { EyeIcon } from '../../assets/eye-simple'
 
 export function Login() {
   const [userType, setUserType] = useState<'client' | 'supplier'>('client')
-  const [email, setEmail] = useState('')
+  const [cpf, setCpf] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
   const { login, isLoading } = useAuth()
+
+  const applyCpfMask = (value: string) => {
+    const cleanedValue = value.replace(/\D/g, '')
+
+    if (cleanedValue.length <= 11) {
+      return cleanedValue
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+    }
+
+    return cleanedValue
+      .slice(0, 11)
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+  }
+
+  const handleCpfChange = (text: string) => {
+    const maskedCpf = applyCpfMask(text)
+    setCpf(maskedCpf)
+  }
 
   const userTypeOptions = [
     { id: 'client', label: 'Cliente', icon: <UserIcon /> },
@@ -33,20 +55,20 @@ export function Login() {
   ]
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!cpf || !password) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos')
       return
     }
 
     try {
-      const success = await login(email, password, userType)
+      const success = await login(cpf, password, userType)
 
       if (success) {
         console.log('Login realizado com sucesso!')
       } else {
         Alert.alert(
           'Erro de Login',
-          'Credenciais inválidas. Tente:\n\nCliente:\nemail: cliente@teste.com\nsenha: 123456\n\nFornecedor:\nemail: fornecedor@teste.com\nsenha: 123456'
+          'Credenciais inválidas. Tente:\n\nCliente:\ncpf: 123.456.789-01\nsenha: 123456\n\nFornecedor:\ncpf: 987.654.321-09\nsenha: 123456'
         )
       }
     } catch (error) {
@@ -78,13 +100,13 @@ export function Login() {
 
           <View style={styles.inputWrapper}>
             <View style={{ gap: 8 }}>
-              <Text style={styles.label}>E-mail</Text>
+              <Text style={styles.label}>CPF</Text>
               <Input
-                placeholder="seu@email.com"
+                placeholder="000.000.000-00"
                 leftIcon={<LetterIcon />}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
+                value={cpf}
+                onChangeText={handleCpfChange}
+                keyboardType="numeric"
                 autoCapitalize="none"
               />
             </View>

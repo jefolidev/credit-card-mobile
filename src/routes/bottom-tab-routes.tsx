@@ -1,11 +1,12 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import React, { JSX, useCallback, useState } from 'react'
-import { Alert, StyleSheet, View } from 'react-native'
+import { Alert, Modal, StyleSheet, View } from 'react-native'
 import { DocumentIcon } from 'src/assets/document-icon'
 import { HomeIcon } from 'src/assets/home-icon'
 import { LogOutIcon } from 'src/assets/log-out-icon'
 import { QrCodeIcon } from 'src/assets/qr-code-icon'
 import { UserIcon } from 'src/assets/user-icon'
+import { QRCodeScanner } from 'src/components'
 import { NavigateBar } from 'src/components/navigate-bar'
 import { useCard } from 'src/contexts/use-card'
 import { BillDetails } from 'src/screens/bill-details'
@@ -33,6 +34,7 @@ const TransactionsStack = () => {
 
 export function BottomTabRoutes(): JSX.Element {
   const [currentTab, setCurrentTab] = useState<BottomTabParams>('home')
+  const [showQRScanner, setShowQRScanner] = useState(false)
   const { logoutCard } = useCard()
 
   const handleExit = useCallback(() => {
@@ -47,6 +49,20 @@ export function BottomTabRoutes(): JSX.Element {
       },
     ])
   }, [logoutCard])
+
+  const handleQRCodePress = () => {
+    setShowQRScanner(true)
+  }
+
+  const handleQRCodeScanned = (data: string) => {
+    setShowQRScanner(false)
+    // Processar o código QR escaneado
+    Alert.alert('QR Code Escaneado', `Dados: ${data}`, [{ text: 'OK' }])
+  }
+
+  const handleCloseScanner = () => {
+    setShowQRScanner(false)
+  }
 
   const navigationItems = [
     {
@@ -100,9 +116,19 @@ export function BottomTabRoutes(): JSX.Element {
           items={navigationItems}
           activeItemId={currentTab}
           qrCodeIcon={<QrCodeIcon width={28} height={28} />}
-          onQrCodePress={() => console.log('QR Code pressed')}
+          onQrCodePress={handleQRCodePress}
         />
       )}
+      <Modal
+        visible={showQRScanner}
+        animationType="slide"
+        presentationStyle="fullScreen"
+      >
+        <QRCodeScanner
+          onClose={handleCloseScanner}
+          onQRCodeScanned={handleQRCodeScanned}
+        />
+      </Modal>
     </View>
   )
 }
