@@ -6,6 +6,7 @@ import { Header } from 'src/components/header'
 import TransactionItem from 'src/components/transaction-item'
 import { useAuth } from 'src/contexts/use-auth'
 import { useCard } from 'src/contexts/use-card'
+import { applyCpfMask } from 'src/utils/cpf-mask'
 import { colors } from '../../theme/colors'
 
 export function Home() {
@@ -72,7 +73,7 @@ export function Home() {
                 color: colors.primaryText,
               }}
             >
-              Olá, {user?.name || user?.cpf}!
+              Olá, {user?.name || applyCpfMask(user?.cpf)}!
             </Text>
             <Text
               style={{
@@ -86,7 +87,7 @@ export function Home() {
             </Text>
           </View>
 
-          {/* Informações do Cartão para Clientes */}
+          {/* Informações do Cartão para Portadores */}
           {user?.userType === 'client' && selectedCard && (
             <>
               <CashAmount
@@ -191,7 +192,7 @@ export function Home() {
             </>
           )}
 
-          {/* Informações para Fornecedores */}
+          {/* Informações para Lojistas */}
           {user?.userType === 'supplier' && (
             <>
               <Text
@@ -202,7 +203,7 @@ export function Home() {
                   marginBottom: 10,
                 }}
               >
-                Painel do Fornecedor
+                Painel do Lojista
               </Text>
 
               <BillInfoCard

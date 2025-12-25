@@ -22,6 +22,7 @@ import { Header } from '../../components/header'
 import { useAuth } from '../../contexts/use-auth'
 import { useCard } from '../../contexts/use-card'
 import { colors } from '../../theme/colors'
+import { applyCpfMask } from '../../utils/cpf-mask'
 
 export function Profile() {
   const { user, logout } = useAuth()
@@ -55,7 +56,7 @@ export function Profile() {
 
       <ScrollView style={styles.content}>
         <View style={styles.section}>
-          {/* Nome do cliente */}
+          {/* Nome do portador */}
           <View
             style={{
               flexDirection: 'row',
@@ -177,9 +178,7 @@ export function Profile() {
               </View>
               <View style={styles.infoTexts}>
                 <Text style={styles.label}>CPF</Text>
-                <Text style={styles.value}>
-                  {user?.cpf ?? '---.---.------'}
-                </Text>
+                <Text style={styles.value}>{applyCpfMask(user?.cpf)}</Text>
               </View>
             </View>
             <View style={styles.infoCardRow}>

@@ -16,6 +16,7 @@ import { QrCodeSale } from 'src/screens/qr-code-sale'
 import { SalesCancellation } from 'src/screens/sales-cancellation'
 import { SalesHistory } from 'src/screens/sales-history'
 import { colors } from 'src/theme/colors'
+import { applyCpfMask } from 'src/utils/cpf-mask'
 
 type ScreenType =
   | 'dashboard'
@@ -143,7 +144,7 @@ export function SupplierDashboard() {
     <View style={styles.container}>
       {/* Header */}
       <Header
-        title="Painel do fornecedor"
+        title="Painel do lojista"
         icon={
           <SupplierIcon width={22} height={22} color={colors.primaryText} />
         }
@@ -152,10 +153,7 @@ export function SupplierDashboard() {
       {/* User Info */}
       <View style={styles.userContainer}>
         <View style={styles.userInfo}>
-          <Text style={styles.userCpf}>
-            CPF:{' '}
-            {user?.cpf?.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
-          </Text>
+          <Text style={styles.userCpf}>CPF: {applyCpfMask(user?.cpf)}</Text>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <LogOutIcon width={16} height={16} color={colors.red[500]} />
           </TouchableOpacity>
@@ -165,7 +163,7 @@ export function SupplierDashboard() {
       {/* Menu Section */}
       <View style={styles.menuContainer}>
         <View style={styles.menuHeader}>
-          <Text style={styles.menuTitle}>Menu do Fornecedor</Text>
+          <Text style={styles.menuTitle}>Menu do Lojista</Text>
           <Text style={styles.menuSubtitle}>Selecione a operação desejada</Text>
         </View>
 
@@ -195,7 +193,7 @@ export function SupplierDashboard() {
             <View style={styles.menuItemContent}>
               <Text style={styles.menuItemTitle}>Consulta de Saldo</Text>
               <Text style={styles.menuItemDescription}>
-                Visualizar saldo do cliente
+                Visualizar saldo do portador
               </Text>
             </View>
             <ChevronRightIcon width={20} height={20} color={colors.gray[400]} />

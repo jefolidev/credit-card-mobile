@@ -2,6 +2,7 @@ import React from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { EyeIcon } from 'src/assets/eye-simple'
 import { BalanceInfo } from 'src/components/balance-info'
+import { applyCpfMask } from 'src/utils/cpf-mask'
 
 interface CardData {
   id: string
@@ -89,7 +90,7 @@ export function CreditCardDisplay({
           <Text style={styles.holderName}>{card.holderName}</Text>
 
           {/* CPF */}
-          <Text style={styles.cpf}>CPF: {card.cpf}</Text>
+          <Text style={styles.cpf}>CPF: {applyCpfMask(card.cpf)}</Text>
         </View>
       </TouchableOpacity>
 
