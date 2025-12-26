@@ -5,6 +5,7 @@ import {
   useEffect,
   useState,
 } from 'react'
+import { authServices } from 'src/screens/login/services'
 
 type UserType = 'client' | 'supplier'
 
@@ -22,7 +23,7 @@ interface AuthContextProps {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (cpf: string, password: string, userType: UserType) => Promise<boolean>
+  auth: (cpf: string, password: string, userType: UserType) => Promise<boolean>
   logout: () => void
 }
 
@@ -75,15 +76,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkStoredSession()
   }, [])
 
-  const login = async (
+  const auth = async (
     cpf: string,
     password: string,
     userType: UserType
   ): Promise<boolean> => {
     setIsLoading(true)
-
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await authServices.login({ cpf, password }, userType)
 
       const foundUser = mockUsers.find(
         (u) =>
@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isAuthenticated,
         isLoading,
-        login,
+        auth,
         logout,
       }}
     >

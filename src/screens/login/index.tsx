@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import {
   Alert,
   Image,
@@ -19,18 +20,27 @@ import { RadioGroup } from 'src/components/radio'
 import { useAuth } from 'src/contexts/use-auth'
 import { EyeIcon } from '../../assets/eye-simple'
 import { applyCpfMask, cleanCpf } from '../../utils/cpf-mask'
+import { LoginBodySchema } from './schema'
 
 export function Login() {
   const [userType, setUserType] = useState<'client' | 'supplier'>('client')
-  const [cpf, setCpf] = useState('')
-  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
-  const { login, isLoading } = useAuth()
+  const { auth, isLoading } = useAuth()
+
+  const { handleSubmit, control, setValue, watch } = useForm<LoginBodySchema>({
+    defaultValues: {
+      cpf: '',
+      password: '',
+    },
+  })
+
+  const cpf = watch('cpf')
+  const password = watch('password')
 
   const handleCpfChange = (text: string) => {
     const maskedCpf = applyCpfMask(text)
-    setCpf(maskedCpf)
+    setValue('cpf', maskedCpf)
   }
 
   const userTypeOptions = [
@@ -38,18 +48,11 @@ export function Login() {
     { id: 'supplier', label: 'Lojista', icon: <SupplierIcon /> },
   ]
 
-  const handleLogin = async () => {
-    if (!cpf || !password) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos')
-      return
-    }
-
-    // Remove máscara do CPF antes de enviar para autenticação
+  const handleLogin = async (userData: LoginBodySchema) => {
     const cleanedCpf = cleanCpf(cpf)
-    console.log(cleanedCpf, password, userType)
 
     try {
-      const success = await login(cleanedCpf, password, userType)
+      const success = await auth(cleanedCpf, userData.password, userType)
 
       if (success) {
         console.log('Login realizado com sucesso!')
@@ -101,7 +104,7 @@ export function Login() {
               <Input
                 placeholder="Digite sua senha"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(text) => setValue('password', text)}
                 secureTextEntry={!showPassword}
                 leftIcon={<LockIcon />}
                 rightIcon={<EyeIcon closed={!showPassword} color="#99A1AF" />}
@@ -114,7 +117,7 @@ export function Login() {
           <View style={[styles.buttonWrapper, { marginTop: 5 }]}>
             <Button
               variant={userType === 'supplier' ? 'secondary' : 'primary'}
-              onPress={handleLogin}
+              onPress={handleSubmit(handleLogin)}
               disabled={isLoading}
             >
               {isLoading ? 'Entrando...' : 'Entrar'}
