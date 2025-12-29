@@ -418,7 +418,6 @@ type SaleHistoryItem = {
     cardNumberMasked: string;
     cardholderName: string;
     expiry: string;               // MM/YY
-    brand: 'visa' | 'mastercard' | 'elo';
     type: 'credit' | 'debit';
     balanceCents: number;
     creditLimitCents: number;
