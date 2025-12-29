@@ -1,4 +1,10 @@
-import { createContext, ReactNode, useContext, useState } from 'react'
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
 import { BillStatus } from 'src/components/cash-amount'
 import { cardsServices } from 'src/services/cards/endpoints'
 import {
@@ -70,6 +76,15 @@ export function CardProvider({ children }: { children: ReactNode }) {
   const [isCardLoading, setIsCardLoading] = useState(false)
   const [cardToken, setCardToken] = useState<string | null>(null)
 
+  // Debug useEffect para monitorar mudanças de estado - reduzido
+  useEffect(() => {
+    console.log('🔄 CardProvider:', {
+      selectedCard: selectedCard ? selectedCard.cardholderName : 'nenhum',
+      isCardAuthenticated,
+      hasToken: !!cardToken,
+    })
+  }, [selectedCard, isCardAuthenticated, cardToken])
+
   const selectCard = (card: CreditCard) => {
     console.log(
       '📌 selectCard chamado com:',
@@ -109,37 +124,59 @@ export function CardProvider({ children }: { children: ReactNode }) {
         setCardToken(response.token)
         setCardAuthToken(response.token)
 
-        // Encontrar e selecionar o cartão autenticado
+        // Primeiro, tenta usar o selectedCard atual se o ID bater
+        if (selectedCard && String(selectedCard.id) === String(cardId)) {
+          console.log(
+            '✅ Usando selectedCard existente:',
+            selectedCard.cardholderName
+          )
+          setIsCardAuthenticated(true)
+          console.log(
+            '✅ Autenticação concluída com sucesso - cartão já selecionado'
+          )
+          return true
+        }
+
+        // Se não tiver selectedCard ou ID diferente, busca no array de cartões
         console.log(
           '🔍 Procurando cartão com ID:',
           cardId,
-          'tipo:',
-          typeof cardId
+          'no array de',
+          cards.length,
+          'cartões'
         )
         const cardToSelect = cards.find((card) => {
-          console.log(
-            '   comparando com card.id:',
-            card.id,
-            'tipo:',
-            typeof card.id
-          )
-          return String(card.id) === String(cardId) // Conversão para string para garantir compatibilidade
+          return String(card.id) === String(cardId)
         })
-        console.log(
-          '🔍 Cartão encontrado:',
-          cardToSelect
-            ? `${cardToSelect.cardholderName} - ${cardToSelect.id}`
-            : 'NÃO ENCONTRADO'
-        )
 
         if (cardToSelect) {
           setSelectedCard(cardToSelect)
           console.log(
-            '✅ Cartão selecionado no contexto:',
+            '✅ Cartão encontrado e selecionado:',
             cardToSelect.cardholderName
           )
         } else {
-          console.error('❌ Cartão não encontrado no array de cartões!')
+          // Se ainda não encontrou, cria um cartão temporário com as informações que temos
+          console.log(
+            '⚠️ Cartão não encontrado no array, criando registro temporário'
+          )
+          const tempCard: CreditCard = {
+            id: cardId,
+            cardNumber: '****',
+            cardholderName: 'Cartão Autenticado',
+            balance: 0,
+            creditLimit: 0,
+            type: 'credit',
+            isActive: true,
+            closingDate: 0,
+            dueDate: 0,
+            period: '',
+            creditReturnDate: 0,
+            estimatedBilling: 0,
+            bills: [],
+          }
+          setSelectedCard(tempCard)
+          console.log('✅ Cartão temporário criado e selecionado')
         }
 
         setIsCardAuthenticated(true)
