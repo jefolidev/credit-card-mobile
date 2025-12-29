@@ -2,7 +2,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 
 import { useAuth } from 'src/contexts/use-auth'
 import { useCard } from 'src/contexts/use-card'
-import { CardAuthenticationBottomSheet } from 'src/screens/card-authentication/components/card-authentication-bottom-sheet'
 import { Cards } from 'src/screens/cards'
 import { ProfileSac } from 'src/screens/contacts/PerfilSac'
 import { Login } from 'src/screens/login'
@@ -22,6 +21,8 @@ export function StackRoutes({ isAuthenticated }: StackRoutesProps) {
   const { user } = useAuth()
   const { selectedCard, isCardAuthenticated } = useCard()
 
+  // Debug logs para verificar o estado da navegação
+
   if (!isAuthenticated) {
     return (
       <Stack.Navigator
@@ -33,7 +34,7 @@ export function StackRoutes({ isAuthenticated }: StackRoutesProps) {
     )
   }
 
-  if (user?.userType === 'supplier') {
+  if (user?.role === 'SELLER') {
     return (
       <Stack.Navigator
         initialRouteName="supplierDashboard"
@@ -44,25 +45,41 @@ export function StackRoutes({ isAuthenticated }: StackRoutesProps) {
     )
   }
 
-  // Para clientes: verifica se tem cartão selecionado e autenticado
-  if (!selectedCard || !isCardAuthenticated) {
-    return (
-      <Stack.Navigator
-        initialRouteName="cards"
-        screenOptions={{ headerShown: false }}
-      >
-        <Stack.Screen name="cards" component={Cards} />
-      </Stack.Navigator>
-    )
+  // PORTADOR precisa ter cartão selecionado E autenticado para ir ao home
+  if (user?.role === 'PORTATOR') {
+    if (!selectedCard) {
+      return (
+        <Stack.Navigator
+          initialRouteName="cards"
+          screenOptions={{ headerShown: false }}
+        >
+          <Stack.Screen name="cards" component={Cards} />
+        </Stack.Navigator>
+      )
+    }
+
+    if (!isCardAuthenticated) {
+      return (
+        <Stack.Navigator
+          initialRouteName="cards"
+          screenOptions={{ headerShown: false }}
+        >
+          <Stack.Screen name="cards" component={Cards} />
+        </Stack.Navigator>
+      )
+    }
+
+    // Cartão selecionado E autenticado = vai para home
   }
 
-  // Se tem cartão selecionado e autenticado, mostra as tabs
+  // Se é PORTADOR com cartão autenticado, vai para as tabs (home com resumo)
   return (
     <Stack.Navigator
       initialRouteName="tabs"
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="tabs" component={BottomTabRoutes} />
+      <Stack.Screen name="cards" component={Cards} />
       {/* Aux screens/modal sheets accessible from tabs */}
       <Stack.Screen name="Contacts" component={ProfileSac} />
       <Stack.Screen
@@ -78,11 +95,6 @@ export function StackRoutes({ isAuthenticated }: StackRoutesProps) {
       <Stack.Screen
         name="SecondCardBottomSheet"
         component={SecondCardBottomSheet}
-        options={{ presentation: 'transparentModal' }}
-      />
-      <Stack.Screen
-        name="CardAuthenticationBottomSheet"
-        component={CardAuthenticationBottomSheet}
         options={{ presentation: 'transparentModal' }}
       />
     </Stack.Navigator>
