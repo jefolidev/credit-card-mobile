@@ -14,7 +14,8 @@ import { CardAuthBottomSheet } from 'src/components/card-auth-bottom-sheet'
 import { CreditCard } from 'src/components/credit-card'
 import { Header } from 'src/components/header'
 import { useAuth } from 'src/contexts/use-auth'
-import { CreditCard as CreditCardType, useCard } from 'src/contexts/use-card'
+import { useCard } from 'src/contexts/use-card'
+import { ResponseGetAllCardsUser } from 'src/services/cards/responses-dto'
 import { colors } from 'src/theme/colors'
 
 type RootStackParamList = {
@@ -30,26 +31,45 @@ type CardsScreenNavigationProp = NativeStackNavigationProp<
 
 export function Cards() {
   const { user, logout } = useAuth()
-  const { getUserCards, isCardAuthenticated } = useCard()
+  const { getUserCards, isCardAuthenticated, selectCard, selectedCard } =
+    useCard()
+
+  const [cards, setCards] = useState<ResponseGetAllCardsUser>([])
   const [showBottomSheet, setShowBottomSheet] = useState(false)
-  const [cardForAuth, setCardForAuth] = useState<CreditCardType | null>(null)
+
   const navigation = useNavigation<CardsScreenNavigationProp>()
+
+  useEffect(() => {
+    const fetchCards = async () => {
+      try {
+        const userCards = await getUserCards()
+        setCards(userCards)
+      } catch (error) {
+        console.error('Erro ao buscar cartões do usuário:', error)
+      }
+    }
+
+    fetchCards()
+  }, [getUserCards])
 
   const handleLogout = () => {
     logout()
   }
 
   useEffect(() => {
-    if (isCardAuthenticated) {
-      // Navigate to the main tabs screen after successful card authentication
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'tabs' }],
-      })
-    }
-  }, [isCardAuthenticated, navigation])
+    console.log('=== CARDS SCREEN useEffect ===')
+    console.log('isCardAuthenticated mudou para:', isCardAuthenticated)
 
-  if (user?.userType !== 'client') {
+    if (isCardAuthenticated) {
+      console.log(
+        '🚀 Cartão autenticado! O StackRoutes irá re-renderizar automaticamente'
+      )
+      // Não precisa navegar manualmente - o StackRoutes detecta a mudança de isCardAuthenticated
+      // e renderiza o navegador com tabs automaticamente
+    }
+  }, [isCardAuthenticated])
+
+  if (user?.role !== 'PORTATOR') {
     return (
       <View style={styles.container}>
         <Header
@@ -73,28 +93,54 @@ export function Cards() {
     )
   }
 
-  const userCards = getUserCards(user.id)
+  const handleCardSelect = (card: any) => {
+    console.log(
+      '🎯 Cards: Cartão selecionado para autenticação:',
+      card.name,
+      'ID:',
+      card.id
+    )
 
-  const handleCardSelect = (card: CreditCardType) => {
-    setCardForAuth(card)
+    // Primeiro converta para o formato do contexto
+    const cardToSelect = {
+      id: card.id,
+      cardNumber: card.cardNumber,
+      cardholderName: card.name,
+      balance: 0, // Será obtido após autenticação
+      creditLimit: 0, // Será obtido após autenticação
+      type: 'credit' as const,
+      isActive: true,
+      closingDate: 0,
+      dueDate: 0,
+      period: '',
+      creditReturnDate: 0,
+      estimatedBilling: 0,
+      bills: [],
+    }
+
+    console.log(
+      '🎯 Cards: Cartão formatado para contexto:',
+      cardToSelect.cardholderName,
+      'ID:',
+      cardToSelect.id
+    )
+    // Seleciona o cartão no contexto
+    selectCard(cardToSelect)
     setShowBottomSheet(true)
   }
 
   const handleCloseBottomSheet = () => {
     setShowBottomSheet(false)
-    setCardForAuth(null)
   }
 
-  const renderCard = ({ item }: { item: CreditCardType }) => (
+  const renderCard = ({ item }: { item: any }) => (
     <TouchableOpacity
       style={styles.cardContainer}
       onPress={() => handleCardSelect(item)}
     >
       <CreditCard
         cardNumber={item.cardNumber}
-        cardOwner={item.cardholderName}
-        cardVality={item.expiryDate}
-        cardAssociation={item.brand.toUpperCase()}
+        cardOwner={item.name}
         cardType={item.type === 'credit' ? 'Crédito' : 'Débito'}
       />
     </TouchableOpacity>
@@ -119,16 +165,14 @@ export function Cards() {
         <View style={styles.header}>
           <Text style={styles.title}>Cartões cadastrados</Text>
           <Text style={styles.subtitle}>
-            {userCards.length}{' '}
-            {userCards.length === 1
-              ? 'cartão cadastrado'
-              : 'cartões cadastrados'}
+            {cards.length}{' '}
+            {cards.length === 1 ? 'cartão cadastrado' : 'cartões cadastrados'}
           </Text>
         </View>
 
-        {userCards.length > 0 ? (
+        {cards.length > 0 ? (
           <FlatList
-            data={userCards}
+            data={cards}
             renderItem={renderCard}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
@@ -143,7 +187,7 @@ export function Cards() {
 
       <CardAuthBottomSheet
         isVisible={showBottomSheet}
-        selectedCard={cardForAuth}
+        selectedCard={selectedCard}
         onClose={handleCloseBottomSheet}
       />
     </View>
