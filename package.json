@@ -6,7 +6,8 @@
     "start": "expo start --dev-client",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "mock-server": "node mock-server.js"
   },
   "dependencies": {
     "@expo-google-fonts/arimo": "^0.4.2",
@@ -37,7 +38,11 @@
   },
   "private": true,
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/react": "~19.1.10",
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
     "typescript": "~5.9.2"
   }
 }
