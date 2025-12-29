@@ -2,15 +2,13 @@ import axios, { AxiosError, isAxiosError } from 'axios'
 import { Platform } from 'react-native'
 
 // Base URL dinâmica por ambiente/plataforma
-const baseURL =
-  (process.env.EXPO_PUBLIC_API_BASE_URL || '').trim() ||
-  Platform.select({
-    ios: 'http://localhost:3000',
-    android: 'http://10.0.2.2:3000',
-  }) ||
-  'http://localhost:3000'
+const baseURL = Platform.select({
+  ios: `http://192.168.1.2:3000`,
+  android: `http://10.0.2.2:3000`,
+})
 
 let authToken: string | null = null
+let cardAuthToken: string | null = null
 
 export function setAuthToken(token: string | null) {
   authToken = token
@@ -26,6 +24,23 @@ export function getAuthToken(): string | null {
 
 export function clearAuthToken() {
   authToken = null
+}
+
+// Funções para gerenciar token de cartão
+export function setCardAuthToken(token: string | null) {
+  cardAuthToken = token
+    ? token.startsWith('Bearer ')
+      ? token
+      : `Bearer ${token}`
+    : null
+}
+
+export function getCardAuthToken(): string | null {
+  return cardAuthToken
+}
+
+export function clearCardAuthToken() {
+  cardAuthToken = null
 }
 
 export type APIError = {
@@ -70,6 +85,12 @@ api.interceptors.request.use(
     if (token) {
       config.headers.set('Authorization', token)
     }
+
+    const cardToken = getCardAuthToken()
+    if (cardToken) {
+      config.headers.set('authorization_card', cardToken)
+    }
+
     return config
   },
   (error) => Promise.reject(error)
