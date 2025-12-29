@@ -18,17 +18,18 @@ import { Button } from 'src/components/button'
 import { Input } from 'src/components/input'
 import { RadioGroup } from 'src/components/radio'
 import { useAuth } from 'src/contexts/use-auth'
+import { UserRole } from 'src/services/auth/enum/user-role'
 import { EyeIcon } from '../../assets/eye-simple'
 import { applyCpfMask, cleanCpf } from '../../utils/cpf-mask'
 import { LoginBodySchema } from './schema'
 
 export function Login() {
-  const [userType, setUserType] = useState<'client' | 'supplier'>('client')
+  const [userType, setUserType] = useState<UserRole>('PORTATOR')
   const [showPassword, setShowPassword] = useState(false)
 
   const { auth, isLoading } = useAuth()
 
-  const { handleSubmit, control, setValue, watch } = useForm<LoginBodySchema>({
+  const { handleSubmit, setValue, watch } = useForm<LoginBodySchema>({
     defaultValues: {
       cpf: '',
       password: '',
@@ -44,8 +45,8 @@ export function Login() {
   }
 
   const userTypeOptions = [
-    { id: 'client', label: 'Portador', icon: <UserIcon /> },
-    { id: 'supplier', label: 'Lojista', icon: <SupplierIcon /> },
+    { id: UserRole.PORTATOR, label: 'Portador', icon: <UserIcon /> },
+    { id: UserRole.SELLER, label: 'Lojista', icon: <SupplierIcon /> },
   ]
 
   const handleLogin = async (userData: LoginBodySchema) => {
@@ -83,7 +84,7 @@ export function Login() {
           <RadioGroup
             options={userTypeOptions}
             selectedId={userType}
-            onSelect={(id) => setUserType(id as 'client' | 'supplier')}
+            onSelect={(id) => setUserType(id as UserRole)}
           />
 
           <View style={styles.inputWrapper}>
@@ -109,14 +110,12 @@ export function Login() {
                 leftIcon={<LockIcon />}
                 rightIcon={<EyeIcon closed={!showPassword} color="#99A1AF" />}
                 onRightIconPress={() => setShowPassword(!showPassword)}
-                maxLength={6}
-                keyboardType="numeric"
               />
             </View>
           </View>
           <View style={[styles.buttonWrapper, { marginTop: 5 }]}>
             <Button
-              variant={userType === 'supplier' ? 'secondary' : 'primary'}
+              variant={userType === UserRole.SELLER ? 'secondary' : 'primary'}
               onPress={handleSubmit(handleLogin)}
               disabled={isLoading}
             >
