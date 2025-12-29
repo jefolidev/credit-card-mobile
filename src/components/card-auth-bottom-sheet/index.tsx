@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import {
   Alert,
   Dimensions,
@@ -17,6 +18,7 @@ import { CreditCard } from 'src/components/credit-card'
 import { Input } from 'src/components/input'
 import { CreditCard as CreditCardType, useCard } from 'src/contexts/use-card'
 import { colors } from 'src/theme/colors'
+import { AuthCardBodySchema } from './schema'
 
 interface CardAuthBottomSheetProps {
   isVisible: boolean
@@ -31,9 +33,16 @@ export function CardAuthBottomSheet({
   selectedCard,
   onClose,
 }: CardAuthBottomSheetProps) {
-  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const { authenticateCard, isCardLoading } = useCard()
+
+  const { handleSubmit, setValue, watch } = useForm<AuthCardBodySchema>({
+    defaultValues: {
+      password: '',
+    },
+  })
+
+  const password = watch('password')
 
   const handleAuthenticate = async () => {
     if (!selectedCard) {
@@ -41,8 +50,8 @@ export function CardAuthBottomSheet({
       return
     }
 
-    if (!password || password.length !== 6) {
-      Alert.alert('Erro', 'Digite uma senha de 6 dígitos')
+    if (!password || password.length !== 4) {
+      Alert.alert('Erro', 'Digite uma senha de 4 dígitos')
       return
     }
 
@@ -50,13 +59,18 @@ export function CardAuthBottomSheet({
       const success = await authenticateCard(selectedCard.id, password)
 
       if (success) {
-        // Fecha o bottom sheet e limpa os campos após autenticação bem-sucedida
+        console.log('🔍 DEBUG: Autenticação bem sucedida!')
+        console.log('🔍 DEBUG: Fechando modal e navegando para dashboard...')
         onClose()
-        setPassword('')
+        setValue('password', '')
         setShowPassword(false)
+
+        console.log(
+          '✅ Cartão autenticado! StackRoutes irá re-renderizar e navegar para dashboard'
+        )
       } else {
         Alert.alert('Erro', 'Senha incorreta. Tente novamente.')
-        setPassword('')
+        setValue('password', '')
       }
     } catch (error) {
       Alert.alert('Erro', 'Ocorreu um erro durante a autenticação')
@@ -70,7 +84,7 @@ export function CardAuthBottomSheet({
 
   const handleClose = () => {
     onClose()
-    setPassword('')
+    setValue('password', '')
     setShowPassword(false)
   }
 
@@ -108,8 +122,6 @@ export function CardAuthBottomSheet({
               <CreditCard
                 cardNumber={selectedCard.cardNumber}
                 cardOwner={selectedCard.cardholderName}
-                cardVality={selectedCard.expiryDate}
-                cardAssociation={selectedCard.brand.toUpperCase()}
                 cardType={selectedCard.type === 'credit' ? 'Crédito' : 'Débito'}
               />
             </View>
@@ -131,14 +143,14 @@ export function CardAuthBottomSheet({
 
               {/* Campo da Senha */}
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Senha do Cartão (6 dígitos)</Text>
+                <Text style={styles.label}>Senha do Cartão (4 dígitos)</Text>
                 <Input
                   placeholder="Digite sua senha"
-                  value={password}
-                  onChangeText={setPassword}
+                  value={watch('password')}
+                  onChangeText={(text) => setValue('password', text)}
                   secureTextEntry={!showPassword}
                   keyboardType="numeric"
-                  maxLength={6}
+                  maxLength={4}
                   leftIcon={<LockIcon />}
                   rightIcon={
                     <TouchableOpacity onPress={togglePasswordVisibility}>
@@ -151,18 +163,12 @@ export function CardAuthBottomSheet({
 
               {/* Botão de Entrar */}
               <Button
-                onPress={handleAuthenticate}
-                disabled={isCardLoading || password.length !== 6}
+                onPress={handleSubmit(handleAuthenticate)}
+                disabled={isCardLoading || watch('password').length !== 4}
                 style={styles.authButton}
               >
                 {isCardLoading ? 'Autenticando...' : 'Entrar'}
               </Button>
-
-              {/* Texto de Ajuda */}
-              <Text style={styles.helpText}>
-                Para teste, use as senhas:{'\n'}
-                Visa: 123456 | Mastercard: 654321 | Elo: 111222
-              </Text>
             </View>
           </ScrollView>
         </View>
@@ -198,7 +204,7 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     paddingTop: 12,
-    paddingBottom: 16,
+    paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
   },
