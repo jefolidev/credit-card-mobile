@@ -1,24 +1,16 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import { StyleSheet, Text, View } from 'react-native'
 import colors from 'src/theme/colors'
-import { Divisor } from '../divisor'
 import { Dot } from '../dot'
 
 interface CreditCardProps {
   cardNumber: string
   cardOwner: string
-  cardVality: string
   cardType?: string
   cardAssociation?: string
 }
 
-export function CreditCard({
-  cardNumber,
-  cardOwner,
-  cardAssociation = 'Múltiplo',
-  cardVality,
-  cardType = 'Padrão',
-}: CreditCardProps) {
+export function CreditCard({ cardNumber, cardOwner }: CreditCardProps) {
   const maskCardNumber = (number: string) => {
     const clean = number.replace(/\s+/g, '')
 
@@ -76,16 +68,6 @@ export function CreditCard({
           <Text style={cardStyles.legend}>Titular do cartão</Text>
           <Text style={cardStyles.text}>{cardOwner}</Text>
         </View>
-        <View>
-          <Text style={cardStyles.legend}>Validade</Text>
-          <Text style={cardStyles.text}>{cardVality}</Text>
-        </View>
-      </View>
-      <Divisor />
-      <View style={(cardStyles.infoGroup, { marginTop: 10 })}>
-        <Text style={cardStyles.legend}>
-          {cardAssociation} | {cardType}
-        </Text>
       </View>
     </LinearGradient>
   )

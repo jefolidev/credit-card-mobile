@@ -11,18 +11,15 @@ import { colors } from '../../theme/colors'
 
 export function Home() {
   const { user, logout } = useAuth()
-  const { selectedCard, logoutCard, getTransactions, getBills } = useCard()
+  const { selectedCard } = useCard()
 
   // Get current month transactions
   const getCurrentMonthTransactions = () => {
     if (!selectedCard) return []
 
-    const bills = getBills(selectedCard.id)
-    const currentBill = bills.find((bill) => bill.status === 'current')
-
-    if (!currentBill) return []
-
-    return getTransactions(currentBill.id)
+    // Se não tiver funções mock, retorna array vazio por enquanto
+    // Depois pode ser substituído por chamadas da API
+    return []
   }
 
   const currentTransactions = getCurrentMonthTransactions()
@@ -87,8 +84,8 @@ export function Home() {
             </Text>
           </View>
 
-          {/* Informações do Cartão para Portadores */}
-          {user?.userType === 'client' && selectedCard && (
+          {/* Informações do Cartão para PORTADORES com cartão selecionado */}
+          {user?.role === 'PORTATOR' && selectedCard ? (
             <>
               <CashAmount
                 amount={selectedCard.balance}
@@ -190,10 +187,23 @@ export function Home() {
                 )}
               </View>
             </>
-          )}
+          ) : user?.role === 'PORTATOR' ? (
+            // Fallback para PORTADOR sem cartão selecionado
+            <View style={{ padding: 20, alignItems: 'center' }}>
+              <Text
+                style={{
+                  fontSize: 16,
+                  color: colors.secondaryText,
+                  textAlign: 'center',
+                }}
+              >
+                Selecione um cartão para ver seu resumo financeiro
+              </Text>
+            </View>
+          ) : null}
 
           {/* Informações para Lojistas */}
-          {user?.userType === 'supplier' && (
+          {user?.role === 'SELLER' && (
             <>
               <Text
                 style={{

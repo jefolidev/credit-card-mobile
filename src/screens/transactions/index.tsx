@@ -49,7 +49,6 @@ export function Transactions() {
       <View style={styles.content}>
         <View style={styles.headerSection}>
           <Text style={styles.cardTitle}>
-            {selectedCard.brand.toUpperCase()} ••••{' '}
             {selectedCard.cardNumber.slice(-4)}
           </Text>
           <Text style={styles.subtitle}>
