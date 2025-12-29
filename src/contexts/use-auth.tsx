@@ -5,55 +5,23 @@ import {
   useEffect,
   useState,
 } from 'react'
-import { authServices } from 'src/screens/login/services'
-
-type UserType = 'client' | 'supplier'
-
-interface User {
-  id: string
-  phone: string
-  cpf: string
-  city: string
-  state: string
-  userType: UserType
-  name?: string
-}
+import { authServices } from 'src/services/auth/auth.services'
+import { UserRole } from 'src/services/auth/enum/user-role'
+import { GetMeResponse } from 'src/services/auth/responses.dto'
+import { clearAuthToken, setAuthToken } from '../api/api'
 
 interface AuthContextProps {
-  user: User | null
+  user: GetMeResponse | null
   isAuthenticated: boolean
   isLoading: boolean
-  auth: (cpf: string, password: string, userType: UserType) => Promise<boolean>
+  auth: (cpf: string, password: string, userType: UserRole) => Promise<boolean>
   logout: () => void
 }
 
 const AuthContext = createContext<AuthContextProps | null>(null)
 
-const mockUsers = [
-  {
-    id: '1',
-    cpf: '12345678900',
-    phone: '(11) 91234-5678',
-    password: '123456',
-    city: 'Fortaleza',
-    state: 'Ceará, CE',
-    userType: 'client' as UserType,
-    name: 'João Portador',
-  },
-  {
-    id: '2',
-    cpf: '98765432100',
-    phone: '(21) 99876-5432',
-    city: 'Fortaleza',
-    password: '123456',
-    state: 'Ceará, CE',
-    userType: 'supplier' as UserType,
-    name: 'Maria Lojista',
-  },
-]
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<GetMeResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -79,32 +47,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const auth = async (
     cpf: string,
     password: string,
-    userType: UserType
+    userType: UserRole
   ): Promise<boolean> => {
     setIsLoading(true)
+    const { loginByCpf, getMe } = authServices
+
     try {
-      await authServices.login({ cpf, password }, userType)
+      console.log('Iniciando login...', { cpf, userType })
 
-      const foundUser = mockUsers.find(
-        (u) =>
-          u.cpf === cpf && u.password === password && u.userType === userType
-      )
+      const loginResponse = await loginByCpf({ cpf, password })
+      console.log('Login realizado, salvando token...')
 
-      if (foundUser) {
-        const userData: User = {
-          id: foundUser.id,
-          cpf: foundUser.cpf,
-          state: foundUser.state,
-          phone: foundUser.phone,
-          userType: foundUser.userType,
-          city: foundUser.city,
-          name: foundUser.name,
+      if (loginResponse.token) {
+        setAuthToken(loginResponse.token)
+        console.log('Token configurado para requisições futuras')
+      }
+
+      const { id, email, name, role } = await getMe()
+      if (email && name && role) {
+        const userData = {
+          id,
+          userType,
+          name,
+          role,
+          email,
         }
 
         setUser(userData)
-
+        console.log('Login bem-sucedido!')
         return true
       } else {
+        console.log('Dados do usuário incompletos')
         return false
       }
     } catch (error) {
@@ -119,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      clearAuthToken()
 
       setUser(null)
     } catch (error) {
