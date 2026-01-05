@@ -34,6 +34,7 @@ export interface Bill {
 export interface CreditCard {
   id: string
   cardNumber: string
+  cpf: string
   cardholderName: string
   balance: number
   creditLimit: number
@@ -66,6 +67,7 @@ const CardContext = createContext<CardContextProps | null>(null)
 export function CardProvider({ children }: { children: ReactNode }) {
   const [cards, setCards] = useState<CreditCard[]>([])
   const [selectedCard, setSelectedCard] = useState<CreditCard | null>(null)
+
   const [isCardAuthenticated, setIsCardAuthenticated] = useState(false)
   const [isCardLoading, setIsCardLoading] = useState(false)
   const [cardToken, setCardToken] = useState<string | null>(null)
@@ -97,6 +99,8 @@ export function CardProvider({ children }: { children: ReactNode }) {
         setCardToken(response.token)
         setCardAuthToken(response.token)
         setIsCardAuthenticated(true)
+        console.log(selectedCard)
+
         return true
       } else {
         console.error('❌ Token não recebido na resposta')
@@ -123,14 +127,14 @@ export function CardProvider({ children }: { children: ReactNode }) {
 
       // ResponseGetAllCardsUser é um array direto de cartões
       if (response && Array.isArray(response)) {
-        // Converter para o formato interno CreditCard se necessário
         const formattedCards = response.map((card) => ({
           id: card.id,
+          cpf: '',
           cardNumber: card.cardNumber,
           cardholderName: card.name,
           cardPassword: '', // Não deve ser armazenado
-          balance: 0, // Obtido separadamente
-          creditLimit: 0, // Obtido separadamente
+          balance: 0, // Será obtido após autenticação
+          creditLimit: 0, // Será obtido após autenticação
           type: 'credit' as const,
           isActive: true,
           closingDate: 0,
@@ -158,7 +162,22 @@ export function CardProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      return await cardsServices.getBalanceCard()
+      const response = await cardsServices.getBalanceCard()
+
+      // Atualizar o cartão selecionado com os dados reais
+      setSelectedCard((prevCard) => {
+        if (prevCard) {
+          return {
+            ...prevCard,
+            cpf: response.cpf,
+            balance: response.limitAvailable,
+            creditLimit: response.limitAvailable,
+          }
+        }
+        return prevCard
+      })
+
+      return response
     } catch (error) {
       throw error
     }
@@ -170,7 +189,48 @@ export function CardProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      return await cardsServices.getBillingsCards()
+      const response = await cardsServices.getBillingsCards()
+
+      // Mapear as bills do backend para o formato interno
+      const formattedBills: Bill[] = response.map((billing) => {
+        const [monthName, year] = billing.monthAndYear.split('/')
+
+        // Converter datas de forma segura
+        const formatDate = (date: any) => {
+          if (!date) return new Date().toISOString().split('T')[0]
+          const dateObj = typeof date === 'string' ? new Date(date) : date
+          return dateObj instanceof Date && !isNaN(dateObj.getTime())
+            ? dateObj.toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0]
+        }
+
+        return {
+          id: billing.id,
+          month: monthName,
+          year: parseInt(year),
+          amount: billing.totalAmount,
+          dueDate: formatDate(billing.dateEndBilling),
+          closingDate: formatDate(billing.dateStartBilling),
+          status: billing.status as BillStatus,
+          cardId: selectedCard?.id || '',
+          transactions: [], // Será preenchido ao buscar detalhes da fatura
+        }
+      })
+
+      // console.log(formattedBills)
+
+      // Atualizar o cartão selecionado com as bills
+      setSelectedCard((prevCard) => {
+        if (prevCard) {
+          return {
+            ...prevCard,
+            bills: formattedBills,
+          }
+        }
+        return prevCard
+      })
+
+      return response
     } catch (error) {
       throw error
     }

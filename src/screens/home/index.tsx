@@ -1,25 +1,56 @@
+import { useEffect } from 'react'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { HomeIcon } from 'src/assets/home-icon'
 import { BillInfoCard } from 'src/components/bill-info-card'
 import { CashAmount } from 'src/components/cash-amount'
 import { Header } from 'src/components/header'
-import TransactionItem from 'src/components/transaction-item'
 import { useAuth } from 'src/contexts/use-auth'
 import { useCard } from 'src/contexts/use-card'
-import { applyCpfMask } from 'src/utils/cpf-mask'
 import { colors } from '../../theme/colors'
 
 export function Home() {
   const { user, logout } = useAuth()
-  const { selectedCard } = useCard()
+  const { selectedCard, isCardAuthenticated, getCardBalance, getCardBillings } =
+    useCard()
 
-  // Get current month transactions
+  // Carregar saldo do cartão quando entrar na tela
+  useEffect(() => {
+    const loadCardData = async () => {
+      if (isCardAuthenticated && selectedCard) {
+        try {
+          await getCardBalance()
+          await getCardBillings()
+          console.log('💰 Dados do cartão carregados com sucesso')
+        } catch (error) {
+          console.error('💰 Erro ao carregar dados do cartão:', error)
+        }
+      }
+    }
+
+    loadCardData()
+  }, [isCardAuthenticated, selectedCard?.id])
+
+  // Get current month transactions from bills
   const getCurrentMonthTransactions = () => {
-    if (!selectedCard) return []
+    if (!selectedCard || !selectedCard.bills) {
+      console.log('🔍 Debug: Sem cartão ou bills')
+      return []
+    }
 
-    // Se não tiver funções mock, retorna array vazio por enquanto
-    // Depois pode ser substituído por chamadas da API
-    return []
+    console.log('🔍 Debug: Bills encontradas:', selectedCard.bills.length)
+    console.log('🔍 Debug: Bills:', selectedCard.bills)
+
+    // Se não tiver transações nas bills, vamos mostrar as próprias bills como transações
+    const billsAsTransactions = selectedCard.bills.map((bill) => ({
+      id: bill.id,
+      title: `Fatura ${bill.month}/${bill.year}`,
+      amount: bill.amount,
+      date: bill.dueDate,
+      type: 'payment' as const,
+    }))
+
+    console.log('🔍 Debug: Bills as transactions:', billsAsTransactions)
+    return billsAsTransactions
   }
 
   const currentTransactions = getCurrentMonthTransactions()
@@ -70,7 +101,7 @@ export function Home() {
                 color: colors.primaryText,
               }}
             >
-              Olá, {user?.name || applyCpfMask(user?.cpf)}!
+              Olá, {user?.name}!
             </Text>
             <Text
               style={{
@@ -92,47 +123,6 @@ export function Home() {
                 creditLimit={selectedCard.creditLimit}
                 cardNumber={`Cartão •••• ${selectedCard.cardNumber.slice(-4)}`}
               />
-
-              <View style={styles.infoContiner}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                  }}
-                >
-                  <BillInfoCard
-                    title="Próximo Fechamento"
-                    info={`Dia ${selectedCard.closingDate}`}
-                  />
-                  <BillInfoCard
-                    title="Competência"
-                    info={selectedCard.period}
-                  />
-                </View>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                  }}
-                >
-                  <BillInfoCard
-                    title="Retorno de Crédito"
-                    info={`Dia ${selectedCard.creditReturnDate}`}
-                  />
-                  <BillInfoCard
-                    title="Faturamento Previsto"
-                    info={selectedCard.estimatedBilling.toLocaleString(
-                      'pt-BR',
-                      {
-                        style: 'currency',
-                        currency: 'BRL',
-                      }
-                    )}
-                  />
-                </View>
-              </View>
 
               <View
                 style={{
@@ -156,7 +146,7 @@ export function Home() {
                 <Text style={{ color: colors.primary }}>Ver todas</Text>
               </View>
 
-              <View style={styles.transactionsList}>
+              {/* <View style={styles.transactionsList}>
                 {limitedDates.length > 0 ? (
                   limitedDates.map((date) => (
                     <View key={date} style={styles.transactionWrapper}>
@@ -185,7 +175,7 @@ export function Home() {
                     Nenhuma transação encontrada
                   </Text>
                 )}
-              </View>
+              </View> */}
             </>
           ) : user?.role === 'PORTATOR' ? (
             // Fallback para PORTADOR sem cartão selecionado

@@ -7,9 +7,7 @@ app.use(express.json());
 
 // Middleware de log
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  console.log('Headers:', req.headers);
-  console.log('Body:', req.body);
+
   next();
 });
 
@@ -45,7 +43,6 @@ app.post('/sessions/login-by-cpf', (req, res) => {
 // Mock de get me
 app.get('/sessions/me', (req, res) => {
   console.log('GetMe request recebido');
-  console.log('Authorization header:', req.headers.authorization);
 
   res.json({
     id: '1',

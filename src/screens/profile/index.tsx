@@ -1,5 +1,6 @@
 import { useNavigation } from '@react-navigation/native'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useEffect } from 'react'
 import {
   Alert,
   ScrollView,
@@ -22,16 +23,30 @@ import { Header } from '../../components/header'
 import { useAuth } from '../../contexts/use-auth'
 import { useCard } from '../../contexts/use-card'
 import { colors } from '../../theme/colors'
-import { applyCpfMask } from '../../utils/cpf-mask'
 
 export function Profile() {
   const { user, logout } = useAuth()
-  const { selectedCard, logoutCard } = useCard()
-  const { getUserCards } = useCard()
-
-  const userCards = getUserCards(user!.id)
+  const { selectedCard, logoutCard, cards, getUserCards } = useCard()
 
   const navigation = useNavigation()
+
+  // Carregar cartões quando a tela for aberta
+  useEffect(() => {
+    const loadUserCards = async () => {
+      if (user) {
+        try {
+          await getUserCards()
+        } catch (error) {
+          console.error('❌ Erro ao carregar cartões no Profile:', error)
+        }
+      }
+    }
+
+    loadUserCards()
+  }, [user?.id, getUserCards])
+
+  // Usar os cartões do contexto em vez de chamar getUserCards diretamente
+  const userCards = cards || []
 
   const handleLogout = () => {
     Alert.alert('Sair', 'Tem certeza que deseja sair?', [
@@ -178,7 +193,7 @@ export function Profile() {
               </View>
               <View style={styles.infoTexts}>
                 <Text style={styles.label}>CPF</Text>
-                <Text style={styles.value}>{applyCpfMask(user?.cpf)}</Text>
+                <Text style={styles.value}>{selectedCard?.cpf}</Text>
               </View>
             </View>
             <View style={styles.infoCardRow}>

@@ -1,4 +1,5 @@
 import { useNavigation } from '@react-navigation/native'
+import { useEffect, useState } from 'react'
 import { FlatList, StyleSheet, Text, View } from 'react-native'
 import { DocumentIcon } from 'src/assets/document-icon'
 import { Header } from 'src/components/header'
@@ -7,8 +8,27 @@ import { Bill, useCard } from 'src/contexts/use-card'
 import { colors } from 'src/theme/colors'
 
 export function Transactions() {
-  const { selectedCard, getBills } = useCard()
+  const { selectedCard, isCardAuthenticated, getCardBillings } = useCard()
   const navigation = useNavigation<any>()
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    const loadBills = async () => {
+      if (isCardAuthenticated && selectedCard && !isLoading) {
+        setIsLoading(true)
+        try {
+          await getCardBillings()
+          console.log('📄 Bills do cartão carregadas na tela de Transactions')
+        } catch (error) {
+          console.error('📄 Erro ao carregar bills do cartão:', error)
+        } finally {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadBills()
+  }, [isCardAuthenticated, selectedCard?.id])
 
   if (!selectedCard) {
     return (
@@ -23,7 +43,7 @@ export function Transactions() {
     )
   }
 
-  const bills = getBills(selectedCard.id)
+  const bills = selectedCard?.bills || []
 
   const renderBill = ({ item }: { item: Bill }) => (
     <MonthlyBillCard
@@ -49,7 +69,10 @@ export function Transactions() {
       <View style={styles.content}>
         <View style={styles.headerSection}>
           <Text style={styles.cardTitle}>
-            {selectedCard.cardNumber.slice(-4)}
+            {selectedCard.cardNumber
+              .padStart(16, '0')
+              .replace(/(.{4})/g, '$1 ')
+              .trim()}
           </Text>
           <Text style={styles.subtitle}>
             Histórico de faturas do seu cartão

@@ -8,19 +8,23 @@ type TransactionType = 'debit' | 'credit' | 'payment' | 'transfer'
 
 interface TransactionItemProps {
   title: string
+  description?: string
   amount: number
   date: string
   type: TransactionType
   category?: string
+  installmentInfo?: string
   onPress?: () => void
 }
 
 export function TransactionItem({
   title,
+  description,
   amount,
   date,
   type,
   category,
+  installmentInfo,
   onPress,
 }: TransactionItemProps) {
   const getIconAndColor = () => {
@@ -82,6 +86,11 @@ export function TransactionItem({
           <Text style={styles.title} numberOfLines={1}>
             {title}
           </Text>
+          {description && (
+            <Text style={styles.description} numberOfLines={2}>
+              {description}
+            </Text>
+          )}
           <Text style={styles.date}>
             {new Date(date)
               .toLocaleDateString('pt-BR', {
@@ -98,9 +107,14 @@ export function TransactionItem({
         </View>
 
         <View style={styles.secondaryInfo}>
-          <Text style={[styles.amount, { color: iconAndColor.amountColor }]}>
-            {formatAmount(amount)}
-          </Text>
+          <View style={styles.amountContainer}>
+            <Text style={[styles.amount, { color: iconAndColor.amountColor }]}>
+              {formatAmount(amount)}
+            </Text>
+            {installmentInfo && (
+              <Text style={styles.installmentInfo}>{installmentInfo}</Text>
+            )}
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -144,6 +158,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Inter_600SemiBold',
     fontWeight: '600',
+  },
+  amountContainer: {
+    alignItems: 'flex-end',
+  },
+  installmentInfo: {
+    fontSize: 10,
+    fontFamily: 'Inter_400Regular',
+    color: colors.gray[400],
+    marginTop: 2,
   },
   secondaryInfo: {
     flexDirection: 'row',

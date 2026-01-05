@@ -129,23 +129,15 @@ console.log(`🌐 API Base URL: ${baseURL}`)
 api.interceptors.request.use(
   async (config) => {
     const token = getAuthToken()
-    console.log('🔑 Token de auth disponível:', token ? 'SIM' : 'NÃO')
 
     if (token) {
       config.headers.set('Authorization', token)
-      console.log(
-        '🔑 Authorization header configurado:',
-        token.substring(0, 20) + '...'
-      )
     }
 
     const cardToken = getCardAuthToken()
     if (cardToken) {
       config.headers.set('authorization_card', cardToken)
     }
-
-    console.log('📡 Fazendo requisição para:', config.url)
-    console.log('📡 Headers:', JSON.stringify(config.headers, null, 2))
 
     return config
   },
