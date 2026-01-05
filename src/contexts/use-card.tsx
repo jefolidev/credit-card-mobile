@@ -1,10 +1,4 @@
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from 'react'
+import { createContext, ReactNode, useContext, useState } from 'react'
 import { BillStatus } from 'src/components/cash-amount'
 import { cardsServices } from 'src/services/cards/endpoints'
 import {
@@ -72,30 +66,17 @@ const CardContext = createContext<CardContextProps | null>(null)
 export function CardProvider({ children }: { children: ReactNode }) {
   const [cards, setCards] = useState<CreditCard[]>([])
   const [selectedCard, setSelectedCard] = useState<CreditCard | null>(null)
-  const [isCardAuthenticated, setIsCardAuthenticated] = useState(false) // SEMPRE inicia FALSE
+  const [isCardAuthenticated, setIsCardAuthenticated] = useState(false)
   const [isCardLoading, setIsCardLoading] = useState(false)
   const [cardToken, setCardToken] = useState<string | null>(null)
 
-  // Debug useEffect para monitorar mudanças de estado - reduzido
-  useEffect(() => {
-    console.log('🔄 CardProvider:', {
-      selectedCard: selectedCard ? selectedCard.cardholderName : 'nenhum',
-      isCardAuthenticated,
-      hasToken: !!cardToken,
-    })
-  }, [selectedCard, isCardAuthenticated, cardToken])
-
   const selectCard = (card: CreditCard) => {
-    console.log(
-      '📌 selectCard chamado com:',
-      card.cardholderName,
-      'ID:',
-      card.id
-    )
-    setSelectedCard(card)
-    setIsCardAuthenticated(false)
-    setCardToken(null)
-    console.log('📌 selectedCard definido')
+    // Se for um cartão diferente do atual, reset a autenticação
+    if (!selectedCard || selectedCard.id !== card.id) {
+      setSelectedCard(card)
+      setIsCardAuthenticated(false)
+      setCardToken(null)
+    }
   }
 
   const authenticateCard = async (
@@ -103,14 +84,6 @@ export function CardProvider({ children }: { children: ReactNode }) {
     password: string
   ): Promise<boolean> => {
     setIsCardLoading(true)
-
-    console.log('🔐 INIT authenticateCard')
-    console.log('🔐 cardId:', cardId)
-    console.log('🔐 cards disponíveis:', cards.length)
-    console.log(
-      '🔐 cards array:',
-      cards.map((c) => ({ id: c.id, name: c.cardholderName }))
-    )
 
     try {
       const authData: AuthCardDTO = {
@@ -123,64 +96,7 @@ export function CardProvider({ children }: { children: ReactNode }) {
       if (response.token) {
         setCardToken(response.token)
         setCardAuthToken(response.token)
-
-        // Primeiro, tenta usar o selectedCard atual se o ID bater
-        if (selectedCard && String(selectedCard.id) === String(cardId)) {
-          console.log(
-            '✅ Usando selectedCard existente:',
-            selectedCard.cardholderName
-          )
-          setIsCardAuthenticated(true)
-          console.log(
-            '✅ Autenticação concluída com sucesso - cartão já selecionado'
-          )
-          return true
-        }
-
-        // Se não tiver selectedCard ou ID diferente, busca no array de cartões
-        console.log(
-          '🔍 Procurando cartão com ID:',
-          cardId,
-          'no array de',
-          cards.length,
-          'cartões'
-        )
-        const cardToSelect = cards.find((card) => {
-          return String(card.id) === String(cardId)
-        })
-
-        if (cardToSelect) {
-          setSelectedCard(cardToSelect)
-          console.log(
-            '✅ Cartão encontrado e selecionado:',
-            cardToSelect.cardholderName
-          )
-        } else {
-          // Se ainda não encontrou, cria um cartão temporário com as informações que temos
-          console.log(
-            '⚠️ Cartão não encontrado no array, criando registro temporário'
-          )
-          const tempCard: CreditCard = {
-            id: cardId,
-            cardNumber: '****',
-            cardholderName: 'Cartão Autenticado',
-            balance: 0,
-            creditLimit: 0,
-            type: 'credit',
-            isActive: true,
-            closingDate: 0,
-            dueDate: 0,
-            period: '',
-            creditReturnDate: 0,
-            estimatedBilling: 0,
-            bills: [],
-          }
-          setSelectedCard(tempCard)
-          console.log('✅ Cartão temporário criado e selecionado')
-        }
-
         setIsCardAuthenticated(true)
-        console.log('✅ Autenticação concluída com sucesso')
         return true
       } else {
         console.error('❌ Token não recebido na resposta')

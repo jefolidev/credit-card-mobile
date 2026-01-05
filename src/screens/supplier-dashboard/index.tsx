@@ -96,7 +96,7 @@ export function SupplierDashboard() {
   }
 
   const handleConfirmQrSale = (saleData: QrSaleData) => {
-    console.log('QR Code sale confirmed:', saleData)
+    // QR Code sale confirmed
   }
 
   // Render different screens based on current state

@@ -121,3 +121,5 @@ const cardStyles = StyleSheet.create({
     alignItems: 'center',
   },
 })
+
+export default CreditCard

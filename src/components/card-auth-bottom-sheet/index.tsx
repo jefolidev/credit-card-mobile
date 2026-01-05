@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native'
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import {
@@ -36,6 +37,8 @@ export function CardAuthBottomSheet({
   const [showPassword, setShowPassword] = useState(false)
   const { authenticateCard, isCardLoading } = useCard()
 
+  const navigation = useNavigation<any>()
+
   const { handleSubmit, setValue, watch } = useForm<AuthCardBodySchema>({
     defaultValues: {
       password: '',
@@ -59,15 +62,9 @@ export function CardAuthBottomSheet({
       const success = await authenticateCard(selectedCard.id, password)
 
       if (success) {
-        console.log('🔍 DEBUG: Autenticação bem sucedida!')
-        console.log('🔍 DEBUG: Fechando modal e navegando para dashboard...')
         onClose()
         setValue('password', '')
         setShowPassword(false)
-
-        console.log(
-          '✅ Cartão autenticado! StackRoutes irá re-renderizar e navegar para dashboard'
-        )
       } else {
         Alert.alert('Erro', 'Senha incorreta. Tente novamente.')
         setValue('password', '')

@@ -1,11 +1,28 @@
 import axios, { AxiosError, isAxiosError } from 'axios'
 import { Platform } from 'react-native'
 
+// Função para obter o IP local da máquina
+const getLocalIP = () => {
+  // IP local descoberto: 192.168.1.5
+  return '192.168.1.5'
+}
+
 // Base URL dinâmica por ambiente/plataforma
-const baseURL = Platform.select({
-  ios: `http://192.168.1.2:3000`,
-  android: `http://10.0.2.2:3000`,
-})
+const getApiUrl = () => {
+  const localIP = getLocalIP()
+
+  if (Platform.OS === 'android') {
+    // Para Android Emulator
+    return 'http://10.0.2.2:3000'
+  } else if (Platform.OS === 'ios') {
+    // Para iOS Simulator - usar IP da máquina host
+    return `http://${localIP}:3000`
+  }
+  // Fallback para web/outras plataformas
+  return 'http://localhost:3000'
+}
+
+const baseURL = getApiUrl()
 
 let authToken: string | null = null
 let cardAuthToken: string | null = null
@@ -57,13 +74,40 @@ function toAPIError(error: unknown): APIError {
     const data = err.response?.data
     const code =
       (data && (data.code || data.error?.code)) || err.code || undefined
+
+    // Tratamento específico para timeouts
+    if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+      return {
+        status,
+        code: 'TIMEOUT',
+        message:
+          'Tempo limite excedido. Verifique sua conexão com a internet e tente novamente.',
+        details: data,
+      }
+    }
+
+    // Tratamento para problemas de conexão
+    if (
+      err.code === 'ECONNREFUSED' ||
+      err.code === 'NETWORK_ERROR' ||
+      err.code === 'ERR_NETWORK'
+    ) {
+      return {
+        status,
+        code: 'CONNECTION_ERROR',
+        message:
+          'Não foi possível conectar ao servidor. Verifique: 1) Mock server rodando (npm run mock-server), 2) IP correto na configuração',
+        details: data,
+      }
+    }
+
     const message =
       (data && (data.message || data.error?.message)) ||
       err.message ||
-      'Unexpected error'
+      'Erro inesperado'
     return { status, code, message, details: data }
   }
-  return { message: (error as Error)?.message || 'Unexpected error' }
+  return { message: (error as Error)?.message || 'Erro inesperado' }
 }
 
 export function isUnauthorized(error: unknown) {
@@ -72,24 +116,36 @@ export function isUnauthorized(error: unknown) {
 
 const api = axios.create({
   baseURL,
-  timeout: 15000,
+  timeout: 30000, // Aumentado para 30 segundos
   headers: {
     Accept: 'application/json',
     'Content-Type': 'application/json',
   },
 })
 
+// Log da URL sendo usada para debug
+console.log(`🌐 API Base URL: ${baseURL}`)
+
 api.interceptors.request.use(
   async (config) => {
     const token = getAuthToken()
+    console.log('🔑 Token de auth disponível:', token ? 'SIM' : 'NÃO')
+
     if (token) {
       config.headers.set('Authorization', token)
+      console.log(
+        '🔑 Authorization header configurado:',
+        token.substring(0, 20) + '...'
+      )
     }
 
     const cardToken = getCardAuthToken()
     if (cardToken) {
       config.headers.set('authorization_card', cardToken)
     }
+
+    console.log('📡 Fazendo requisição para:', config.url)
+    console.log('📡 Headers:', JSON.stringify(config.headers, null, 2))
 
     return config
   },

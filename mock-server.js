@@ -24,8 +24,8 @@ app.post('/sessions/login-by-cpf', (req, res) => {
 
   const { cpf, password } = req.body;
 
-  // Mock de validação - aceita qualquer CPF com senha 123456
-  if (password === '123456') {
+  // Mock de validação - aceita qualquer CPF com senhas teste
+  if (password === '123456' || password === 'senha123') {
     res.json({
       token: 'mock-token-12345',
       user: {
@@ -80,7 +80,7 @@ app.listen(PORT, () => {
   console.log(`👤 Me endpoint: http://localhost:${PORT}/sessions/me`);
   console.log('=====================================');
   console.log('Para testar o login, use:');
-  console.log('- Qualquer CPF válido');
-  console.log('- Senha: 123456');
+  console.log('- CPF: 43501465718');
+  console.log('- Senha: senha123');
   console.log('=====================================');
 });

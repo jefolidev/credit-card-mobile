@@ -2,6 +2,7 @@ import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useEffect, useState } from 'react'
 import {
+  Alert,
   FlatList,
   StyleSheet,
   Text,
@@ -50,22 +51,15 @@ export function Cards() {
     }
 
     fetchCards()
-  }, [getUserCards])
+  }, []) // Removido getUserCards da dependência
 
   const handleLogout = () => {
     logout()
   }
 
   useEffect(() => {
-    console.log('=== CARDS SCREEN useEffect ===')
-    console.log('isCardAuthenticated mudou para:', isCardAuthenticated)
-
     if (isCardAuthenticated) {
-      console.log(
-        '🚀 Cartão autenticado! O StackRoutes irá re-renderizar automaticamente'
-      )
-      // Não precisa navegar manualmente - o StackRoutes detecta a mudança de isCardAuthenticated
-      // e renderiza o navegador com tabs automaticamente
+      // Cartão autenticado - StackRoutes irá detectar automaticamente
     }
   }, [isCardAuthenticated])
 
@@ -94,20 +88,13 @@ export function Cards() {
   }
 
   const handleCardSelect = (card: any) => {
-    console.log(
-      '🎯 Cards: Cartão selecionado para autenticação:',
-      card.name,
-      'ID:',
-      card.id
-    )
-
-    // Primeiro converta para o formato do contexto
+    // Converter para o formato do contexto
     const cardToSelect = {
       id: card.id,
       cardNumber: card.cardNumber,
       cardholderName: card.name,
-      balance: 0, // Será obtido após autenticação
-      creditLimit: 0, // Será obtido após autenticação
+      balance: 0,
+      creditLimit: 0,
       type: 'credit' as const,
       isActive: true,
       closingDate: 0,
@@ -118,13 +105,16 @@ export function Cards() {
       bills: [],
     }
 
-    console.log(
-      '🎯 Cards: Cartão formatado para contexto:',
-      cardToSelect.cardholderName,
-      'ID:',
-      cardToSelect.id
-    )
-    // Seleciona o cartão no contexto
+    // Verifica se é o mesmo cartão já autenticado
+    if (selectedCard && selectedCard.id === card.id && isCardAuthenticated) {
+      Alert.alert(
+        'Cartão já autenticado',
+        'Este cartão já está autenticado e pronto para uso!',
+        [{ text: 'OK' }]
+      )
+      return
+    }
+
     selectCard(cardToSelect)
     setShowBottomSheet(true)
   }
@@ -171,13 +161,40 @@ export function Cards() {
         </View>
 
         {cards.length > 0 ? (
-          <FlatList
-            data={cards}
-            renderItem={renderCard}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.cardsList}
-          />
+          <>
+            <FlatList
+              data={cards}
+              renderItem={renderCard}
+              keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.cardsList}
+            />
+
+            {/* Botão de navegação */}
+            <TouchableOpacity
+              style={[
+                styles.navigationButton,
+                (!selectedCard || !isCardAuthenticated) &&
+                  styles.navigationButtonDisabled,
+              ]}
+              onPress={() => navigation.navigate('tabs')}
+              disabled={!selectedCard || !isCardAuthenticated}
+            >
+              <Text
+                style={[
+                  styles.navigationButtonText,
+                  (!selectedCard || !isCardAuthenticated) &&
+                    styles.navigationButtonTextDisabled,
+                ]}
+              >
+                {selectedCard && isCardAuthenticated
+                  ? 'Acessar Dashboard'
+                  : selectedCard
+                  ? 'Autentique o cartão para continuar'
+                  : 'Selecione um cartão'}
+              </Text>
+            </TouchableOpacity>
+          </>
         ) : (
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateText}>Nenhum cartão cadastrado</Text>
@@ -242,5 +259,27 @@ const styles = StyleSheet.create({
   logoutButton: {
     padding: 8,
     tintColor: '#ec44ef',
+  },
+  navigationButton: {
+    backgroundColor: colors.primary,
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 20,
+    marginBottom: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navigationButtonDisabled: {
+    backgroundColor: colors.secondaryText,
+    opacity: 0.5,
+  },
+  navigationButtonText: {
+    color: colors.background,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  navigationButtonTextDisabled: {
+    color: colors.background,
+    opacity: 0.7,
   },
 })

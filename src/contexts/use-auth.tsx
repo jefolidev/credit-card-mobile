@@ -53,14 +53,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { loginByCpf, getMe } = authServices
 
     try {
-      console.log('Iniciando login...', { cpf, userType })
+      // Iniciando login
 
       const loginResponse = await loginByCpf({ cpf, password })
-      console.log('Login realizado, salvando token...')
+      // Login realizado, salvando token
 
       if (loginResponse.token) {
         setAuthToken(loginResponse.token)
-        console.log('Token configurado para requisições futuras')
+        // Token configurado para requisições futuras
       }
 
       const { id, email, name, role } = await getMe()
@@ -74,10 +74,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         setUser(userData)
-        console.log('Login bem-sucedido!')
+        // Login bem-sucedido
         return true
       } else {
-        console.log('Dados do usuário incompletos')
+        // Dados do usuário incompletos
         return false
       }
     } catch (error) {

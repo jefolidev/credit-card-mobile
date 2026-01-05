@@ -15,7 +15,7 @@ app.use(cors())
 app.use(express.json())
 
 // Mock de login
-app.post('/sessions/login-by-cpf', (req, res) => {
+app.post('/sessions/login/cpf', (req, res) => {
   console.log('Login request:', req.body)
 
   const { cpf, password } = req.body

@@ -56,7 +56,7 @@ export function Login() {
       const success = await auth(cleanedCpf, userData.password, userType)
 
       if (success) {
-        console.log('Login realizado com sucesso!')
+        // Login realizado com sucesso
       } else {
         Alert.alert('Erro', 'Credenciais inválidos')
       }

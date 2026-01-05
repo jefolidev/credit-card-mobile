@@ -21,8 +21,6 @@ export function StackRoutes({ isAuthenticated }: StackRoutesProps) {
   const { user } = useAuth()
   const { selectedCard, isCardAuthenticated } = useCard()
 
-  // Debug logs para verificar o estado da navegação
-
   if (!isAuthenticated) {
     return (
       <Stack.Navigator
@@ -50,6 +48,7 @@ export function StackRoutes({ isAuthenticated }: StackRoutesProps) {
     if (!selectedCard) {
       return (
         <Stack.Navigator
+          key="no-card-selected"
           initialRouteName="cards"
           screenOptions={{ headerShown: false }}
         >
@@ -61,6 +60,7 @@ export function StackRoutes({ isAuthenticated }: StackRoutesProps) {
     if (!isCardAuthenticated) {
       return (
         <Stack.Navigator
+          key="card-not-authenticated"
           initialRouteName="cards"
           screenOptions={{ headerShown: false }}
         >
@@ -68,13 +68,14 @@ export function StackRoutes({ isAuthenticated }: StackRoutesProps) {
         </Stack.Navigator>
       )
     }
-
-    // Cartão selecionado E autenticado = vai para home
   }
 
   // Se é PORTADOR com cartão autenticado, vai para as tabs (home com resumo)
   return (
     <Stack.Navigator
+      key={`tabs-${selectedCard?.id}-${
+        isCardAuthenticated ? 'auth' : 'noauth'
+      }`}
       initialRouteName="tabs"
       screenOptions={{ headerShown: false }}
     >
