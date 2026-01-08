@@ -74,6 +74,11 @@ export const cardsServices = {
     return data
   },
 
+  unblockCard: async (): Promise<ResponseWithMessageDto> => {
+    const { data } = await api.patch('/buyer/card/unblock')
+    return data
+  },
+
   /////Esse id é o que for lido no QR Code
   getDetailsQrCode: async (id: string): Promise<ResponseSellByQrCodeDto> => {
     const { data } = await api.get(`/buyer/qrcode/` + id)

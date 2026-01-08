@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const auth = async (
-    cpf: string,
+    userCpf: string,
     password: string,
     userType: UserRole
   ): Promise<boolean> => {
@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // Iniciando login
 
-      const loginResponse = await loginByCpf({ cpf, password })
+      const loginResponse = await loginByCpf({ userCpf, password })
       // Login realizado, salvando token
 
       if (loginResponse.token) {
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Token configurado para requisições futuras
       }
 
-      const { id, email, name, role } = await getMe()
+      const { id, email, name, role, cpf, telefoneCelular } = await getMe()
       if (email && name && role) {
         const userData = {
           id,
@@ -71,6 +71,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name,
           role,
           email,
+          cpf,
+          telefoneCelular,
         }
 
         setUser(userData)

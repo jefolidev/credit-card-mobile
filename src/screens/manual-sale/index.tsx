@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
+import { Controller, useForm } from 'react-hook-form'
 import {
-  Alert,
   FlatList,
   Keyboard,
   Modal,
@@ -16,83 +16,116 @@ import { ArrowLeftIcon } from 'src/assets/arrow-left'
 import { CreditCardIcon } from 'src/assets/credit-card-icon'
 import { DocumentIcon } from 'src/assets/document-icon'
 import { DollarIcon } from 'src/assets/dollar-icon'
-import { UserIcon } from 'src/assets/user-icon'
+import { KeyIcon } from 'src/assets/key-icon'
+import { SellProcessingModal } from 'src/components/sell-processing-modal'
+import { useSells } from 'src/contexts/use-sells'
+import { CreateSellDto } from 'src/services/sells/validations/create-sell.dto'
 import { colors } from 'src/theme/colors'
+import {
+  calculateInstallmentValue,
+  formatCardNumber,
+  formatCurrency,
+  parseCurrencyToNumber,
+} from 'src/utils'
 
 interface ManualSaleProps {
   onGoBack: () => void
-  onConfirmSale: (saleData: SaleData) => void
+  onContinueToPayment: (saleData: CreateSellDto) => void
 }
 
-interface SaleData {
-  value: number
+interface SaleFormData {
+  description: string
+  saleValue: string
   installments: number
-  cardNumber: string
-  customerName: string
 }
 
-export function ManualSale({ onGoBack, onConfirmSale }: ManualSaleProps) {
-  const [saleValue, setSaleValue] = useState('')
-  const [installments, setInstallments] = useState(1)
-  const [cardNumber, setCardNumber] = useState('')
-  const [customerName, setCustomerName] = useState('')
+interface PaymentFormData {
+  cardNumber: string
+  password: string
+}
+
+export function ManualSale({ onGoBack, onContinueToPayment }: ManualSaleProps) {
   const [showInstallmentModal, setShowInstallmentModal] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [processingState, setProcessingState] = useState<
+    'loading' | 'success' | 'error' | 'idle'
+  >('idle')
+  const [errorMessage, setErrorMessage] = useState('')
 
-  // Format currency input
-  const formatCurrency = (value: string) => {
-    const numericValue = value.replace(/[^\d]/g, '')
-    const numberValue = parseInt(numericValue || '0') / 100
-    return numberValue.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    })
-  }
+  const { createSell } = useSells()
 
-  const formatCardNumber = (value: string) => {
-    const numericValue = value.replace(/[^\d]/g, '')
-    const formattedValue = numericValue.replace(/(\d{4})(?=\d)/g, '$1 ')
-    return formattedValue.slice(0, 19) // Limit to 16 digits with spaces
-  }
+  const saleForm = useForm<SaleFormData>({
+    defaultValues: {
+      description: '',
+      saleValue: '',
+      installments: 1,
+    },
+  })
 
-  const parseCurrencyToNumber = (currency: string): number => {
-    const numericValue = currency.replace(/[^\d]/g, '')
-    return parseInt(numericValue || '0') / 100
-  }
+  const paymentForm = useForm<PaymentFormData>({
+    defaultValues: {
+      cardNumber: '',
+      password: '',
+    },
+  })
 
-  const getSaleValue = (): number => {
-    return parseCurrencyToNumber(saleValue)
-  }
+  const currentSaleValue = parseCurrencyToNumber(saleForm.watch('saleValue'))
+  const currentInstallments = saleForm.watch('installments')
+  const currentDescription = saleForm.watch('description')
 
-  const getInstallmentValue = (): number => {
-    const value = getSaleValue()
-    return value / installments
-  }
+  const isFormValid =
+    currentDescription.trim().length > 0 && currentSaleValue > 0
+  const installmentValue = calculateInstallmentValue(
+    currentSaleValue,
+    currentInstallments
+  )
 
-  const isFormValid = (): boolean => {
-    const value = getSaleValue()
-    const cardNumberClean = cardNumber.replace(/\s/g, '')
-    return (
-      value > 0 &&
-      installments > 0 &&
-      cardNumberClean.length === 16 &&
-      customerName.trim().length > 0
-    )
-  }
+  const handleContinue = saleForm.handleSubmit(() => {
+    setShowPaymentModal(true)
+  })
 
-  const handleConfirm = () => {
-    if (!isFormValid()) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos corretamente.')
-      return
+  const handleFinalizeSale = paymentForm.handleSubmit(async (paymentData) => {
+    const saleData = saleForm.getValues()
+    const cardNumberClean = paymentData.cardNumber.replace(/\s/g, '')
+
+    const finalSaleData: CreateSellDto = {
+      description: saleData.description.trim(),
+      amount: currentSaleValue,
+      cardNumber: cardNumberClean,
+      installments: saleData.installments,
+      cardPassword: paymentData.password,
     }
 
-    const saleData: SaleData = {
-      value: getSaleValue(),
-      installments,
-      cardNumber: cardNumber.replace(/\s/g, ''),
-      customerName: customerName.trim(),
-    }
+    try {
+      setProcessingState('loading')
+      setShowPaymentModal(false)
 
-    onConfirmSale(saleData)
+      await createSell(finalSaleData)
+
+      setProcessingState('success')
+
+      // Wait for success animation to complete
+      setTimeout(() => {
+        onContinueToPayment(finalSaleData)
+      }, 2000)
+    } catch (error: any) {
+      setProcessingState('error')
+      setErrorMessage(
+        error?.response?.data?.message ||
+          error?.message ||
+          'Erro inesperado ao processar a venda'
+      )
+    }
+  })
+
+  const handleProcessingComplete = () => {
+    setProcessingState('idle')
+    setErrorMessage('')
+
+    if (processingState === 'error') {
+      // Reopen payment modal to try again
+      setShowPaymentModal(true)
+    }
   }
 
   const installmentOptions = Array.from({ length: 12 }, (_, i) => i + 1)
@@ -122,18 +155,48 @@ export function ManualSale({ onGoBack, onConfirmSale }: ManualSaleProps) {
 
           {/* Form */}
           <View style={styles.form}>
+            {/* Description */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>Descrição da Venda</Text>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={currentDescription}
+                  onChangeText={(text) =>
+                    saleForm.setValue('description', text)
+                  }
+                  placeholder="Descreva o que está sendo vendido"
+                  placeholderTextColor={colors.gray[400]}
+                  maxLength={100}
+                />
+              </View>
+            </View>
+
             {/* Sale Value */}
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>Valor da Venda</Text>
               <View style={styles.inputContainer}>
                 <View style={styles.currencyInputContainer}>
-                  <TextInput
-                    style={styles.currencyInput}
-                    value={saleValue}
-                    onChangeText={(text) => setSaleValue(formatCurrency(text))}
-                    placeholder="R$ 0,00"
-                    keyboardType="numeric"
-                    placeholderTextColor={colors.gray[400]}
+                  <Controller
+                    control={saleForm.control}
+                    name="saleValue"
+                    rules={{
+                      required: 'Valor é obrigatório',
+                      validate: (value) => {
+                        const numValue = parseCurrencyToNumber(value)
+                        return numValue > 0 || 'Valor deve ser maior que zero'
+                      },
+                    }}
+                    render={({ field: { onChange, value } }) => (
+                      <TextInput
+                        style={styles.currencyInput}
+                        value={value}
+                        onChangeText={(text) => onChange(formatCurrency(text))}
+                        placeholder="R$ 0,00"
+                        keyboardType="numeric"
+                        placeholderTextColor={colors.gray[400]}
+                      />
+                    )}
                   />
                   <View style={styles.inputIcon}>
                     <DollarIcon
@@ -161,15 +224,15 @@ export function ManualSale({ onGoBack, onConfirmSale }: ManualSaleProps) {
                   />
                 </View>
                 <Text style={styles.selectText}>
-                  {getSaleValue() > 0
-                    ? `${installments}x de ${getInstallmentValue().toLocaleString(
+                  {currentSaleValue > 0
+                    ? `${currentInstallments}x de ${installmentValue.toLocaleString(
                         'pt-BR',
                         {
                           style: 'currency',
                           currency: 'BRL',
                         }
                       )}`
-                    : `${installments}x`}
+                    : `${currentInstallments}x`}
                 </Text>
                 <View style={styles.selectArrow}>
                   <Text style={styles.selectArrowText}>▼</Text>
@@ -177,56 +240,21 @@ export function ManualSale({ onGoBack, onConfirmSale }: ManualSaleProps) {
               </TouchableOpacity>
             </View>
 
-            {/* Card Number */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>Número do Cartão</Text>
-              <View style={styles.inputContainer}>
-                <View style={styles.inputIcon}>
-                  <CreditCardIcon
-                    width={20}
-                    height={20}
-                    color={colors.gray[400]}
-                  />
-                </View>
-                <TextInput
-                  style={styles.input}
-                  value={cardNumber}
-                  onChangeText={(text) => setCardNumber(formatCardNumber(text))}
-                  placeholder="0000 0000 0000 0000"
-                  keyboardType="numeric"
-                  placeholderTextColor={colors.gray[400]}
-                  maxLength={19}
-                />
-              </View>
-            </View>
-
-            {/* Customer Name */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>Nome do Portador</Text>
-              <View style={styles.inputContainer}>
-                <View style={styles.inputIcon}>
-                  <UserIcon width={20} height={20} color={colors.gray[400]} />
-                </View>
-                <TextInput
-                  style={styles.input}
-                  value={customerName}
-                  onChangeText={setCustomerName}
-                  placeholder="Nome completo"
-                  placeholderTextColor={colors.gray[400]}
-                  autoCapitalize="words"
-                />
-              </View>
-            </View>
-
             {/* Summary Card - Only show when form is valid */}
-            {isFormValid() && (
+            {isFormValid && (
               <View style={styles.summaryCard}>
                 <Text style={styles.summaryTitle}>Resumo da Venda</Text>
                 <View style={styles.summaryContent}>
                   <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Descrição:</Text>
+                    <Text style={styles.summaryValue}>
+                      {currentDescription}
+                    </Text>
+                  </View>
+                  <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Valor Total:</Text>
                     <Text style={styles.summaryValue}>
-                      {getSaleValue().toLocaleString('pt-BR', {
+                      {currentSaleValue.toLocaleString('pt-BR', {
                         style: 'currency',
                         currency: 'BRL',
                       })}
@@ -235,8 +263,8 @@ export function ManualSale({ onGoBack, onConfirmSale }: ManualSaleProps) {
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Parcelas:</Text>
                     <Text style={styles.summaryValue}>
-                      {installments}x de{' '}
-                      {getInstallmentValue().toLocaleString('pt-BR', {
+                      {currentInstallments}x de{' '}
+                      {installmentValue.toLocaleString('pt-BR', {
                         style: 'currency',
                         currency: 'BRL',
                       })}
@@ -257,12 +285,12 @@ export function ManualSale({ onGoBack, onConfirmSale }: ManualSaleProps) {
               <TouchableOpacity
                 style={[
                   styles.primaryButton,
-                  !isFormValid() && styles.primaryButtonDisabled,
+                  !isFormValid && styles.primaryButtonDisabled,
                 ]}
-                onPress={handleConfirm}
-                disabled={!isFormValid()}
+                onPress={handleContinue}
+                disabled={!isFormValid}
               >
-                <Text style={styles.primaryButtonText}>Confirmar Venda</Text>
+                <Text style={styles.primaryButtonText}>Continuar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -291,22 +319,23 @@ export function ManualSale({ onGoBack, onConfirmSale }: ManualSaleProps) {
                       <TouchableOpacity
                         style={[
                           styles.optionItem,
-                          installments === item && styles.selectedOption,
+                          currentInstallments === item && styles.selectedOption,
                         ]}
                         onPress={() => {
-                          setInstallments(item)
+                          saleForm.setValue('installments', item)
                           setShowInstallmentModal(false)
                         }}
                       >
                         <Text
                           style={[
                             styles.optionText,
-                            installments === item && styles.selectedOptionText,
+                            currentInstallments === item &&
+                              styles.selectedOptionText,
                           ]}
                         >
-                          {getSaleValue() > 0
+                          {currentSaleValue > 0
                             ? `${item}x de ${(
-                                getSaleValue() / item
+                                currentSaleValue / item
                               ).toLocaleString('pt-BR', {
                                 style: 'currency',
                                 currency: 'BRL',
@@ -328,6 +357,129 @@ export function ManualSale({ onGoBack, onConfirmSale }: ManualSaleProps) {
             </View>
           </TouchableWithoutFeedback>
         </Modal>
+
+        {/* Payment Modal */}
+        <Modal
+          visible={showPaymentModal}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowPaymentModal(false)}
+        >
+          <TouchableWithoutFeedback onPress={dismissKeyboard}>
+            <View style={styles.modalOverlay}>
+              <TouchableWithoutFeedback>
+                <View style={styles.paymentModalContent}>
+                  <Text style={styles.modalTitle}>Dados do Pagamento</Text>
+
+                  <View style={styles.paymentForm}>
+                    {/* Card Number */}
+                    <View style={styles.fieldContainer}>
+                      <Text style={styles.label}>Número do Cartão</Text>
+                      <View style={styles.inputContainer}>
+                        <View style={styles.inputIcon}>
+                          <CreditCardIcon
+                            width={20}
+                            height={20}
+                            color={colors.gray[400]}
+                          />
+                        </View>
+                        <Controller
+                          control={paymentForm.control}
+                          name="cardNumber"
+                          rules={{
+                            required: 'Número do cartão é obrigatório',
+                            validate: (value) => {
+                              const clean = value.replace(/\s/g, '')
+                              return (
+                                clean.length === 16 ||
+                                'Cartão deve ter 16 dígitos'
+                              )
+                            },
+                          }}
+                          render={({ field: { onChange, value } }) => (
+                            <TextInput
+                              style={styles.input}
+                              value={value}
+                              onChangeText={(text) =>
+                                onChange(formatCardNumber(text))
+                              }
+                              placeholder="0000 0000 0000 0000"
+                              keyboardType="numeric"
+                              placeholderTextColor={colors.gray[400]}
+                              maxLength={19}
+                            />
+                          )}
+                        />
+                      </View>
+                    </View>
+
+                    {/* Password */}
+                    <View style={styles.fieldContainer}>
+                      <Text style={styles.label}>Senha do Cartão</Text>
+                      <View style={styles.inputContainer}>
+                        <View style={styles.inputIcon}>
+                          <KeyIcon
+                            width={20}
+                            height={20}
+                            color={colors.gray[400]}
+                          />
+                        </View>
+                        <Controller
+                          control={paymentForm.control}
+                          name="password"
+                          rules={{
+                            required: 'Senha é obrigatória',
+                            minLength: {
+                              value: 4,
+                              message: 'Senha deve ter pelo menos 4 dígitos',
+                            },
+                          }}
+                          render={({ field: { onChange, value } }) => (
+                            <TextInput
+                              style={styles.input}
+                              value={value}
+                              onChangeText={onChange}
+                              placeholder="••••"
+                              keyboardType="numeric"
+                              secureTextEntry
+                              placeholderTextColor={colors.gray[400]}
+                              maxLength={6}
+                            />
+                          )}
+                        />
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={styles.paymentButtonContainer}>
+                    <TouchableOpacity
+                      style={styles.cancelButton}
+                      onPress={() => setShowPaymentModal(false)}
+                    >
+                      <Text style={styles.cancelButtonText}>Cancelar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.finishButton}
+                      onPress={handleFinalizeSale}
+                    >
+                      <Text style={styles.finishButtonText}>
+                        Finalizar Venda
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+
+        {/* Sell Processing Modal */}
+        <SellProcessingModal
+          visible={processingState !== 'idle'}
+          state={processingState}
+          errorMessage={errorMessage}
+          onComplete={handleProcessingComplete}
+        />
       </SafeAreaView>
     </TouchableWithoutFeedback>
   )
@@ -583,5 +735,50 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#FFFFFF',
     lineHeight: 24,
+  },
+  paymentModalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    maxHeight: '80%',
+  },
+  paymentForm: {
+    gap: 20,
+    marginVertical: 20,
+  },
+  paymentButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: 20,
+  },
+  cancelButton: {
+    flex: 1,
+    height: 50,
+    backgroundColor: colors.gray[200],
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: colors.primaryText,
+  },
+  finishButton: {
+    flex: 1,
+    height: 50,
+    backgroundColor: '#5d0ec0',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  finishButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#FFFFFF',
   },
 })

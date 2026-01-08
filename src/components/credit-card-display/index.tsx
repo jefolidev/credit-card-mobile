@@ -2,7 +2,7 @@ import React from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { EyeIcon } from 'src/assets/eye-simple'
 import { BalanceInfo } from 'src/components/balance-info'
-import { applyCpfMask } from 'src/utils/cpf-mask'
+import { applyCpfMask } from 'src/utils'
 
 interface CardData {
   id: string

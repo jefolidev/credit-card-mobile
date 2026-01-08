@@ -60,6 +60,12 @@ interface CardContextProps {
   getCardBalance: () => Promise<ResponseGetBalanceCard>
   getCardBillings: () => Promise<ResponseGetBillingsCards>
   getBillingDetails: (billingId: string) => Promise<ResponseGetBillingDetails>
+  changeCardPassword: (
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<boolean>
+  blockCard: () => Promise<boolean>
+  unblockCard: () => Promise<boolean>
 }
 
 const CardContext = createContext<CardContextProps | null>(null)
@@ -250,6 +256,81 @@ export function CardProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const changeCardPassword = async (
+    currentPassword: string,
+    newPassword: string
+  ): Promise<boolean> => {
+    if (!isCardAuthenticated || !cardToken) {
+      throw new Error('Cartão não autenticado')
+    }
+
+    try {
+      await cardsServices.changePasswordCard({
+        password: currentPassword,
+        newPassword,
+        confirmPassword: newPassword,
+      })
+      return true
+    } catch (error) {
+      console.error('❌ Erro ao alterar senha do cartão:', error)
+      return false
+    }
+  }
+
+  const blockCard = async (): Promise<boolean> => {
+    if (!isCardAuthenticated || !cardToken) {
+      throw new Error('Cartão não autenticado')
+    }
+
+    try {
+      await cardsServices.blockCard()
+      console.log('🔒 Cartão bloqueado com sucesso')
+
+      // Atualizar o estado do cartão como bloqueado
+      setSelectedCard((prevCard) => {
+        if (prevCard) {
+          return {
+            ...prevCard,
+            isActive: false,
+          }
+        }
+        return prevCard
+      })
+
+      return true
+    } catch (error) {
+      console.error('❌ Erro ao bloquear cartão:', error)
+      return false
+    }
+  }
+
+  const unblockCard = async (): Promise<boolean> => {
+    if (!isCardAuthenticated || !cardToken) {
+      throw new Error('Cartão não autenticado')
+    }
+
+    try {
+      await cardsServices.unblockCard()
+      console.log('🔓 Cartão desbloqueado com sucesso')
+
+      // Atualizar o estado do cartão como desbloqueado
+      setSelectedCard((prevCard) => {
+        if (prevCard) {
+          return {
+            ...prevCard,
+            isActive: true,
+          }
+        }
+        return prevCard
+      })
+
+      return true
+    } catch (error) {
+      console.error('❌ Erro ao desbloquear cartão:', error)
+      return false
+    }
+  }
+
   return (
     <CardContext.Provider
       value={{
@@ -264,6 +345,9 @@ export function CardProvider({ children }: { children: ReactNode }) {
         getCardBalance,
         getCardBillings,
         getBillingDetails,
+        changeCardPassword,
+        blockCard,
+        unblockCard,
       }}
     >
       {children}

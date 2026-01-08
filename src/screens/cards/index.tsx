@@ -93,6 +93,7 @@ export function Cards() {
       id: card.id,
       cardNumber: card.cardNumber,
       cardholderName: card.name,
+      cpf: card.cpf || '',
       balance: 0,
       creditLimit: 0,
       type: 'credit' as const,

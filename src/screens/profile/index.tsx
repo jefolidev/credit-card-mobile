@@ -202,9 +202,7 @@ export function Profile() {
               </View>
               <View style={styles.infoTexts}>
                 <Text style={styles.label}>Telefone</Text>
-                <Text style={styles.value}>
-                  {user?.phone ?? '(--) ----- ----'}
-                </Text>
+                <Text style={styles.value}>{'(--) ----- ----'}</Text>
               </View>
               <TouchableOpacity style={{ marginRight: 12 }}>
                 <EditPencil width={22} height={22} color={colors.zinc[500]} />
@@ -216,9 +214,7 @@ export function Profile() {
               </View>
               <View style={styles.infoTexts}>
                 <Text style={styles.label}>Localização</Text>
-                <Text style={styles.value}>
-                  {user?.city ? `${user.city}, ${user.state}` : 'São Paulo, SP'}
-                </Text>
+                <Text style={styles.value}>{'São Paulo, SP'}</Text>
               </View>
             </View>
           </View>

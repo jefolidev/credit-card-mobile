@@ -17,13 +17,6 @@ interface BalanceInfoProps {
 export function BalanceInfo({ balance }: BalanceInfoProps) {
   const utilizationPercentage = (balance.usedBalance / balance.totalLimit) * 100
 
-  const formatCurrency = (value: number) => {
-    return value.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    })
-  }
-
   return (
     <View style={styles.container}>
       {/* Balance Information Card */}
@@ -42,7 +35,7 @@ export function BalanceInfo({ balance }: BalanceInfoProps) {
           <View style={styles.balanceRow}>
             <Text style={styles.balanceLabel}>Limite Total</Text>
             <Text style={styles.balanceValue}>
-              {formatCurrency(balance.totalLimit)}
+              {formatNumberToCurrency(balance.totalLimit)}
             </Text>
           </View>
 
@@ -50,7 +43,7 @@ export function BalanceInfo({ balance }: BalanceInfoProps) {
           <View style={styles.balanceRow}>
             <Text style={styles.balanceLabel}>Saldo Disponível</Text>
             <Text style={[styles.balanceValue, styles.availableValue]}>
-              {formatCurrency(balance.availableBalance)}
+              {formatNumberToCurrency(balance.availableBalance)}
             </Text>
           </View>
 
@@ -58,7 +51,7 @@ export function BalanceInfo({ balance }: BalanceInfoProps) {
           <View style={styles.balanceRow}>
             <Text style={styles.balanceLabel}>Saldo Utilizado</Text>
             <Text style={[styles.balanceValue, styles.usedValue]}>
-              {formatCurrency(balance.usedBalance)}
+              {formatNumberToCurrency(balance.usedBalance)}
             </Text>
           </View>
 

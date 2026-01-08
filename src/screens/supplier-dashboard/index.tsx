@@ -16,7 +16,7 @@ import { QrCodeSale } from 'src/screens/qr-code-sale'
 import { SalesCancellation } from 'src/screens/sales-cancellation'
 import { SalesHistory } from 'src/screens/sales-history'
 import { colors } from 'src/theme/colors'
-import { applyCpfMask } from 'src/utils/cpf-mask'
+import { applyCpfMask } from 'src/utils'
 
 type ScreenType =
   | 'dashboard'
@@ -28,10 +28,11 @@ type ScreenType =
   | 'balanceInquiry'
 
 interface SaleData {
-  value: number
+  description: string
+  amount: number
   installments: number
   cardNumber: string
-  customerName: string
+  cardPassword: string
 }
 
 interface QrSaleData {
@@ -84,13 +85,11 @@ export function SupplierDashboard() {
 
   const handleConfirmManualSale = (saleData: SaleData) => {
     Alert.alert(
-      'Venda Confirmada',
-      `Venda de ${saleData.value.toLocaleString('pt-BR', {
+      'Venda Finalizada',
+      `${saleData.description} - ${saleData.amount.toLocaleString('pt-BR', {
         style: 'currency',
         currency: 'BRL',
-      })} em ${saleData.installments}x para ${
-        saleData.customerName
-      } foi registrada com sucesso!`,
+      })} em ${saleData.installments}x foi processada com sucesso!`,
       [{ text: 'OK', onPress: handleGoBackToDashboard }]
     )
   }
@@ -114,7 +113,7 @@ export function SupplierDashboard() {
     return (
       <ManualSale
         onGoBack={handleGoBackToNewSale}
-        onConfirmSale={handleConfirmManualSale}
+        onContinueToPayment={handleConfirmManualSale}
       />
     )
   }

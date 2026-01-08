@@ -9,4 +9,6 @@ export type GetMeResponse = {
   id: string;
   role: UserRole;
   name: string;
+  cpf: string;
+  telefoneCelular?: string
 }

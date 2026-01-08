@@ -10,6 +10,7 @@ import React from 'react'
 import { AmountVisibilityProvider } from './contexts/use-amount-visibility'
 import { AuthProvider } from './contexts/use-auth'
 import { CardProvider } from './contexts/use-card'
+import { SellsProvider } from './contexts/use-sells'
 import { Routes } from './routes/@index'
 
 // TODO: FAZER PAGINA DE CONTATO E LOJISTA EM SEGUIDA | MANDAR RELATORIO PRO THENISON
@@ -29,9 +30,11 @@ export default function App() {
   return (
     <AuthProvider>
       <CardProvider>
-        <AmountVisibilityProvider>
-          <Routes />
-        </AmountVisibilityProvider>
+        <SellsProvider>
+          <AmountVisibilityProvider>
+            <Routes />
+          </AmountVisibilityProvider>
+        </SellsProvider>
       </CardProvider>
     </AuthProvider>
   )

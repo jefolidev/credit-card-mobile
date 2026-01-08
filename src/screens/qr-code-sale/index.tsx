@@ -16,6 +16,7 @@ import { DocumentIcon } from 'src/assets/document-icon'
 import { DollarIcon } from 'src/assets/dollar-icon'
 import { QrCodeIcon } from 'src/assets/qr-code-icon'
 import { colors } from 'src/theme/colors'
+import { formatCurrency, parseCurrencyToNumber } from 'src/utils'
 
 interface QrCodeSaleProps {
   onGoBack: () => void
@@ -32,21 +33,6 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
   const [installments, setInstallments] = useState(1)
   const [showQrCode, setShowQrCode] = useState(false)
   const [showInstallmentModal, setShowInstallmentModal] = useState(false)
-
-  // Format currency input
-  const formatCurrency = (value: string) => {
-    const numericValue = value.replace(/[^\d]/g, '')
-    const numberValue = parseInt(numericValue || '0') / 100
-    return numberValue.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    })
-  }
-
-  const parseCurrencyToNumber = (currency: string): number => {
-    const numericValue = currency.replace(/[^\d]/g, '')
-    return parseInt(numericValue || '0') / 100
-  }
 
   const getSaleValue = (): number => {
     return parseCurrencyToNumber(saleValue)
