@@ -1,3 +1,4 @@
+export type RootStackParamList = {
   login: undefined
   cards: undefined
   product: undefined

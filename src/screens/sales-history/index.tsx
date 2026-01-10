@@ -1,17 +1,26 @@
-import React, { useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import {
   FlatList,
+  Keyboard,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native'
 import { DocumentIcon } from 'src/assets/document-icon'
+import { FilterIcon } from 'src/assets/filter-icon'
+import { DateInput } from 'src/components'
 import { Header } from 'src/components/header'
 import { SaleItem, SaleItemProps, SaleStatus } from 'src/components/sale-item'
+import { useAuth } from 'src/contexts/use-auth'
+import { useSells } from 'src/contexts/use-sells'
+import { ResponseGetSell } from 'src/services/sells/responses.dto'
 import { colors } from 'src/theme/colors'
+import { formatCurrency, parseCurrencyToNumber } from 'src/utils'
 
 type FilterStatus = 'all' | SaleStatus
 
@@ -21,147 +30,185 @@ interface FilterButton {
   count: number
 }
 
-const mockSales: SaleItemProps[] = [
-  {
-    id: 'VND001233',
-    customerName: 'Maria Santos',
-    cardNumber: '6050 **** **** 8392',
-    amount: 89.9,
-    installments: 1,
-    date: '15/12/2024 às 13:15',
-    status: 'authorized',
-  },
-  {
-    id: 'VND001232',
-    customerName: 'Carlos Oliveira',
-    cardNumber: '6050 **** **** 1543',
-    amount: 450.0,
-    installments: 6,
-    date: '15/12/2024 às 11:48',
-    status: 'unauthorized',
-  },
-  {
-    id: 'VND001231',
-    customerName: 'Ana Silva',
-    cardNumber: '6050 **** **** 7821',
-    amount: 125.5,
-    installments: 3,
-    date: '14/12/2024 às 16:22',
-    status: 'authorized',
-  },
-  {
-    id: 'VND001230',
-    customerName: 'Pedro Costa',
-    cardNumber: '6050 **** **** 9834',
-    amount: 680.0,
-    installments: 12,
-    date: '14/12/2024 às 15:10',
-    status: 'cancelled',
-  },
-  {
-    id: 'VND001229',
-    customerName: 'Lucia Ferreira',
-    cardNumber: '6050 **** **** 4567',
-    amount: 89.0,
-    installments: 1,
-    date: '13/12/2024 às 09:30',
-    status: 'authorized',
-  },
-  {
-    id: 'VND001228',
-    customerName: 'Roberto Mendes',
-    cardNumber: '6050 **** **** 2341',
-    amount: 320.0,
-    installments: 4,
-    date: '12/12/2024 às 14:15',
-    status: 'unauthorized',
-  },
-  {
-    id: 'VND001227',
-    customerName: 'Fernanda Lima',
-    cardNumber: '6050 **** **** 8765',
-    amount: 200.0,
-    installments: 2,
-    date: '12/12/2024 às 10:45',
-    status: 'authorized',
-  },
-  {
-    id: 'VND001226',
-    customerName: 'José Santos',
-    cardNumber: '6050 **** **** 9012',
-    amount: 150.75,
-    installments: 1,
-    date: '11/12/2024 às 18:30',
-    status: 'unauthorized',
-  },
-]
+interface AdvancedFilters {
+  description: string
+  minAmount: string
+  maxAmount: string
+  startDate: string
+  endDate: string
+  cardNumber: string
+  asc: boolean
+  status?: 'PAID' | 'IN_CANCELATION' | 'CANCELED'
+}
 
 interface SalesHistoryProps {
   onGoBack?: () => void
 }
 
 export function SalesHistory({ onGoBack }: SalesHistoryProps) {
-  const [searchText, setSearchText] = useState('')
+  const { user } = useAuth()
+  const { getSells } = useSells()
+  const [sales, setSales] = useState<ResponseGetSell[]>([])
+  const [loading, setLoading] = useState(false)
   const [activeFilter, setActiveFilter] = useState<FilterStatus>('all')
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+
+  const { control, watch, reset } = useForm<AdvancedFilters>({
+    defaultValues: {
+      description: '',
+      minAmount: '',
+      maxAmount: '',
+      startDate: '',
+      endDate: '',
+      cardNumber: '',
+      asc: true,
+    },
+  })
+
+  const searchText = watch('description')
+  const advancedFilters = useWatch({ control })
+
+  // Função para converter string de data para Date
+  const parseDate = (dateString: string): Date | null => {
+    if (!dateString || dateString.length !== 10) return null
+    const [day, month, year] = dateString.split('/')
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+    return isNaN(date.getTime()) ? null : date
+  }
+
+  const fetchSales = useCallback(async () => {
+    if (!user?.id) return
+
+    setLoading(true)
+    try {
+      const filters = {
+        userId: user.id,
+        // Não enviar description para API, fazer busca local apenas
+        minAmount: advancedFilters.minAmount
+          ? parseCurrencyToNumber(advancedFilters.minAmount).toString()
+          : undefined,
+        maxAmount: advancedFilters.maxAmount
+          ? parseCurrencyToNumber(advancedFilters.maxAmount).toString()
+          : undefined,
+        startDate: advancedFilters.startDate || undefined,
+        endDate: advancedFilters.endDate || undefined,
+        status: activeFilter !== 'all' ? activeFilter : undefined,
+        asc: advancedFilters.asc,
+        limit: '50',
+        page: '1',
+      }
+
+      const response = await getSells(filters)
+      setSales(response.sells || [])
+    } catch (error) {
+      console.error('Erro ao buscar vendas:', error)
+      setSales([])
+    } finally {
+      setLoading(false)
+    }
+  }, [
+    user?.id,
+    advancedFilters.minAmount,
+    advancedFilters.maxAmount,
+    advancedFilters.startDate,
+    advancedFilters.endDate,
+    advancedFilters.asc,
+    activeFilter,
+  ])
+
+  useEffect(() => {
+    fetchSales()
+  }, [fetchSales])
 
   const filteredSales = useMemo(() => {
-    let sales = mockSales
+    let filteredData = sales
 
-    if (searchText.trim()) {
+    // Aplicar busca local por descrição, número do cartão ou portador
+    if (searchText?.trim()) {
       const searchLower = searchText.toLowerCase()
-      sales = sales.filter(
+      filteredData = sales.filter(
         (sale) =>
+          // Buscar na descrição (se existir)
+          sale.description?.toLowerCase().includes(searchLower) ||
+          // Buscar no ID da venda
           sale.id.toLowerCase().includes(searchLower) ||
-          sale.customerName.toLowerCase().includes(searchLower) ||
-          sale.cardNumber.toLowerCase().includes(searchLower)
+          // Buscar no nome do portador
+          sale.card?.user?.name?.toLowerCase().includes(searchLower) ||
+          // Buscar no número do cartão
+          sale.card?.cardNumber?.toLowerCase().includes(searchLower)
       )
     }
 
-    if (activeFilter !== 'all') {
-      sales = sales.filter((sale) => sale.status === activeFilter)
-    }
+    return filteredData
+  }, [sales, searchText])
 
-    return sales
-  }, [searchText, activeFilter])
+  const clearAdvancedFilters = () => {
+    reset({
+      description: '',
+      minAmount: '',
+      maxAmount: '',
+      startDate: '',
+      endDate: '',
+      cardNumber: '',
+      asc: true,
+    })
+  }
+
+  const hasActiveAdvancedFilters = Object.entries(advancedFilters).some(
+    ([key, value]) => {
+      if (key === 'asc') return false // Não considerar 'asc' como filtro ativo
+      return value !== '' && value !== true && value !== false
+    }
+  )
 
   const getFilterButtons = (): FilterButton[] => {
-    const authorizedCount = mockSales.filter(
-      (sale) => sale.status === 'authorized'
+    const authorizedCount = sales.filter(
+      (sale) => sale.status === 'PAID'
     ).length
-    const unauthorizedCount = mockSales.filter(
-      (sale) => sale.status === 'unauthorized'
+    const unauthorizedCount = sales.filter(
+      (sale) => sale.status === 'IN_CANCELATION'
     ).length
-    const cancelledCount = mockSales.filter(
-      (sale) => sale.status === 'cancelled'
+    const cancelledCount = sales.filter(
+      (sale) => sale.status === 'CANCELED'
     ).length
 
     return [
       {
         key: 'all',
-        label: `Todas (${mockSales.length})`,
-        count: mockSales.length,
+        label: `Todas (${sales.length})`,
+        count: sales.length,
       },
       {
-        key: 'authorized',
+        key: 'PAID',
         label: `Autorizadas (${authorizedCount})`,
         count: authorizedCount,
       },
       {
-        key: 'unauthorized',
-        label: `Não Autorizadas (${unauthorizedCount})`,
-        count: unauthorizedCount,
-      },
-      {
-        key: 'cancelled',
+        key: 'CANCELED',
         label: `Canceladas (${cancelledCount})`,
         count: cancelledCount,
       },
     ]
   }
 
-  const renderSaleItem = ({ item }: { item: SaleItemProps }) => (
-    <SaleItem {...item} />
-  )
+  const renderSaleItem = ({ item }: { item: ResponseGetSell }) => {
+    const saleProps: SaleItemProps = {
+      id: item.id,
+      customerName: item.card?.user?.name || 'N/A',
+      cardNumber: item.card?.cardNumber || 'N/A',
+      amount: item.amount,
+      installments: item.installments,
+      date:
+        new Date(item.createdAt).toLocaleDateString('pt-BR') +
+        ' às ' +
+        new Date(item.createdAt).toLocaleTimeString('pt-BR', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+      status: item.status,
+    }
+    return <SaleItem {...saleProps} />
+  }
 
   const getFilterButtonColors = (
     buttonKey: FilterStatus,
@@ -180,17 +227,17 @@ export function SalesHistory({ onGoBack }: SalesHistoryProps) {
           backgroundColor: colors.primary,
           textColor: 'white',
         }
-      case 'authorized':
+      case 'PAID':
         return {
           backgroundColor: '#008236',
           textColor: 'white',
         }
-      case 'unauthorized':
+      case 'CANCELED':
         return {
           backgroundColor: '#c10007',
           textColor: 'white',
         }
-      case 'cancelled':
+      case 'IN_CANCELATION':
         return {
           backgroundColor: colors.gray[600],
           textColor: 'white',
@@ -245,48 +292,221 @@ export function SalesHistory({ onGoBack }: SalesHistoryProps) {
         onBackPress={onGoBack}
       />
 
-      <View style={styles.content}>
-        {/* Header Info */}
-        <View style={styles.headerInfo}>
-          <Text style={styles.title}>Vendas realizadas</Text>
-          <Text style={styles.subtitle}>{mockSales.length} transações</Text>
-        </View>
-
-        {/* Search Input */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchInputWrapper}>
-            <DocumentIcon width={16} height={16} color={colors.gray[400]} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Buscar por ID, cartão ou portador..."
-              placeholderTextColor="rgba(16,24,40,0.5)"
-              value={searchText}
-              onChangeText={setSearchText}
-            />
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.content}>
+          {/* Header Info */}
+          <View style={styles.headerInfo}>
+            <Text style={styles.title}>Vendas realizadas</Text>
+            <Text style={styles.subtitle}>{sales.length} transações</Text>
           </View>
+
+          {/* Search Input */}
+          <View style={styles.searchContainer}>
+            <View style={styles.searchInputWrapper}>
+              <DocumentIcon width={16} height={16} color={colors.gray[400]} />
+              <Controller
+                control={control}
+                name="description"
+                render={({ field: { onChange, value } }) => (
+                  <TextInput
+                    style={styles.searchInput}
+                    placeholder="Buscar por descrição, cartão ou portador..."
+                    placeholderTextColor="rgba(16,24,40,0.5)"
+                    value={value}
+                    onChangeText={onChange}
+                  />
+                )}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.filterToggleButton,
+                hasActiveAdvancedFilters && styles.filterToggleButtonActive,
+              ]}
+              onPress={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            >
+              <FilterIcon
+                width={20}
+                height={20}
+                color={hasActiveAdvancedFilters ? 'white' : colors.gray[600]}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Advanced Filters Panel */}
+          {showAdvancedFilters && (
+            <View style={styles.advancedFiltersPanel}>
+              <View style={styles.advancedFiltersHeader}>
+                <Text style={styles.advancedFiltersTitle}>
+                  Filtros avançados
+                </Text>
+                <TouchableOpacity onPress={clearAdvancedFilters}>
+                  <Text style={styles.clearFiltersText}>Limpar filtros</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.filtersRow}>
+                <Controller
+                  control={control}
+                  name="startDate"
+                  render={({ field: { onChange, value } }) => (
+                    <DateInput
+                      label="Data inicial"
+                      value={value}
+                      onChange={onChange}
+                      placeholder="DD/MM/AAAA"
+                    />
+                  )}
+                />
+                <Controller
+                  control={control}
+                  name="endDate"
+                  render={({ field: { onChange, value } }) => (
+                    <DateInput
+                      label="Data final"
+                      value={value}
+                      onChange={onChange}
+                      placeholder="DD/MM/AAAA"
+                    />
+                  )}
+                />
+              </View>
+
+              <View style={styles.filtersRow}>
+                <View style={styles.filterItem}>
+                  <Text style={styles.filterLabel}>Valor mínimo</Text>
+                  <Controller
+                    control={control}
+                    name="minAmount"
+                    render={({ field: { onChange, value } }) => (
+                      <TextInput
+                        style={styles.filterInput}
+                        placeholder="R$ 0,00"
+                        value={value}
+                        onChangeText={(text: string) => {
+                          const formatted = formatCurrency(text)
+                          onChange(formatted)
+                        }}
+                        keyboardType="numeric"
+                      />
+                    )}
+                  />
+                </View>
+
+                <View style={styles.filterItem}>
+                  <Text style={styles.filterLabel}>Valor máximo</Text>
+                  <Controller
+                    control={control}
+                    name="maxAmount"
+                    render={({ field: { onChange, value } }) => (
+                      <TextInput
+                        style={styles.filterInput}
+                        placeholder="R$ 999,99"
+                        value={value}
+                        onChangeText={(text: string) => {
+                          const formatted = formatCurrency(text)
+                          onChange(formatted)
+                        }}
+                        keyboardType="numeric"
+                      />
+                    )}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.filtersRow}>
+                <View style={styles.filterItem}>
+                  <Text style={styles.filterLabel}>Número do cartão</Text>
+                  <Controller
+                    control={control}
+                    name="cardNumber"
+                    render={({ field: { onChange, value } }) => (
+                      <TextInput
+                        style={styles.filterInput}
+                        placeholder="6050 **** **** 1234"
+                        value={value}
+                        onChangeText={onChange}
+                        keyboardType="numeric"
+                        maxLength={19}
+                      />
+                    )}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.filtersRow}>
+                <View style={styles.filterItem}>
+                  <Text style={styles.filterLabel}>Ordenação por valor</Text>
+                  <Controller
+                    control={control}
+                    name="asc"
+                    render={({ field: { onChange, value } }) => (
+                      <View style={styles.sortButtons}>
+                        <TouchableOpacity
+                          style={[
+                            styles.sortButton,
+                            value && styles.sortButtonActive,
+                          ]}
+                          onPress={() => onChange(true)}
+                        >
+                          <Text
+                            style={[
+                              styles.sortButtonText,
+                              value && styles.sortButtonTextActive,
+                            ]}
+                          >
+                            Crescente
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[
+                            styles.sortButton,
+                            !value && styles.sortButtonActive,
+                          ]}
+                          onPress={() => onChange(false)}
+                        >
+                          <Text
+                            style={[
+                              styles.sortButtonText,
+                              !value && styles.sortButtonTextActive,
+                            ]}
+                          >
+                            Decrescente
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  />
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* Filter Buttons */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.filterContainer}
+            contentContainerStyle={styles.filterContentContainer}
+          >
+            {getFilterButtons().map(renderFilterButton)}
+          </ScrollView>
         </View>
+      </TouchableWithoutFeedback>
 
-        {/* Filter Buttons */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterContainer}
-          contentContainerStyle={styles.filterContentContainer}
-        >
-          {getFilterButtons().map(renderFilterButton)}
-        </ScrollView>
-
-        {/* Sales List */}
-        <FlatList
-          data={filteredSales}
-          renderItem={renderSaleItem}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.salesList}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-          ListEmptyComponent={renderEmptyComponent}
-        />
-      </View>
+      {/* Sales List */}
+      <FlatList
+        data={filteredSales}
+        renderItem={renderSaleItem}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        style={styles.salesListContainer}
+        contentContainerStyle={styles.salesList}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ListEmptyComponent={renderEmptyComponent}
+        nestedScrollEnabled={true}
+      />
     </View>
   )
 }
@@ -297,9 +517,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    flex: 1,
     paddingHorizontal: 12,
-    paddingVertical: 17,
+    paddingTop: 8,
   },
   headerInfo: {
     paddingHorizontal: 12,
@@ -322,6 +541,9 @@ const styles = StyleSheet.create({
   searchContainer: {
     paddingHorizontal: 0,
     marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   searchInputWrapper: {
     flexDirection: 'row',
@@ -334,6 +556,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 12,
     height: 51,
+    flex: 1,
   },
   searchInput: {
     flex: 1,
@@ -341,14 +564,106 @@ const styles = StyleSheet.create({
     fontFamily: 'Arimo_400Regular',
     color: '#101828',
   },
+  filterToggleButton: {
+    width: 51,
+    height: 51,
+    backgroundColor: '#f9fafb',
+    borderWidth: 1.45,
+    borderColor: '#d1d5dc',
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterToggleButtonActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  advancedFiltersPanel: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  advancedFiltersHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  advancedFiltersTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#101828',
+    fontFamily: 'Arimo_600SemiBold',
+  },
+  clearFiltersText: {
+    fontSize: 14,
+    color: colors.primary,
+    fontFamily: 'Arimo_400Regular',
+  },
+  filtersRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  filterItem: {
+    flex: 1,
+  },
+  filterLabel: {
+    fontSize: 14,
+    color: '#374151',
+    fontFamily: 'Arimo_400Regular',
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  filterInput: {
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#d1d5dc',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: '#101828',
+    fontFamily: 'Arimo_400Regular',
+  },
+  sortButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  sortButton: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#f3f4f6',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    alignItems: 'center',
+  },
+  sortButtonActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  sortButtonText: {
+    fontSize: 14,
+    color: '#374151',
+    fontFamily: 'Arimo_400Regular',
+  },
+  sortButtonTextActive: {
+    color: 'white',
+  },
   filterContainer: {
-    marginBottom: 20,
-    minHeight: 42,
+    marginBottom: 4,
+    maxHeight: 36,
   },
   filterContentContainer: {
     flexDirection: 'row',
     gap: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
     alignItems: 'center',
   },
   filterButton: {
@@ -365,6 +680,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Arimo_400Regular',
     lineHeight: 20,
     textAlign: 'center',
+  },
+  salesListContainer: {
+    flex: 1,
+    paddingHorizontal: 12,
   },
   salesList: {
     paddingHorizontal: 0,

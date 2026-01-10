@@ -5,8 +5,9 @@ import { CheckIcon } from 'src/assets/check-icon'
 import ClockIcon from 'src/assets/clock-icon'
 import { CreditCardIcon } from 'src/assets/credit-card-icon'
 import { DollarIcon } from 'src/assets/dollar-icon'
+import { formatCardNumber } from 'src/utils'
 
-export type SaleStatus = 'authorized' | 'unauthorized' | 'cancelled'
+export type SaleStatus = 'PAID' | 'IN_CANCELATION' | 'CANCELED'
 
 export interface SaleItemProps {
   id: string
@@ -20,7 +21,7 @@ export interface SaleItemProps {
 
 const getStatusConfig = (status: SaleStatus) => {
   switch (status) {
-    case 'authorized':
+    case 'PAID':
       return {
         backgroundColor: '#dcfce7',
         borderColor: '#b9f8cf',
@@ -28,20 +29,20 @@ const getStatusConfig = (status: SaleStatus) => {
         text: 'Autorizada',
         textColor: '#008236',
       }
-    case 'unauthorized':
+    case 'CANCELED':
       return {
         backgroundColor: '#ffe2e2',
         borderColor: '#ffc9c9',
         icon: <CancelIcon width={16} height={16} color="#c10007" />,
-        text: 'Não Autorizada',
+        text: 'Cancelada',
         textColor: '#c10007',
       }
-    case 'cancelled':
+    case 'IN_CANCELATION':
       return {
         backgroundColor: '#f3f4f6',
         borderColor: '#e5e7eb',
         icon: <ClockIcon width={16} height={16} strokeColor="#364153" />,
-        text: 'Cancelada',
+        text: 'Em cancelamento',
         textColor: '#364153',
       }
   }
@@ -81,7 +82,7 @@ export function SaleItem({
       <View style={styles.details}>
         <View style={styles.detailRow}>
           <CreditCardIcon width={16} height={16} color="#364153" />
-          <Text style={styles.detailText}>{cardNumber}</Text>
+          <Text style={styles.detailText}>{formatCardNumber(cardNumber)}</Text>
         </View>
 
         <View style={styles.detailRow}>

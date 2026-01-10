@@ -52,5 +52,3 @@ export function DocumentIcon({
     </Svg>
   )
 }
-
-export default DocumentIcon

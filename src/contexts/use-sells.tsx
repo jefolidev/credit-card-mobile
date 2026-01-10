@@ -4,17 +4,22 @@ import {
   confirmCancellation,
   createQrCode as createQrCodeEndpoint,
   createSell as createSellEndpoint,
+  getSells as getSellsEndpoint,
 } from 'src/services/sells/endpoints'
 import {
   ResponseCreateSells,
+  ResponseGetAllSells,
   ResponseGetSell,
   ResponseSellQrCode,
 } from 'src/services/sells/responses.dto'
 import { CreateQrCodeSellDto } from 'src/services/sells/validations/create-qr-code-sell.dto'
 import { CreateSellDto } from 'src/services/sells/validations/create-sell.dto'
+import { FiltersGetSellDto } from 'src/services/sells/validations/filters-get-sell-dto'
 
 interface SellsContextProps {
   sells: ResponseGetSell[]
+
+  getSells: (filters?: FiltersGetSellDto) => Promise<ResponseGetAllSells>
   createQrCode: (payload: CreateQrCodeSellDto) => Promise<ResponseSellQrCode>
   createSell: (payload: CreateSellDto) => Promise<ResponseCreateSells>
   cancelSell: (sellId: string) => Promise<void>
@@ -25,6 +30,19 @@ const SellsContext = createContext<SellsContextProps>({} as SellsContextProps)
 
 export function SellsProvider({ children }: { children: React.ReactNode }) {
   const [sells, setSells] = useState<ResponseGetSell[]>([])
+
+  async function getSells(
+    filters: FiltersGetSellDto = {}
+  ): Promise<ResponseGetAllSells> {
+    try {
+      const response = await getSellsEndpoint(filters)
+      setSells(response.sells || [])
+      return response
+    } catch (error) {
+      console.error('❌ Erro ao buscar vendas:', error)
+      throw error
+    }
+  }
 
   async function createQrCode({
     amount,
@@ -79,6 +97,7 @@ export function SellsProvider({ children }: { children: React.ReactNode }) {
     <SellsContext.Provider
       value={{
         sells,
+        getSells,
         createQrCode,
         createSell,
         cancelSell,
