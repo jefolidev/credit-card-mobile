@@ -13,14 +13,14 @@ import {
 } from 'react-native'
 import { DocumentIcon } from 'src/assets/document-icon'
 import { FilterIcon } from 'src/assets/filter-icon'
-import { DateInput } from 'src/components'
+import { FilterPanel } from 'src/components'
 import { Header } from 'src/components/header'
 import { SaleItem, SaleItemProps, SaleStatus } from 'src/components/sale-item'
 import { useAuth } from 'src/contexts/use-auth'
 import { useSells } from 'src/contexts/use-sells'
 import { ResponseGetSell } from 'src/services/sells/responses.dto'
 import { colors } from 'src/theme/colors'
-import { formatCurrency, parseCurrencyToNumber } from 'src/utils'
+import { parseCurrencyToNumber } from 'src/utils'
 
 type FilterStatus = 'all' | SaleStatus
 
@@ -68,7 +68,6 @@ export function SalesHistory({ onGoBack }: SalesHistoryProps) {
   const searchText = watch('description')
   const advancedFilters = useWatch({ control })
 
-  // Função para converter string de data para Date
   const parseDate = (dateString: string): Date | null => {
     if (!dateString || dateString.length !== 10) return null
     const [day, month, year] = dateString.split('/')
@@ -83,7 +82,7 @@ export function SalesHistory({ onGoBack }: SalesHistoryProps) {
     try {
       const filters = {
         userId: user.id,
-        // Não enviar description para API, fazer busca local apenas
+
         minAmount: advancedFilters.minAmount
           ? parseCurrencyToNumber(advancedFilters.minAmount).toString()
           : undefined,
@@ -123,18 +122,13 @@ export function SalesHistory({ onGoBack }: SalesHistoryProps) {
   const filteredSales = useMemo(() => {
     let filteredData = sales
 
-    // Aplicar busca local por descrição, número do cartão ou portador
     if (searchText?.trim()) {
       const searchLower = searchText.toLowerCase()
       filteredData = sales.filter(
         (sale) =>
-          // Buscar na descrição (se existir)
           sale.description?.toLowerCase().includes(searchLower) ||
-          // Buscar no ID da venda
           sale.id.toLowerCase().includes(searchLower) ||
-          // Buscar no nome do portador
           sale.card?.user?.name?.toLowerCase().includes(searchLower) ||
-          // Buscar no número do cartão
           sale.card?.cardNumber?.toLowerCase().includes(searchLower)
       )
     }
@@ -156,7 +150,7 @@ export function SalesHistory({ onGoBack }: SalesHistoryProps) {
 
   const hasActiveAdvancedFilters = Object.entries(advancedFilters).some(
     ([key, value]) => {
-      if (key === 'asc') return false // Não considerar 'asc' como filtro ativo
+      if (key === 'asc') return false
       return value !== '' && value !== true && value !== false
     }
   )
@@ -165,7 +159,7 @@ export function SalesHistory({ onGoBack }: SalesHistoryProps) {
     const authorizedCount = sales.filter(
       (sale) => sale.status === 'PAID'
     ).length
-    const unauthorizedCount = sales.filter(
+    const inCancellationCount = sales.filter(
       (sale) => sale.status === 'IN_CANCELATION'
     ).length
     const cancelledCount = sales.filter(
@@ -187,6 +181,11 @@ export function SalesHistory({ onGoBack }: SalesHistoryProps) {
         key: 'CANCELED',
         label: `Canceladas (${cancelledCount})`,
         count: cancelledCount,
+      },
+      {
+        key: 'IN_CANCELATION',
+        label: `Em cancelamento (${inCancellationCount})`,
+        count: inCancellationCount,
       },
     ]
   }
@@ -335,153 +334,12 @@ export function SalesHistory({ onGoBack }: SalesHistoryProps) {
           </View>
 
           {/* Advanced Filters Panel */}
-          {showAdvancedFilters && (
-            <View style={styles.advancedFiltersPanel}>
-              <View style={styles.advancedFiltersHeader}>
-                <Text style={styles.advancedFiltersTitle}>
-                  Filtros avançados
-                </Text>
-                <TouchableOpacity onPress={clearAdvancedFilters}>
-                  <Text style={styles.clearFiltersText}>Limpar filtros</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.filtersRow}>
-                <Controller
-                  control={control}
-                  name="startDate"
-                  render={({ field: { onChange, value } }) => (
-                    <DateInput
-                      label="Data inicial"
-                      value={value}
-                      onChange={onChange}
-                      placeholder="DD/MM/AAAA"
-                    />
-                  )}
-                />
-                <Controller
-                  control={control}
-                  name="endDate"
-                  render={({ field: { onChange, value } }) => (
-                    <DateInput
-                      label="Data final"
-                      value={value}
-                      onChange={onChange}
-                      placeholder="DD/MM/AAAA"
-                    />
-                  )}
-                />
-              </View>
-
-              <View style={styles.filtersRow}>
-                <View style={styles.filterItem}>
-                  <Text style={styles.filterLabel}>Valor mínimo</Text>
-                  <Controller
-                    control={control}
-                    name="minAmount"
-                    render={({ field: { onChange, value } }) => (
-                      <TextInput
-                        style={styles.filterInput}
-                        placeholder="R$ 0,00"
-                        value={value}
-                        onChangeText={(text: string) => {
-                          const formatted = formatCurrency(text)
-                          onChange(formatted)
-                        }}
-                        keyboardType="numeric"
-                      />
-                    )}
-                  />
-                </View>
-
-                <View style={styles.filterItem}>
-                  <Text style={styles.filterLabel}>Valor máximo</Text>
-                  <Controller
-                    control={control}
-                    name="maxAmount"
-                    render={({ field: { onChange, value } }) => (
-                      <TextInput
-                        style={styles.filterInput}
-                        placeholder="R$ 999,99"
-                        value={value}
-                        onChangeText={(text: string) => {
-                          const formatted = formatCurrency(text)
-                          onChange(formatted)
-                        }}
-                        keyboardType="numeric"
-                      />
-                    )}
-                  />
-                </View>
-              </View>
-
-              <View style={styles.filtersRow}>
-                <View style={styles.filterItem}>
-                  <Text style={styles.filterLabel}>Número do cartão</Text>
-                  <Controller
-                    control={control}
-                    name="cardNumber"
-                    render={({ field: { onChange, value } }) => (
-                      <TextInput
-                        style={styles.filterInput}
-                        placeholder="6050 **** **** 1234"
-                        value={value}
-                        onChangeText={onChange}
-                        keyboardType="numeric"
-                        maxLength={19}
-                      />
-                    )}
-                  />
-                </View>
-              </View>
-
-              <View style={styles.filtersRow}>
-                <View style={styles.filterItem}>
-                  <Text style={styles.filterLabel}>Ordenação por valor</Text>
-                  <Controller
-                    control={control}
-                    name="asc"
-                    render={({ field: { onChange, value } }) => (
-                      <View style={styles.sortButtons}>
-                        <TouchableOpacity
-                          style={[
-                            styles.sortButton,
-                            value && styles.sortButtonActive,
-                          ]}
-                          onPress={() => onChange(true)}
-                        >
-                          <Text
-                            style={[
-                              styles.sortButtonText,
-                              value && styles.sortButtonTextActive,
-                            ]}
-                          >
-                            Crescente
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={[
-                            styles.sortButton,
-                            !value && styles.sortButtonActive,
-                          ]}
-                          onPress={() => onChange(false)}
-                        >
-                          <Text
-                            style={[
-                              styles.sortButtonText,
-                              !value && styles.sortButtonTextActive,
-                            ]}
-                          >
-                            Decrescente
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    )}
-                  />
-                </View>
-              </View>
-            </View>
-          )}
+          <FilterPanel
+            control={control}
+            visible={showAdvancedFilters}
+            onClear={clearAdvancedFilters}
+            showAllFields={true}
+          />
 
           {/* Filter Buttons */}
           <ScrollView
@@ -577,83 +435,6 @@ const styles = StyleSheet.create({
   filterToggleButtonActive: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
-  },
-  advancedFiltersPanel: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  advancedFiltersHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  advancedFiltersTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#101828',
-    fontFamily: 'Arimo_600SemiBold',
-  },
-  clearFiltersText: {
-    fontSize: 14,
-    color: colors.primary,
-    fontFamily: 'Arimo_400Regular',
-  },
-  filtersRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  filterItem: {
-    flex: 1,
-  },
-  filterLabel: {
-    fontSize: 14,
-    color: '#374151',
-    fontFamily: 'Arimo_400Regular',
-    marginBottom: 8,
-    fontWeight: '500',
-  },
-  filterInput: {
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: '#d1d5dc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: '#101828',
-    fontFamily: 'Arimo_400Regular',
-  },
-  sortButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  sortButton: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: '#f3f4f6',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    alignItems: 'center',
-  },
-  sortButtonActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  sortButtonText: {
-    fontSize: 14,
-    color: '#374151',
-    fontFamily: 'Arimo_400Regular',
-  },
-  sortButtonTextActive: {
-    color: 'white',
   },
   filterContainer: {
     marginBottom: 4,
