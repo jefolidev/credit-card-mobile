@@ -6,6 +6,7 @@ import {
   ResponseGetBalanceCard,
   ResponseGetBillingDetails,
   ResponseGetBillingsCards,
+  ResponseGetPortatorBalance,
   ResponseSellByQrCodeDto,
   ResponseWithMessageDto,
 } from './responses-dto'
@@ -41,6 +42,16 @@ export const cardsServices = {
 
   getBillingsCards: async (): Promise<ResponseGetBillingsCards> => {
     const { data } = await api.get('/buyer/card/billings')
+    return data
+  },
+
+  getPortatorBalance: async (query?: {
+    cpf?: string
+    cardNumber?: string
+  }): Promise<ResponseGetPortatorBalance> => {
+    const { data } = await api.get('/seller/portator/balance', {
+      params: query,
+    })
     return data
   },
 

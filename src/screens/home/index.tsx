@@ -37,9 +37,6 @@ export function Home() {
       return []
     }
 
-    console.log('🔍 Debug: Bills encontradas:', selectedCard.bills.length)
-    console.log('🔍 Debug: Bills:', selectedCard.bills)
-
     // Se não tiver transações nas bills, vamos mostrar as próprias bills como transações
     const billsAsTransactions = selectedCard.bills.map((bill) => ({
       id: bill.id,
@@ -49,7 +46,6 @@ export function Home() {
       type: 'payment' as const,
     }))
 
-    console.log('🔍 Debug: Bills as transactions:', billsAsTransactions)
     return billsAsTransactions
   }
 
@@ -70,19 +66,7 @@ export function Home() {
     (a, b) => new Date(b).getTime() - new Date(a).getTime()
   )
 
-  const formatDateLegend = (dateString: string) => {
-    const date = new Date(dateString)
-    return date
-      .toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      })
-      .replace(' de ', ' ')
-  }
-
   // Get latest transactions with date grouping (limit to show max 2 dates for home screen)
-  const limitedDates = sortedDates.slice(0, 2)
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>

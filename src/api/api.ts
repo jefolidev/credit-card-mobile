@@ -12,13 +12,13 @@ const getApiUrl = () => {
   const localIP = getLocalIP()
 
   if (Platform.OS === 'android') {
-    // Para Android Emulator
-    return 'http://10.0.2.2:3000'
+    // Para Android Emulator - usar 10.0.2.2 para acessar localhost da máquina host
+    return `http://${localIP}:3000`
   } else if (Platform.OS === 'ios') {
     // Para iOS Simulator - usar IP da máquina host
     return `http://${localIP}:3000`
   }
-  // Fallback para web/outras plataformas
+  0 // Fallback para web/outras plataformas
   return 'http://localhost:3000'
 }
 
@@ -96,7 +96,7 @@ function toAPIError(error: unknown): APIError {
         status,
         code: 'CONNECTION_ERROR',
         message:
-          'Não foi possível conectar ao servidor. Verifique: 1) Mock server rodando (npm run mock-server), 2) IP correto na configuração',
+          'Não foi possível conectar ao servidor NestJS. Verifique se o servidor está rodando na porta 3000',
         details: data,
       }
     }

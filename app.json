@@ -4,12 +4,27 @@
     "slug": "credit-card-app",
     "version": "1.0.0",
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ]
     ],
     "extra": {
       "eas": {
         "projectId": "aa73d0f6-96d0-476e-819a-9632118bfd04"
       }
+    },
+    "android": {
+      "package": "com.jefkjkk.creditcardapp",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     }
   }
 }

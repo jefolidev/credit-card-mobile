@@ -15,6 +15,7 @@ import { NewSale } from 'src/screens/new-sale'
 import { QrCodeSale } from 'src/screens/qr-code-sale'
 import { SalesCancellation } from 'src/screens/sales-cancellation'
 import { SalesHistory } from 'src/screens/sales-history'
+import { CreateQrCodeSellDto } from 'src/services/sells/validations/create-qr-code-sell.dto'
 import { colors } from 'src/theme/colors'
 import { applyCpfMask } from 'src/utils'
 
@@ -94,7 +95,7 @@ export function SupplierDashboard() {
     )
   }
 
-  const handleConfirmQrSale = (saleData: QrSaleData) => {
+  const handleConfirmQrSale = (saleData: CreateQrCodeSellDto) => {
     // QR Code sale confirmed
   }
 

@@ -5,6 +5,7 @@ import {
   Modal,
   PanResponder,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableWithoutFeedback,
@@ -31,7 +32,10 @@ export function BaseSheet({
 
   const panResponder = React.useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: (evt, gestureState) => {
+        // Only handle pan gestures on the header area, not the content
+        return evt.nativeEvent.pageY < 150
+      },
       onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dy) > 5,
       onPanResponderMove: (_, gesture) => {
         if (gesture.dy > 0) {
@@ -77,14 +81,21 @@ export function BaseSheet({
           </TouchableWithoutFeedback>
           <Animated.View
             style={[styles.sheet, { transform: [{ translateY }] }]}
-            {...panResponder.panHandlers}
           >
-            <View style={styles.sheetHeader}>
+            <View style={styles.sheetHeader} {...panResponder.panHandlers}>
               <View style={styles.dragHandle} />
               <Text style={styles.sheetTitle}>{title}</Text>
             </View>
 
-            {children}
+            <ScrollView
+              style={styles.scrollContent}
+              contentContainerStyle={styles.scrollContentContainer}
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled={true}
+            >
+              {children}
+            </ScrollView>
+
             {footer && <View style={styles.footerContainer}>{footer}</View>}
           </Animated.View>
         </View>
@@ -105,7 +116,15 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     padding: 16,
-    maxHeight: '80%',
+    height: '80%',
+    minHeight: 200,
+  },
+  scrollContent: {
+    flex: 1,
+  },
+  scrollContentContainer: {
+    flexGrow: 1,
+    paddingBottom: 8,
   },
   sheetHeader: { alignItems: 'flex-start', marginBottom: 8 },
   dragHandle: {

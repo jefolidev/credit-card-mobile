@@ -1,4 +1,4 @@
-package com.creditcardapp
+package com.jefkjkk.creditcardapp
 
 import android.os.Build
 import android.os.Bundle

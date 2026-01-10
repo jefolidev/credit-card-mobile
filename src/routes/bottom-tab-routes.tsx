@@ -13,9 +13,15 @@ import { BillDetails } from 'src/screens/bill-details'
 import { Cards } from 'src/screens/cards'
 import { Home } from 'src/screens/home'
 import { Profile } from 'src/screens/profile'
+import { QrPayment } from 'src/screens/qr-payment'
 import { Transactions } from 'src/screens/transactions'
 
-type BottomTabParams = 'home' | 'transactions' | 'cards' | 'profile'
+type BottomTabParams =
+  | 'home'
+  | 'transactions'
+  | 'cards'
+  | 'profile'
+  | 'qr-payment'
 
 const Stack = createNativeStackNavigator()
 
@@ -51,7 +57,7 @@ export function BottomTabRoutes(): JSX.Element {
   }, [logoutCard])
 
   const handleQRCodePress = () => {
-    setShowQRScanner(true)
+    setCurrentTab('qr-payment')
   }
 
   const handleQRCodeScanned = (data: string) => {
@@ -62,6 +68,10 @@ export function BottomTabRoutes(): JSX.Element {
 
   const handleCloseScanner = () => {
     setShowQRScanner(false)
+  }
+
+  const handleQrPaymentBack = () => {
+    setCurrentTab('home')
   }
 
   const navigationItems = [
@@ -101,6 +111,8 @@ export function BottomTabRoutes(): JSX.Element {
         return <Cards />
       case 'profile':
         return <Profile />
+      case 'qr-payment':
+        return <QrPayment onGoBack={handleQrPaymentBack} />
       default:
         return <Home />
     }
@@ -109,7 +121,7 @@ export function BottomTabRoutes(): JSX.Element {
   return (
     <View style={styles.container}>
       <View style={styles.content}>{renderScreen()}</View>
-      {currentTab !== 'cards' && (
+      {currentTab !== 'cards' && currentTab !== 'qr-payment' && (
         <NavigateBar
           currentTab={currentTab}
           onTabPress={setCurrentTab}

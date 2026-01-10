@@ -21,6 +21,7 @@ export function QRCodeScanner({
 }: QRCodeScannerProps) {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
   const [scanned, setScanned] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
     getCameraPermissions()
@@ -38,9 +39,14 @@ export function QRCodeScanner({
     type: string
     data: string
   }) => {
-    if (!scanned) {
+    if (!scanned && !isProcessing) {
       setScanned(true)
-      onQRCodeScanned(data)
+      setIsProcessing(true)
+
+      // Add visual feedback delay
+      setTimeout(() => {
+        onQRCodeScanned(data)
+      }, 300)
     }
   }
 
@@ -142,6 +148,16 @@ export function QRCodeScanner({
               <View style={styles.crossHorizontal} />
               <View style={styles.crossVertical} />
             </View>
+
+            {/* Success Overlay */}
+            {isProcessing && (
+              <View style={styles.successOverlay}>
+                <View style={styles.successIcon}>
+                  <Text style={styles.successText}>✓</Text>
+                </View>
+                <Text style={styles.successLabel}>QR Code Detectado!</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -150,13 +166,6 @@ export function QRCodeScanner({
           <Text style={styles.instructionsText}>
             Aponte a câmera para o QR Code que deseja escanear
           </Text>
-        </View>
-
-        {/* Gallery Button */}
-        <View style={styles.bottomActions}>
-          <TouchableOpacity style={styles.galleryButton} onPress={openGallery}>
-            <Text style={styles.galleryButtonText}>Escolher da galeria</Text>
-          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -356,5 +365,38 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#FFFFFF',
     lineHeight: 24,
+  },
+
+  // Success overlay styles
+  successOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(139, 92, 246, 0.9)',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  successIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  successText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#8B5CF6',
+  },
+  successLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textAlign: 'center',
   },
 })

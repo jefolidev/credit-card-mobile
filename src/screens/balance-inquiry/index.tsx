@@ -1,133 +1,148 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { Controller, useForm } from 'react-hook-form'
 import {
-  FlatList,
+  ActivityIndicator,
+  Keyboard,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native'
 import { DocumentIcon } from 'src/assets/document-icon'
+import { DollarIcon } from 'src/assets/dollar-icon'
 import { UserIcon } from 'src/assets/user-icon'
-import { CreditCardDisplay } from 'src/components/credit-card-display'
+import CreditCard from 'src/components/credit-card'
 import { Header } from 'src/components/header'
+import { useCard } from 'src/contexts/use-card'
+import { ResponseGetPortatorBalance } from 'src/services/cards/responses-dto'
 import { colors } from 'src/theme/colors'
+import { applyCpfMask, cleanCpf, formatCardNumber } from 'src/utils'
+import { getErrorMessage } from './utils'
+
+const formatCurrency = (value: number): string => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value)
+}
 
 type SearchType = 'cpf' | 'card'
 
-// Mock data - será substituído por dados reais
-interface CardData {
-  id: string
-  cardNumber: string
-  holderName: string
-  cpf: string
-  cardType: string
-  status: 'active' | 'inactive'
-  balance: {
-    totalLimit: number
-    availableBalance: number
-    usedBalance: number
-    dueDate: string
-  }
+interface SearchFormData {
+  searchText: string
+  searchType: SearchType
 }
-
-const mockCards: CardData[] = [
-  {
-    id: 'CARD001',
-    cardNumber: '5412 7890 1234 5678',
-    holderName: 'MARIA SILVA OLIVEIRA',
-    cpf: '123.456.789-00',
-    cardType: 'Gold',
-    status: 'active',
-    balance: {
-      totalLimit: 5000.0,
-      availableBalance: 4250.0,
-      usedBalance: 750.0,
-      dueDate: 'Dia 15',
-    },
-  },
-]
 
 interface BalanceInquiryProps {
   onGoBack?: () => void
 }
 
 export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
-  const [searchText, setSearchText] = useState('')
-  const [activeSearchType, setActiveSearchType] = useState<SearchType>('cpf')
   const [searchPerformed, setSearchPerformed] = useState(false)
-  const [foundCards, setFoundCards] = useState<CardData[]>([])
-  const [selectedCard, setSelectedCard] = useState<CardData | null>(null)
+  const [foundCard, setFoundCard] = useState<ResponseGetPortatorBalance | null>(
+    null
+  )
+  const [isLoading, setIsLoading] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [showToast, setShowToast] = useState(false)
 
-  // Funções de máscara
-  const applyCpfMask = (value: string) => {
-    const digits = value.replace(/\D/g, '')
-    return digits
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d{1,2})/, '$1-$2')
-      .slice(0, 14)
+  const { getPortatorBalance } = useCard()
+
+  const { control, watch, setValue } = useForm<SearchFormData>({
+    defaultValues: {
+      searchText: '',
+      searchType: 'cpf',
+    },
+  })
+
+  const searchText = watch('searchText')
+  const searchType = watch('searchType')
+
+  const showToastMessage = (message: string) => {
+    setToastMessage(message)
+    setShowToast(true)
+    setTimeout(() => {
+      setShowToast(false)
+    }, 3000)
   }
 
-  const applyCardMask = (value: string) => {
-    const digits = value.replace(/\D/g, '')
-    return digits
-      .replace(/(\d{4})(\d)/, '$1 $2')
-      .replace(/(\d{4})\s(\d{4})(\d)/, '$1 $2 $3')
-      .replace(/(\d{4})\s(\d{4})\s(\d{4})(\d)/, '$1 $2 $3 $4')
-      .slice(0, 19)
+  const dismissKeyboard = () => {
+    Keyboard.dismiss()
   }
+
+  useEffect(() => {
+    // Reset search when changing search type
+    if (searchText) {
+      setValue('searchText', '')
+      setSearchPerformed(false)
+      setFoundCard(null)
+      setIsExpanded(false)
+    }
+  }, [searchType, setValue])
 
   const handleInputChange = (text: string) => {
     let maskedText = text
 
-    switch (activeSearchType) {
+    switch (searchType) {
       case 'cpf':
         maskedText = applyCpfMask(text)
         break
       case 'card':
-        maskedText = applyCardMask(text)
+        maskedText = formatCardNumber(text)
         break
       default:
         maskedText = text
         break
     }
 
-    setSearchText(maskedText)
+    setValue('searchText', maskedText)
   }
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!searchText.trim()) return
 
+    setIsLoading(true)
     setSearchPerformed(true)
 
-    // Simular busca
-    const searchLower = searchText.toLowerCase()
-    const results = mockCards.filter((card) => {
-      switch (activeSearchType) {
-        case 'cpf':
-          return card.cpf
-            .replace(/\D/g, '')
-            .includes(searchText.replace(/\D/g, ''))
-        case 'card':
-          return card.cardNumber
-            .replace(/\s/g, '')
-            .includes(searchText.replace(/\s/g, ''))
-        default:
-          return false
-      }
-    })
+    try {
+      let searchParams: { cpf?: string; cardNumber?: string } = {}
 
-    setFoundCards(results)
-    setSelectedCard(null)
+      if (searchType === 'cpf') {
+        searchParams.cpf = cleanCpf(searchText)
+      } else if (searchType === 'card') {
+        searchParams.cardNumber = searchText.replace(/\s/g, '')
+      }
+
+      const result = await getPortatorBalance(searchParams)
+
+      if (result) {
+        setFoundCard(result)
+      } else {
+        setFoundCard(null)
+        showToastMessage(
+          'Nenhum cartão foi encontrado com os dados informados.'
+        )
+      }
+    } catch (error: any) {
+      console.error('Erro ao buscar saldo:', error)
+      setFoundCard(null)
+
+      showToastMessage(getErrorMessage(error))
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleCardPress = (card: CardData) => {
-    setSelectedCard(selectedCard?.id === card.id ? null : card)
+  const handleCardPress = () => {
+    setIsExpanded(!isExpanded)
   }
 
   const getSearchPlaceholder = () => {
-    switch (activeSearchType) {
+    switch (searchType) {
       case 'cpf':
         return 'Digite o CPF'
       case 'card':
@@ -138,7 +153,7 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
   }
 
   const getSearchIcon = () => {
-    switch (activeSearchType) {
+    switch (searchType) {
       case 'cpf':
         return <UserIcon width={20} height={20} color={colors.gray[400]} />
       case 'card':
@@ -149,7 +164,7 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
   }
 
   const renderFilterButton = (type: SearchType, label: string) => {
-    const isActive = activeSearchType === type
+    const isActive = searchType === type
     return (
       <TouchableOpacity
         key={type}
@@ -160,15 +175,7 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
             borderColor: isActive ? colors.primary : '#d1d5dc',
           },
         ]}
-        onPress={() => {
-          if (activeSearchType !== type) {
-            setSearchText('')
-            setSearchPerformed(false)
-            setFoundCards([])
-            setSelectedCard(null)
-          }
-          setActiveSearchType(type)
-        }}
+        onPress={() => setValue('searchType', type)}
       >
         <Text
           style={[
@@ -182,29 +189,127 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
     )
   }
 
-  const renderCard = ({ item }: { item: CardData }) => (
-    <CreditCardDisplay
-      card={item}
-      onPress={() => handleCardPress(item)}
-      isExpanded={selectedCard?.id === item.id}
-    />
-  )
+  const renderCard = () => {
+    if (!foundCard) return null
+
+    // Calcular valores do saldo
+    const totalLimit = foundCard.totalLimit || 2000
+    const availableBalance = foundCard.limitAvailable
+    const usedBalance = totalLimit - availableBalance
+    const usagePercentage =
+      totalLimit > 0 ? (usedBalance / totalLimit) * 100 : 0
+
+    const cardData = {
+      id: foundCard.cardNumber,
+      cardNumber: foundCard.cardNumber,
+      holderName: foundCard.ownerName,
+      cpf: foundCard.ownerCpf,
+      cardType: 'Portador',
+      status: 'active' as const,
+      balance: {
+        totalLimit,
+        availableBalance,
+        usedBalance,
+        dueDate: '',
+      },
+    }
+
+    return (
+      <View>
+        <TouchableOpacity
+          style={styles.cardContainer}
+          onPress={handleCardPress}
+        >
+          <CreditCard
+            cardNumber={cardData.cardNumber}
+            cardOwner={cardData.holderName}
+            cpf={applyCpfMask(cardData.cpf)}
+            shouldRenderNumber={true}
+          />
+        </TouchableOpacity>
+
+        {isExpanded && (
+          <View style={styles.balanceInfoContainer}>
+            {/* Header */}
+            <View style={styles.balanceInfoHeader}>
+              <DollarIcon width={20} height={20} color={colors.primary} />
+              <Text style={styles.balanceInfoTitle}>Informação de Saldo</Text>
+            </View>
+
+            {/* Balance Details */}
+            <View style={styles.balanceDetails}>
+              <View style={styles.balanceRow}>
+                <Text style={styles.balanceLabel}>Saldo Total</Text>
+                <Text style={styles.balanceValue}>
+                  {formatCurrency(totalLimit)}
+                </Text>
+              </View>
+              <View style={styles.balanceRow}>
+                <Text style={styles.balanceLabel}>Saldo Disponível</Text>
+                <Text style={styles.balanceValue}>
+                  {formatCurrency(availableBalance)}
+                </Text>
+              </View>
+              <View style={styles.balanceRow}>
+                <Text style={styles.balanceLabel}>Saldo Utilizado</Text>
+                <Text style={styles.balanceValue}>
+                  {formatCurrency(usedBalance)}
+                </Text>
+              </View>
+              <View style={styles.balanceRow}>
+                <Text style={styles.balanceLabel}>Vencimento da Fatura</Text>
+                <Text style={styles.balanceValue}>Dia 15</Text>
+              </View>
+            </View>
+
+            {/* Progress Bar */}
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBackground}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    { width: `${Math.min(usagePercentage, 100)}%` },
+                  ]}
+                />
+              </View>
+              <View style={styles.progressLabels}>
+                <Text style={styles.progressLabel}>0%</Text>
+                <Text style={styles.progressLabel}>100%</Text>
+              </View>
+            </View>
+          </View>
+        )}
+      </View>
+    )
+  }
 
   const renderEmptyState = () => {
+    if (isLoading) {
+      return (
+        <View style={styles.emptyState}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.emptyTitle}>Buscando...</Text>
+          <Text style={styles.emptyDescription}>
+            Aguarde enquanto consultamos os dados do portador
+          </Text>
+        </View>
+      )
+    }
+
     if (!searchPerformed) {
       return (
         <View style={styles.emptyState}>
           <DocumentIcon width={64} height={64} color={colors.gray[300]} />
           <Text style={styles.emptyTitle}>Nenhuma consulta realizada</Text>
           <Text style={styles.emptyDescription}>
-            Digite um {activeSearchType === 'cpf' ? 'CPF' : 'número do cartão'}{' '}
-            e clique em buscar
+            Digite um {searchType === 'cpf' ? 'CPF' : 'número do cartão'} e
+            clique em buscar
           </Text>
         </View>
       )
     }
 
-    if (foundCards.length === 0) {
+    if (!foundCard) {
       return (
         <View style={styles.emptyState}>
           <DocumentIcon width={64} height={64} color={colors.gray[300]} />
@@ -220,86 +325,97 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
   }
 
   return (
-    <View style={styles.container}>
-      <Header
-        title="Consulta de Saldo"
-        showBackButton={true}
-        onBackPress={onGoBack}
-      />
+    <TouchableWithoutFeedback onPress={dismissKeyboard}>
+      <View style={styles.container}>
+        <Header
+          title="Consulta de Saldo"
+          showBackButton={true}
+          onBackPress={onGoBack}
+        />
 
-      <View style={styles.content}>
-        {/* Filter Buttons */}
-        <View style={styles.filterContainer}>
-          {renderFilterButton('cpf', 'Buscar por CPF')}
-          {renderFilterButton('card', 'Buscar por Cartão')}
-        </View>
-
-        {/* Search Input */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchInputWrapper}>
-            {getSearchIcon()}
-            <TextInput
-              style={styles.searchInput}
-              placeholder={getSearchPlaceholder()}
-              placeholderTextColor="#99a1af"
-              value={searchText}
-              onChangeText={handleInputChange}
-              keyboardType={activeSearchType === 'cpf' ? 'numeric' : 'numeric'}
-            />
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Filter Buttons */}
+          <View style={styles.filterContainer}>
+            {renderFilterButton('cpf', 'Buscar por CPF')}
+            {renderFilterButton('card', 'Buscar por Cartão')}
           </View>
-          <TouchableOpacity
-            style={[
-              styles.searchButton,
-              searchText.trim()
-                ? styles.searchButtonActive
-                : styles.searchButtonInactive,
-            ]}
-            onPress={handleSearch}
-            disabled={!searchText.trim()}
-          >
-            <Text
+
+          {/* Search Input */}
+          <View style={styles.searchContainer}>
+            <View style={styles.searchInputWrapper}>
+              {getSearchIcon()}
+              <Controller
+                control={control}
+                name="searchText"
+                render={({ field: { value } }) => (
+                  <TextInput
+                    style={styles.searchInput}
+                    placeholder={getSearchPlaceholder()}
+                    placeholderTextColor="#99a1af"
+                    value={value}
+                    onChangeText={handleInputChange}
+                    keyboardType={searchType === 'cpf' ? 'numeric' : 'numeric'}
+                  />
+                )}
+              />
+            </View>
+            <TouchableOpacity
               style={[
-                styles.searchButtonText,
+                styles.searchButton,
                 searchText.trim()
-                  ? styles.searchButtonTextActive
-                  : styles.searchButtonTextInactive,
+                  ? styles.searchButtonActive
+                  : styles.searchButtonInactive,
               ]}
+              onPress={handleSearch}
+              disabled={!searchText.trim() || isLoading}
             >
-              Buscar
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Info Alert */}
-        <View style={styles.alertContainer}>
-          <DocumentIcon width={20} height={20} color="#1c398e" />
-          <View style={styles.alertContent}>
-            <Text style={styles.alertTitle}>Informação</Text>
-            <Text style={styles.alertDescription}>
-              Digite o {activeSearchType === 'cpf' ? 'CPF' : 'número do cartão'}{' '}
-              do portador para consultar o saldo disponível e informações do
-              cartão.
-            </Text>
+              <Text
+                style={[
+                  styles.searchButtonText,
+                  searchText.trim()
+                    ? styles.searchButtonTextActive
+                    : styles.searchButtonTextInactive,
+                ]}
+              >
+                {isLoading ? 'Buscando...' : 'Buscar'}
+              </Text>
+            </TouchableOpacity>
           </View>
-        </View>
 
-        {/* Results */}
-        <View style={styles.resultsContainer}>
-          {foundCards.length > 0 ? (
-            <FlatList
-              data={foundCards}
-              renderItem={renderCard}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.cardsList}
-              ItemSeparatorComponent={() => <View style={styles.separator} />}
-            />
-          ) : (
-            renderEmptyState()
-          )}
-        </View>
+          {/* Info Alert */}
+          <View style={styles.alertContainer}>
+            <DocumentIcon width={20} height={20} color="#1c398e" />
+            <View style={styles.alertContent}>
+              <Text style={styles.alertTitle}>Informação</Text>
+              <Text style={styles.alertDescription}>
+                Digite o {searchType === 'cpf' ? 'CPF' : 'número do cartão'} do
+                portador para consultar o saldo disponível e informações do
+                cartão.
+              </Text>
+            </View>
+          </View>
+
+          {/* Results */}
+          <View style={styles.resultsContainer}>
+            {foundCard ? renderCard() : renderEmptyState()}
+          </View>
+        </ScrollView>
+
+        {/* Toast */}
+        {showToast && (
+          <View style={styles.toastContainer}>
+            <View style={styles.toast}>
+              <Text style={styles.toastText}>{toastMessage}</Text>
+            </View>
+          </View>
+        )}
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   )
 }
 
@@ -308,11 +424,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  content: {
     padding: 12,
     paddingTop: 24,
     gap: 16,
+    paddingBottom: 32,
   },
   filterContainer: {
     flexDirection: 'row',
@@ -332,6 +451,74 @@ const styles = StyleSheet.create({
     fontFamily: 'Arimo_400Regular',
     lineHeight: 20,
     textAlign: 'center',
+  },
+  cardContainer: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  balanceInfoContainer: {
+    backgroundColor: 'white',
+    borderWidth: 1.25,
+    borderColor: '#d1d5dc',
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 16,
+    gap: 16,
+  },
+  balanceInfoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  balanceInfoTitle: {
+    fontSize: 16,
+    fontFamily: 'Arimo_600SemiBold',
+    color: '#101828',
+    lineHeight: 24,
+  },
+  balanceDetails: {
+    gap: 12,
+  },
+  balanceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  balanceLabel: {
+    fontSize: 14,
+    fontFamily: 'Arimo_400Regular',
+    color: '#6a7282',
+    lineHeight: 20,
+  },
+  balanceValue: {
+    fontSize: 14,
+    fontFamily: 'Arimo_600SemiBold',
+    color: '#101828',
+    lineHeight: 20,
+  },
+  progressContainer: {
+    gap: 8,
+  },
+  progressBackground: {
+    height: 8,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: colors.primary,
+    borderRadius: 4,
+  },
+  progressLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  progressLabel: {
+    fontSize: 12,
+    fontFamily: 'Arimo_400Regular',
+    color: '#6a7282',
+    lineHeight: 16,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -442,5 +629,35 @@ const styles = StyleSheet.create({
     fontFamily: 'Arimo_400Regular',
     lineHeight: 20,
     textAlign: 'center',
+  },
+  toastContainer: {
+    position: 'absolute',
+    top: 100,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  toast: {
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  toastText: {
+    color: '#fff',
+    fontSize: 14,
+    fontFamily: 'Arimo_400Regular',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 })

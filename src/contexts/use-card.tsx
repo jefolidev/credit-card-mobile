@@ -7,6 +7,7 @@ import {
   ResponseGetBalanceCard,
   ResponseGetBillingDetails,
   ResponseGetBillingsCards,
+  ResponseGetPortatorBalance,
 } from 'src/services/cards/responses-dto'
 import AuthCardDTO from 'src/services/cards/validations/auth-card-dto'
 import { setCardAuthToken } from '../api/api'
@@ -57,6 +58,10 @@ interface CardContextProps {
   authenticateCard: (cardId: string, password: string) => Promise<boolean>
   logoutCard: () => void
   getUserCards: () => Promise<ResponseGetAllCardsUser>
+  getPortatorBalance: (searchParams: {
+    cpf?: string
+    cardNumber?: string
+  }) => Promise<ResponseGetPortatorBalance>
   getCardBalance: () => Promise<ResponseGetBalanceCard>
   getCardBillings: () => Promise<ResponseGetBillingsCards>
   getBillingDetails: (billingId: string) => Promise<ResponseGetBillingDetails>
@@ -161,6 +166,19 @@ export function CardProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const getPortatorBalance = async (params?: {
+    cpf?: string
+    cardNumber?: string
+  }): Promise<ResponseGetPortatorBalance> => {
+    try {
+      const response = await cardsServices.getPortatorBalance(params)
+      return response
+    } catch (error) {
+      console.error('Erro ao buscar saldo do portador:', error)
+      throw error
+    }
+  }
+
   // Funções que requerem autenticação de cartão
   const getCardBalance = async (): Promise<ResponseGetBalanceCard> => {
     if (!isCardAuthenticated || !cardToken) {
@@ -177,7 +195,7 @@ export function CardProvider({ children }: { children: ReactNode }) {
             ...prevCard,
             cpf: response.cpf,
             balance: response.limitAvailable,
-            creditLimit: response.limitAvailable,
+            creditLimit: response.totalLimit,
           }
         }
         return prevCard
@@ -345,6 +363,7 @@ export function CardProvider({ children }: { children: ReactNode }) {
         getCardBalance,
         getCardBillings,
         getBillingDetails,
+        getPortatorBalance,
         changeCardPassword,
         blockCard,
         unblockCard,

@@ -1,6 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import { StyleSheet, Text, View } from 'react-native'
 import colors from 'src/theme/colors'
+import { formatCardNumber } from 'src/utils'
 import { Dot } from '../dot'
 
 interface CreditCardProps {
@@ -8,9 +9,16 @@ interface CreditCardProps {
   cardOwner: string
   cardType?: string
   cardAssociation?: string
+  cpf?: string
+  shouldRenderNumber?: boolean
 }
 
-export function CreditCard({ cardNumber, cardOwner }: CreditCardProps) {
+export function CreditCard({
+  cardNumber,
+  cardOwner,
+  cpf,
+  shouldRenderNumber = false,
+}: CreditCardProps) {
   const maskCardNumber = (number: string) => {
     const clean = number.replace(/\s+/g, '')
 
@@ -60,7 +68,15 @@ export function CreditCard({ cardNumber, cardOwner }: CreditCardProps) {
 
       <View style={cardStyles.infoGroup}>
         <Text style={cardStyles.legend}>Número do Cartão</Text>
-        <Text>{maskCardNumber(cardNumber)}</Text>
+        <Text>
+          {shouldRenderNumber ? (
+            <Text style={cardStyles.cardNumberText}>
+              {formatCardNumber(cardNumber)}
+            </Text>
+          ) : (
+            maskCardNumber(cardNumber)
+          )}
+        </Text>
       </View>
 
       <View style={[cardStyles.infoGroup, cardStyles.row]}>
@@ -68,6 +84,13 @@ export function CreditCard({ cardNumber, cardOwner }: CreditCardProps) {
           <Text style={cardStyles.legend}>Titular do cartão</Text>
           <Text style={cardStyles.text}>{cardOwner}</Text>
         </View>
+
+        {cpf && (
+          <View>
+            <Text style={cardStyles.legend}>CPF</Text>
+            <Text style={cardStyles.text}>{cpf}</Text>
+          </View>
+        )}
       </View>
     </LinearGradient>
   )
