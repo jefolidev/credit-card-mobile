@@ -6,6 +6,7 @@ import type {
   ResponseGetSell,
   ResponseSellQrCode,
 } from './responses.dto'
+import type { CancelSellDto } from './validations/cancel-sell-dto'
 import type { ConfirmCancellationDto } from './validations/confirm-cancellation-dto'
 import type { CreateQrCodeSellDto } from './validations/create-qr-code-sell.dto'
 import type { CreateSellDto } from './validations/create-sell.dto'
@@ -48,8 +49,11 @@ const getDetailsSell = async (sellId: string): Promise<ResponseCreateSells> => {
   return data
 }
 
-const cancelSell = async (sellId: string): Promise<void> => {
-  await api.patch(`/sells/${sellId}/cancel`)
+const cancelSell = async (
+  sellId: string,
+  body: CancelSellDto
+): Promise<void> => {
+  await api.patch(`/sells/${sellId}/cancel`, body)
 }
 
 const confirmCancellation = async (
