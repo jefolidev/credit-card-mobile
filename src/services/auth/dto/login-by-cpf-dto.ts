@@ -1,4 +1,4 @@
-export interface LoginByCpfDTO {
+export interface LoginDTO {
   userCpf?: string
   userCnpj?: string
   password: string
