@@ -10,7 +10,6 @@ import {
   Text,
   View,
 } from 'react-native'
-import { LetterIcon } from 'src/assets/email'
 import { LockIcon } from 'src/assets/lock-icon'
 import { SupplierIcon } from 'src/assets/supplier-icon'
 import UserIcon from 'src/assets/user-icon'
@@ -20,7 +19,7 @@ import { RadioGroup } from 'src/components/radio'
 import { useAuth } from 'src/contexts/use-auth'
 import { UserRole } from 'src/services/auth/enum/user-role'
 import { EyeIcon } from '../../assets/eye-simple'
-import { applyCpfMask, cleanCpf } from '../../utils/cpf-mask'
+import { applyCnpjMask, applyCpfMask, cleanCnpj, cleanCpf } from '../../utils'
 import { LoginBodySchema } from './schema'
 
 export function Login() {
@@ -29,7 +28,7 @@ export function Login() {
 
   const { auth, isLoading } = useAuth()
 
-  const { handleSubmit, setValue, watch } = useForm<LoginBodySchema>({
+  const { handleSubmit, setValue, watch, reset } = useForm<LoginBodySchema>({
     defaultValues: {
       cpf: '',
       password: '',
@@ -39,9 +38,15 @@ export function Login() {
   const cpf = watch('cpf')
   const password = watch('password')
 
-  const handleCpfChange = (text: string) => {
-    const maskedCpf = applyCpfMask(text)
-    setValue('cpf', maskedCpf)
+  const handleDocumentChange = (text: string) => {
+    const maskedDocument =
+      userType === 'PORTATOR' ? applyCpfMask(text) : applyCnpjMask(text)
+    setValue('cpf', maskedDocument)
+  }
+
+  const handleUserTypeChange = (newUserType: UserRole) => {
+    setUserType(newUserType)
+    setValue('cpf', '') // Limpa o campo ao trocar o tipo
   }
 
   const userTypeOptions = [
@@ -50,10 +55,11 @@ export function Login() {
   ]
 
   const handleLogin = async (userData: LoginBodySchema) => {
-    const cleanedCpf = cleanCpf(cpf)
+    const cleanedDocument =
+      userType === 'PORTATOR' ? cleanCpf(cpf) : cleanCnpj(cpf)
 
     try {
-      const success = await auth(cleanedCpf, userData.password, userType)
+      const success = await auth(cleanedDocument, userData.password, userType)
 
       if (success) {
         // Login realizado com sucesso
@@ -84,20 +90,32 @@ export function Login() {
           <RadioGroup
             options={userTypeOptions}
             selectedId={userType}
-            onSelect={(id) => setUserType(id as UserRole)}
+            onSelect={(id) => handleUserTypeChange(id as UserRole)}
           />
 
           <View style={styles.inputWrapper}>
             <View style={{ gap: 8 }}>
-              <Text style={styles.label}>CPF</Text>
+              <Text style={styles.label}>
+                {userType === 'PORTATOR' ? 'CPF' : 'CNPJ'}
+              </Text>
               <Input
-                placeholder="000.000.000-00"
-                leftIcon={<LetterIcon />}
+                placeholder={
+                  userType === 'PORTATOR'
+                    ? '000.000.000-00'
+                    : '00.000.000/0000-00'
+                }
+                leftIcon={
+                  userType === 'PORTATOR' ? (
+                    <UserIcon width={20} height={20} color="#99A1AF" />
+                  ) : (
+                    <SupplierIcon width={20} height={20} color="#99A1AF" />
+                  )
+                }
                 value={cpf}
-                onChangeText={handleCpfChange}
+                onChangeText={handleDocumentChange}
                 keyboardType="numeric"
                 autoCapitalize="none"
-                maxLength={14}
+                maxLength={userType === 'PORTATOR' ? 14 : 18}
               />
             </View>
             <View style={{ gap: 8 }}>
