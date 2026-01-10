@@ -14,7 +14,6 @@ import IdentificationIcon from 'src/assets/identification-icon'
 import KeyIcon from 'src/assets/key-icon'
 import { LockIcon } from 'src/assets/lock-icon'
 import { UnlockIcon } from 'src/assets/unlock-icon'
-import EditPencil from '../../assets/edit-pencil'
 import { UserIcon } from '../../assets/user-icon'
 import { Header } from '../../components/header'
 import { useAuth } from '../../contexts/use-auth'
@@ -185,9 +184,6 @@ export function Profile() {
                 {user?.name?.toUpperCase()}
               </Text>
             </View>
-            <TouchableOpacity style={{ marginRight: 12 }}>
-              <EditPencil width={24} height={24} />
-            </TouchableOpacity>
           </View>
 
           {/* Informacoes adicionais */}
