@@ -21,7 +21,6 @@ export function BillInfoCard({
   const formatDiscountValue = (value: string) => {
     if (!isDiscount) return value
 
-    // Remove any existing currency symbols and parse as number
     const numericValue = parseFloat(value.replace(/[^\d.-]/g, ''))
 
     if (isNaN(numericValue)) return value

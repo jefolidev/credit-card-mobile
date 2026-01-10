@@ -2,9 +2,7 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useEffect, useState } from 'react'
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { CheckIcon } from 'src/assets/check-icon'
 import { DocumentIcon } from 'src/assets/document-icon'
-import { ExclamationIcon } from 'src/assets/exclamation-icon'
 import { BillInfoCard } from 'src/components/bill-info-card'
 import { CashAmount } from 'src/components/cash-amount'
 import { Header } from 'src/components/header'
@@ -69,7 +67,6 @@ export function BillDetails() {
             )
 
             setTransactions(formattedTransactions)
-            console.log('🧾 Transações formatadas:', formattedTransactions)
           } else {
             setTransactions([])
           }
@@ -97,73 +94,6 @@ export function BillDetails() {
     navigation.goBack()
     return null
   }
-
-  const getStatusConfig = () => {
-    switch (bill.status) {
-      case 'paid':
-        return {
-          icon: (
-            <CheckIcon width={20} height={20} color={colors.emerald[600]} />
-          ),
-          title: 'Fatura Paga',
-          subtitle: 'Esta fatura foi paga com sucesso',
-          backgroundColor: colors.emerald[50],
-          borderColor: colors.emerald[200],
-          textColor: colors.emerald[700],
-          showWarning: false,
-        }
-      case 'current':
-        return {
-          icon: (
-            <ExclamationIcon
-              width={20}
-              height={20}
-              color={colors.orange[600]}
-            />
-          ),
-          title: 'Fatura Pendente',
-          subtitle: 'Aguardando pagamento',
-          backgroundColor: colors.orange[50],
-          borderColor: colors.orange[200],
-          textColor: colors.orange[700],
-          showWarning: true,
-          warningText:
-            'Não esqueça de pagar sua fatura até a data de vencimento para evitar juros e multa.',
-        }
-      case 'overdue':
-        return {
-          icon: (
-            <ExclamationIcon width={20} height={20} color={colors.red[600]} />
-          ),
-          title: 'Fatura Atrasada',
-          subtitle: 'Vencimento em atraso',
-          backgroundColor: colors.red[50],
-          borderColor: colors.red[200],
-          textColor: colors.red[700],
-          showWarning: true,
-          warningText:
-            'Esta fatura está em atraso. Pague o quanto antes para evitar o acúmulo de juros e multa.',
-        }
-      default:
-        return {
-          icon: (
-            <ExclamationIcon
-              width={20}
-              height={20}
-              color={colors.orange[600]}
-            />
-          ),
-          title: 'Fatura',
-          subtitle: '',
-          backgroundColor: colors.orange[50],
-          borderColor: colors.orange[200],
-          textColor: colors.orange[700],
-          showWarning: false,
-        }
-    }
-  }
-
-  const statusConfig = getStatusConfig()
 
   const formatAmount = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -202,24 +132,6 @@ export function BillDetails() {
       .replace(' de ', ' ')
   }
 
-  const handlePayBill = () => {
-    Alert.alert(
-      'Pagar Fatura',
-      `Confirma o pagamento da fatura no valor de ${formatAmount(
-        bill.amount
-      )}?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Confirmar',
-          onPress: () => {
-            Alert.alert('Sucesso', 'Fatura paga com sucesso!')
-            navigation.goBack()
-          },
-        },
-      ]
-    )
-  }
 
   return (
     <View style={styles.container}>
@@ -232,83 +144,12 @@ export function BillDetails() {
       />
 
       <ScrollView style={styles.content}>
-        {/* Status Card */}
-        <View
-          style={[
-            styles.statusCard,
-            {
-              backgroundColor: statusConfig.backgroundColor,
-              borderColor: statusConfig.borderColor,
-            },
-          ]}
-        >
-          <View style={styles.statusHeader}>
-            {statusConfig.icon}
-            <View style={styles.statusTexts}>
-              <Text
-                style={[styles.statusTitle, { color: statusConfig.textColor }]}
-              >
-                {statusConfig.title}
-              </Text>
-              <Text style={styles.statusSubtitle}>{statusConfig.subtitle}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Warning Card */}
-        {statusConfig.showWarning && (
-          <View
-            style={[
-              styles.warningCard,
-              bill.status === 'overdue'
-                ? {
-                    backgroundColor: colors.red[50],
-                    borderColor: colors.red[200],
-                  }
-                : {
-                    backgroundColor: colors.orange[50],
-                    borderColor: colors.orange[200],
-                  },
-            ]}
-          >
-            <View style={styles.warningHeader}>
-              {bill.status === 'overdue' ? (
-                <ExclamationIcon
-                  width={16}
-                  height={16}
-                  color={colors.red[600]}
-                />
-              ) : (
-                <ExclamationIcon
-                  width={16}
-                  height={16}
-                  color={colors.orange[600]}
-                />
-              )}
-              <Text
-                style={[
-                  styles.warningText,
-                  {
-                    color:
-                      bill.status === 'overdue'
-                        ? colors.red[700]
-                        : colors.orange[700],
-                  },
-                ]}
-              >
-                {statusConfig.warningText}
-              </Text>
-            </View>
-          </View>
-        )}
-
         {/* Bill Info */}
         <View style={styles.billInfoSection}>
           <Text style={styles.sectionTitle}>Informações da Fatura</Text>
 
           <CashAmount
             iconType="credit-card"
-            billStatus={bill.status}
             amount={bill.amount}
             cardType="bill"
             dueDate={new Date(bill.dueDate)}
@@ -380,29 +221,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 16,
   },
-  statusCard: {
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 20,
-    marginBottom: 16,
-  },
-  statusHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  statusTexts: {
-    flex: 1,
-  },
-  statusTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  statusSubtitle: {
-    fontSize: 14,
-    color: colors.secondaryText,
-  },
+
   warningCard: {
     borderRadius: 12,
     borderWidth: 1,

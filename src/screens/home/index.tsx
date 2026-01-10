@@ -1,19 +1,178 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { HomeIcon } from 'src/assets/home-icon'
 import { BillInfoCard } from 'src/components/bill-info-card'
 import { CashAmount } from 'src/components/cash-amount'
 import { Header } from 'src/components/header'
+import TransactionItem from 'src/components/transaction-item'
 import { useAuth } from 'src/contexts/use-auth'
 import { useCard } from 'src/contexts/use-card'
 import { colors } from '../../theme/colors'
 
 export function Home() {
   const { user, logout } = useAuth()
-  const { selectedCard, isCardAuthenticated, getCardBalance, getCardBillings } =
-    useCard()
+  const {
+    selectedCard,
+    isCardAuthenticated,
+    getCardBalance,
+    getCardBillings,
+    getBillingDetails,
+  } = useCard()
 
-  // Carregar saldo do cartão quando entrar na tela
+  const [currentMonthTransactions, setCurrentMonthTransactions] = useState<
+    any[]
+  >([])
+  const [loadingTransactions, setLoadingTransactions] = useState(false)
+
+  // Mapeamento de meses string para números
+  const monthMap: { [key: string]: number } = {
+    JAN: 0,
+    FEV: 1,
+    MAR: 2,
+    ABR: 3,
+    MAI: 4,
+    JUN: 5,
+    JUL: 6,
+    AGO: 7,
+    SET: 8,
+    OUT: 9,
+    NOV: 10,
+    DEZ: 11,
+  }
+
+  // Função para formatar data para comparação (YYYY-MM)
+  const formatMonthYear = (date: Date) => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}`
+  }
+
+  // Função para formatar data para exibição
+  const formatDateLegend = (dateString: string) => {
+    const date = new Date(dateString)
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    if (date.toDateString() === today.toDateString()) {
+      return 'Hoje'
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Ontem'
+    } else {
+      return date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+      })
+    }
+  }
+
+  // Função para buscar transações do mês atual
+  const loadCurrentMonthTransactions = async () => {
+    if (!selectedCard || !selectedCard.bills || !isCardAuthenticated) {
+      console.log('🔍 Condições não atendidas:', {
+        selectedCard: !!selectedCard,
+        bills: !!selectedCard?.bills,
+        isCardAuthenticated,
+      })
+      return
+    }
+
+    setLoadingTransactions(true)
+    try {
+      const currentMonth = formatMonthYear(new Date())
+      console.log('🔍 Buscando faturas para o mês:', currentMonth)
+      console.log(
+        '🔍 Faturas disponíveis:',
+        selectedCard.bills.map((bill) => ({
+          id: bill.id,
+          month: bill.month,
+          year: bill.year,
+          monthNumber: monthMap[bill.month],
+          formatted: formatMonthYear(
+            new Date(bill.year, monthMap[bill.month] || 0)
+          ),
+        }))
+      )
+
+      // Buscar fatura do mês atual
+      const currentBill = selectedCard.bills.find((bill) => {
+        const monthNumber = monthMap[bill.month]
+        if (monthNumber === undefined) {
+          console.log('🔍 Mês desconhecido:', bill.month)
+          return false
+        }
+
+        const billMonth = formatMonthYear(new Date(bill.year, monthNumber))
+        console.log('🔍 Comparando:', {
+          billMonth,
+          currentMonth,
+          match: billMonth === currentMonth,
+        })
+        return billMonth === currentMonth
+      })
+
+      console.log('🔍 Fatura encontrada:', currentBill)
+
+      if (currentBill) {
+        const billDetails = await getBillingDetails(currentBill.id)
+        console.log('🔍 Detalhes da fatura:', billDetails)
+
+        if (billDetails && billDetails.sellInstallments) {
+          console.log(
+            '🔍 Parcelas encontradas:',
+            billDetails.sellInstallments.length
+          )
+          const formattedTransactions = billDetails.sellInstallments.map(
+            (installment: any) => {
+              // Converter data para string no formato correto
+              const formatDate = (date: Date | string) => {
+                const dateObj = date instanceof Date ? date : new Date(date)
+                return dateObj.toISOString()
+              }
+
+              return {
+                id: `${installment.sell.id}-${installment.installmentNumber}`,
+                title: installment.sell.shop.name,
+                description: installment.sell.description,
+                amount: installment.amount,
+                date: formatDate(installment.dueDate),
+                type: 'payment' as const,
+                installmentInfo: `${installment.installmentNumber}/${installment.sell.installments}`,
+              }
+            }
+          )
+
+          console.log('🔍 Transações formatadas:', formattedTransactions)
+
+          // Ordenar por data (mais recentes primeiro) e pegar apenas os últimos 5
+          const sortedTransactions = formattedTransactions
+            .sort((a, b) => {
+              const dateA = new Date(a.date).getTime()
+              const dateB = new Date(b.date).getTime()
+              return dateB - dateA
+            })
+            .slice(0, 5)
+
+          console.log('🔍 Transações formatadas:', sortedTransactions)
+          setCurrentMonthTransactions(sortedTransactions)
+        } else {
+          console.log('🔍 Sem parcelas na fatura')
+          setCurrentMonthTransactions([])
+        }
+      } else {
+        console.log('🔍 Nenhuma fatura encontrada para o mês atual')
+        setCurrentMonthTransactions([])
+      }
+    } catch (error) {
+      console.error('Erro ao buscar transações do mês:', error)
+      setCurrentMonthTransactions([])
+    } finally {
+      setLoadingTransactions(false)
+    }
+  }
+
+  // Carregar dados do cartão quando entrar na tela
   useEffect(() => {
     const loadCardData = async () => {
       if (isCardAuthenticated && selectedCard) {
@@ -30,43 +189,43 @@ export function Home() {
     loadCardData()
   }, [isCardAuthenticated, selectedCard?.id])
 
-  // Get current month transactions from bills
-  const getCurrentMonthTransactions = () => {
-    if (!selectedCard || !selectedCard.bills) {
-      console.log('🔍 Debug: Sem cartão ou bills')
-      return []
+  // useEffect separado para carregar transações quando as bills forem atualizadas
+  useEffect(() => {
+    if (
+      isCardAuthenticated &&
+      selectedCard?.bills &&
+      selectedCard.bills.length > 0
+    ) {
+      loadCurrentMonthTransactions()
     }
+  }, [selectedCard?.bills])
 
-    // Se não tiver transações nas bills, vamos mostrar as próprias bills como transações
-    const billsAsTransactions = selectedCard.bills.map((bill) => ({
-      id: bill.id,
-      title: `Fatura ${bill.month}/${bill.year}`,
-      amount: bill.amount,
-      date: bill.dueDate,
-      type: 'payment' as const,
-    }))
+  // Agrupar transações por data
+  const transactionsByDate = currentMonthTransactions.reduce(
+    (acc, transaction) => {
+      // Validar se transaction.date existe antes de fazer split
+      if (!transaction.date) {
+        console.warn('Transaction sem data encontrada:', transaction)
+        return acc
+      }
 
-    return billsAsTransactions
-  }
+      const date = transaction.date.split('T')[0] // Pegar apenas a data (YYYY-MM-DD)
+      if (!acc[date]) {
+        acc[date] = []
+      }
+      acc[date].push(transaction)
+      return acc
+    },
+    {} as Record<string, typeof currentMonthTransactions>
+  )
 
-  const currentTransactions = getCurrentMonthTransactions()
-
-  // Group transactions by date
-  const transactionsByDate = currentTransactions.reduce((acc, transaction) => {
-    const date = transaction.date
-    if (!acc[date]) {
-      acc[date] = []
-    }
-    acc[date].push(transaction)
-    return acc
-  }, {} as Record<string, typeof currentTransactions>)
-
-  // Sort dates in descending order and get latest 3 transactions
+  // Ordenar datas em ordem decrescente
   const sortedDates = Object.keys(transactionsByDate).sort(
     (a, b) => new Date(b).getTime() - new Date(a).getTime()
   )
 
-  // Get latest transactions with date grouping (limit to show max 2 dates for home screen)
+  // Limitar para mostrar apenas as 2 datas mais recentes
+  const limitedDates = sortedDates.slice(0, 2)
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -126,24 +285,34 @@ export function Home() {
                 >
                   Últimas Transações
                 </Text>
-
-                <Text style={{ color: colors.primary }}>Ver todas</Text>
               </View>
 
-              {/* <View style={styles.transactionsList}>
-                {limitedDates.length > 0 ? (
+              <View style={styles.transactionsList}>
+                {loadingTransactions ? (
+                  <Text
+                    style={{
+                      color: colors.secondaryText,
+                      textAlign: 'center',
+                      padding: 20,
+                    }}
+                  >
+                    Carregando transações...
+                  </Text>
+                ) : limitedDates.length > 0 ? (
                   limitedDates.map((date) => (
                     <View key={date} style={styles.transactionWrapper}>
                       <Text style={styles.dateLegend}>
                         {formatDateLegend(date)}
                       </Text>
-                      {transactionsByDate[date].map((transaction) => (
+                      {transactionsByDate[date].map((transaction: any) => (
                         <TransactionItem
                           key={transaction.id}
                           title={transaction.title}
+                          description={transaction.description}
                           amount={transaction.amount}
                           date={transaction.date}
-                          type={transaction.type}
+                          type={'transfer' as const}
+                          installmentInfo={transaction.installmentInfo}
                         />
                       ))}
                     </View>
@@ -156,10 +325,10 @@ export function Home() {
                       padding: 20,
                     }}
                   >
-                    Nenhuma transação encontrada
+                    Nenhuma transação encontrada este mês
                   </Text>
                 )}
-              </View> */}
+              </View>
             </>
           ) : user?.role === 'PORTATOR' ? (
             // Fallback para PORTADOR sem cartão selecionado

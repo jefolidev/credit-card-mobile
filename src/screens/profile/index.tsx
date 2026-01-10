@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Alert,
   ScrollView,
@@ -10,13 +10,10 @@ import {
   View,
 } from 'react-native'
 import ChevronRightIcon from 'src/assets/chevron-right-icon'
-import CycleArrowPencil from 'src/assets/cycle-arrows-icon'
-import EarPhonesIcon from 'src/assets/ear-phones-icon'
 import IdentificationIcon from 'src/assets/identification-icon'
 import KeyIcon from 'src/assets/key-icon'
-import LocalPinIcon from 'src/assets/local-pin-icon'
 import { LockIcon } from 'src/assets/lock-icon'
-import { PhoneIcon } from 'src/assets/phone-icon'
+import { UnlockIcon } from 'src/assets/unlock-icon'
 import EditPencil from '../../assets/edit-pencil'
 import { UserIcon } from '../../assets/user-icon'
 import { Header } from '../../components/header'
@@ -26,9 +23,71 @@ import { colors } from '../../theme/colors'
 
 export function Profile() {
   const { user, logout } = useAuth()
-  const { selectedCard, logoutCard, cards, getUserCards } = useCard()
+  const { selectedCard, logoutCard, cards, getUserCards, getBillingDetails } =
+    useCard()
+  const [currentMonthTransactionsCount, setCurrentMonthTransactionsCount] =
+    useState(0)
 
   const navigation = useNavigation()
+
+  // Mapear os meses string para números
+  const monthMap: { [key: string]: number } = {
+    JAN: 0,
+    FEV: 1,
+    MAR: 2,
+    ABR: 3,
+    MAI: 4,
+    JUN: 5,
+    JUL: 6,
+    AGO: 7,
+    SET: 8,
+    OUT: 9,
+    NOV: 10,
+    DEZ: 11,
+  }
+
+  // Função para formatar data para comparação (YYYY-MM)
+  const formatMonthYear = (date: Date) => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}`
+  }
+
+  // Função para contar transações do mês atual
+  const loadCurrentMonthTransactionsCount = async () => {
+    if (!selectedCard || !selectedCard.bills) {
+      setCurrentMonthTransactionsCount(0)
+      return
+    }
+
+    try {
+      const currentMonth = formatMonthYear(new Date())
+
+      // Buscar fatura do mês atual
+      const currentBill = selectedCard.bills.find((bill) => {
+        const monthNumber = monthMap[bill.month]
+        if (monthNumber === undefined) return false
+
+        const billMonth = formatMonthYear(new Date(bill.year, monthNumber))
+        return billMonth === currentMonth
+      })
+
+      if (currentBill) {
+        const billDetails = await getBillingDetails(currentBill.id)
+        if (billDetails && billDetails.sellInstallments) {
+          setCurrentMonthTransactionsCount(billDetails.sellInstallments.length)
+        } else {
+          setCurrentMonthTransactionsCount(0)
+        }
+      } else {
+        setCurrentMonthTransactionsCount(0)
+      }
+    } catch (error) {
+      console.error('Erro ao buscar contagem de transações:', error)
+      setCurrentMonthTransactionsCount(0)
+    }
+  }
 
   // Carregar cartões quando a tela for aberta
   useEffect(() => {
@@ -45,8 +104,18 @@ export function Profile() {
     loadUserCards()
   }, [user?.id, getUserCards])
 
+  // useEffect para carregar contagem de transações quando as bills forem atualizadas
+  useEffect(() => {
+    if (selectedCard?.bills && selectedCard.bills.length > 0) {
+      loadCurrentMonthTransactionsCount()
+    }
+  }, [selectedCard?.bills])
+
   // Usar os cartões do contexto em vez de chamar getUserCards diretamente
   const userCards = cards || []
+
+  // Verificar se o cartão está bloqueado
+  const isCardBlocked = !selectedCard?.isActive
 
   const handleLogout = () => {
     Alert.alert('Sair', 'Tem certeza que deseja sair?', [
@@ -141,25 +210,7 @@ export function Profile() {
             </View>
             <View style={{ justifyContent: 'center', alignItems: 'center' }}>
               <Text style={{ color: colors.primary, fontSize: 20 }}>
-                {userCards.reduce((total, card) => {
-                  const currentDate = new Date()
-                  const month = currentDate.getMonth()
-                  const year = currentDate.getFullYear()
-                  const countForCard = (card.bills || []).reduce(
-                    (sum, bill) => {
-                      const txCount = (bill.transactions || []).filter((t) => {
-                        const transactionDate = new Date(t.date)
-                        return (
-                          transactionDate.getMonth() === month &&
-                          transactionDate.getFullYear() === year
-                        )
-                      }).length
-                      return sum + txCount
-                    },
-                    0
-                  )
-                  return total + countForCard
-                }, 0)}
+                {currentMonthTransactionsCount}
               </Text>
               <Text style={{ color: colors.primary, fontSize: 14 }}>
                 Transações/Mês
@@ -185,7 +236,7 @@ export function Profile() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Informações de Contato</Text>
+            <Text style={styles.sectionTitle}>Informações Adicionais</Text>
 
             <View style={styles.infoCardRow}>
               <View style={styles.infoIconCircle}>
@@ -194,27 +245,6 @@ export function Profile() {
               <View style={styles.infoTexts}>
                 <Text style={styles.label}>CPF</Text>
                 <Text style={styles.value}>{selectedCard?.cpf}</Text>
-              </View>
-            </View>
-            <View style={styles.infoCardRow}>
-              <View style={styles.infoIconCircle}>
-                <PhoneIcon width={21} height={21} />
-              </View>
-              <View style={styles.infoTexts}>
-                <Text style={styles.label}>Telefone</Text>
-                <Text style={styles.value}>{'(--) ----- ----'}</Text>
-              </View>
-              <TouchableOpacity style={{ marginRight: 12 }}>
-                <EditPencil width={22} height={22} color={colors.zinc[500]} />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.infoCardRow}>
-              <View style={styles.infoIconCircle}>
-                <LocalPinIcon width={26} height={26} />
-              </View>
-              <View style={styles.infoTexts}>
-                <Text style={styles.label}>Localização</Text>
-                <Text style={styles.value}>{'São Paulo, SP'}</Text>
               </View>
             </View>
           </View>
@@ -253,12 +283,20 @@ export function Profile() {
             >
               <View style={styles.actionLeft}>
                 <View style={styles.actionIcon}>
-                  <LockIcon color={colors.primary} width={28} height={28} />
+                  {isCardBlocked ? (
+                    <UnlockIcon color={colors.primary} width={28} height={28} />
+                  ) : (
+                    <LockIcon color={colors.primary} width={28} height={28} />
+                  )}
                 </View>
                 <View>
-                  <Text style={styles.actionTitle}>Bloquear Cartão</Text>
+                  <Text style={styles.actionTitle}>
+                    {isCardBlocked ? 'Desbloquear Cartão' : 'Bloquear Cartão'}
+                  </Text>
                   <Text style={styles.actionSubtitle}>
-                    Bloqueie ou desbloqueie seu cartão
+                    {isCardBlocked
+                      ? 'Desbloqueie seu cartão para voltar a usá-lo'
+                      : 'Bloqueie seu cartão por segurança'}
                   </Text>
                 </View>
               </View>
@@ -267,32 +305,7 @@ export function Profile() {
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.actionCard}
-              onPress={() =>
-                navigation.navigate('SecondCardBottomSheet' as never)
-              }
-            >
-              <View style={styles.actionLeft}>
-                <View style={styles.actionIcon}>
-                  <CycleArrowPencil
-                    color={colors.primary}
-                    width={28}
-                    height={28}
-                  />
-                </View>
-                <View>
-                  <Text style={styles.actionTitle}>Segunda Via de Cartão</Text>
-                  <Text style={styles.actionSubtitle}>
-                    Solicite uma segunda via de cartão
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.chevron}>
-                <ChevronRightIcon />
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.actionCard}
               onPress={() => navigation.navigate('Contacts' as never)}
             >
@@ -314,7 +327,7 @@ export function Profile() {
               <View style={styles.chevron}>
                 <ChevronRightIcon />
               </View>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         )}
       </ScrollView>

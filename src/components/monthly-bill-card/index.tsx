@@ -1,7 +1,7 @@
 import React from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import ChevronRightIcon from 'src/assets/chevron-right-icon'
-import DocumentIcon from 'src/assets/document-icon'
+import { DocumentIcon } from 'src/assets/document-icon'
 import colors from 'src/theme/colors'
 import { BillStatus } from '../cash-amount'
 
@@ -24,46 +24,24 @@ export function MonthlyBillCard({
   status,
   onPress,
 }: MonthlyBillCardProps) {
-  const getStatusStyles = () => {
-    switch (status) {
-      case 'current':
-        return {
-          backgroundColor: colors.orange[50],
-          borderColor: colors.orange[200],
-          textColor: colors.orange[700],
-          label: 'Pendente',
-        }
-      case 'paid':
-        return {
-          backgroundColor: colors.emerald[50],
-          borderColor: colors.emerald[200],
-          textColor: colors.emerald[700],
-          label: 'Paga',
-        }
-      case 'overdue':
-        return {
-          backgroundColor: colors.red[50],
-          borderColor: colors.red[200],
-          textColor: colors.red[700],
-          label: 'Atrasada',
-        }
-      default:
-        return {
-          backgroundColor: colors.orange[50],
-          borderColor: colors.orange[200],
-          textColor: colors.orange[700],
-          label: 'Pendente',
-        }
-    }
-  }
-
-  const statusStyles = getStatusStyles()
-
   const formatAmount = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
     }).format(value)
+  }
+
+  const formatClosingDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const weekDay = date.toLocaleDateString('pt-BR', { weekday: 'long' })
+    const formattedDate = date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
+    return `${
+      weekDay.charAt(0).toUpperCase() + weekDay.slice(1)
+    }, ${formattedDate}`
   }
 
   return (
@@ -82,7 +60,9 @@ export function MonthlyBillCard({
               {month.charAt(0).toUpperCase() + month.slice(1).toLowerCase()}/
               {year}
             </Text>
-            <Text style={styles.closingDate}>Fechamento {closingDate}</Text>
+            <Text style={styles.closingDate}>
+              Fechamento - {formatClosingDate(closingDate)}
+            </Text>
           </View>
         </View>
         <ChevronRightIcon color={colors.zinc[400]} />
@@ -92,24 +72,6 @@ export function MonthlyBillCard({
         <View style={styles.amountSection}>
           <Text style={styles.amountLabel}>Valor total</Text>
           <Text style={styles.amount}>{formatAmount(amount)}</Text>
-        </View>
-        <View style={styles.rightSection}>
-          <View
-            style={[
-              styles.statusBadge,
-              {
-                backgroundColor: statusStyles.backgroundColor,
-                borderColor: statusStyles.borderColor,
-              },
-            ]}
-          >
-            <Text
-              style={[styles.statusText, { color: statusStyles.textColor }]}
-            >
-              {statusStyles.label}
-            </Text>
-          </View>
-          <Text style={styles.dueDate}>Venc.: {dueDate}</Text>
         </View>
       </View>
     </TouchableOpacity>
