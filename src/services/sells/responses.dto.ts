@@ -49,6 +49,8 @@ export type ResponseGetSell = {
   status: StatusSell
   id: string
   createdAt: Date
+  cancelReason?: string | null
+  canceledAt?: Date | null
   card: {
     cardNumber: string
     user: {
