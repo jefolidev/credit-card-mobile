@@ -5,6 +5,33 @@ import ClockIcon from 'src/assets/clock-icon'
 import { CreditCardIcon } from 'src/assets/credit-card-icon'
 import { DollarIcon } from 'src/assets/dollar-icon'
 import { UserIcon } from 'src/assets/user-icon'
+import { StatusSell } from 'src/services/sells/enum/status-sell-enum'
+import { formatCardNumber } from 'src/utils'
+
+// Função para traduzir motivos de cancelamento
+const translateCancelReason = (reason: string): string => {
+  const reasonMap: Record<string, string> = {
+    'HOLDER_REQUEST': 'Solicitação do portador',
+    'DUPLICATE_TRANSACTION': 'Transação duplicada',
+    'INCORRECT_AMOUNT': 'Valor incorreto',
+    'INCORRECT_CARD': 'Cartão incorreto',
+    'OTHER_REASON': 'Outro motivo',
+  }
+  return reasonMap[reason] || reason
+}
+
+// Função para formatar data no formato HH:mm, DD/MM/YYYY
+const formatDateTime = (date: string | Date): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  
+  const day = String(dateObj.getDate()).padStart(2, '0')
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0')
+  const year = dateObj.getFullYear()
+  const hours = String(dateObj.getHours()).padStart(2, '0')
+  const minutes = String(dateObj.getMinutes()).padStart(2, '0')
+  
+  return `${hours}:${minutes}, ${day}/${month}/${year}`
+}
 
 export interface CancellableSaleItemProps {
   id: string
@@ -12,11 +39,11 @@ export interface CancellableSaleItemProps {
   cardNumber: string
   amount: number
   installments?: number
-  date: string
-  nsu: string
+  date: string | Date
   authCode: string
-  status: 'authorized' | 'cancelled'
-  cancellationReason?: string
+  status: StatusSell
+  cancelReason?: string
+  canceledAt?: string | Date | null
   onCancel: () => void
 }
 
@@ -27,13 +54,42 @@ export function CancellableSaleItem({
   amount,
   installments,
   date,
-  nsu,
   authCode,
   status,
-  cancellationReason,
+  cancelReason,
+  canceledAt,
   onCancel,
 }: CancellableSaleItemProps) {
-  const isDisabled = status === 'cancelled'
+  const isDisabled = status === 'CANCELED' || status === 'IN_CANCELATION'
+
+  const getStatusConfig = () => {
+    switch (status) {
+      case 'PAID':
+        return {
+          backgroundColor: '#dcfce7',
+          color: '#008236',
+          text: 'Autorizada',
+          icon: <CheckIcon width={14} height={14} color="#008236" />,
+        }
+      case 'IN_CANCELATION':
+        return {
+          backgroundColor: '#fef3c7',
+          color: '#d97706',
+          text: 'Em cancelamento',
+          icon: <ClockIcon width={14} height={14} strokeColor="#d97706" />,
+        }
+      case 'CANCELED':
+      default:
+        return {
+          backgroundColor: '#f3f4f6',
+          color: '#364153',
+          text: 'Cancelada',
+          icon: <ClockIcon width={14} height={14} strokeColor="#364153" />,
+        }
+    }
+  }
+
+  const statusConfig = getStatusConfig()
 
   return (
     <View style={[styles.container, isDisabled && styles.disabledContainer]}>
@@ -42,35 +98,26 @@ export function CancellableSaleItem({
           style={[
             styles.statusBadge,
             {
-              backgroundColor: status === 'authorized' ? '#dcfce7' : '#f3f4f6',
+              backgroundColor: statusConfig.backgroundColor,
             },
           ]}
         >
-          {status === 'authorized' ? (
-            <CheckIcon width={14} height={14} color="#008236" />
-          ) : (
-            <ClockIcon width={14} height={14} strokeColor="#364153" />
-          )}
-          <Text
-            style={[
-              styles.statusText,
-              { color: status === 'authorized' ? '#008236' : '#364153' },
-            ]}
-          >
-            {status === 'authorized' ? 'Autorizada' : 'Cancelada'}
+          {statusConfig.icon}
+          <Text style={[styles.statusText, { color: statusConfig.color }]}>
+            {statusConfig.text}
           </Text>
         </View>
 
         <View style={styles.dateContainer}>
           <ClockIcon width={14} height={14} strokeColor="#6a7282" />
-          <Text style={styles.dateText}>{date}</Text>
+          <Text style={styles.dateText}>{formatDateTime(date)}</Text>
         </View>
       </View>
 
       <View style={styles.details}>
         <View style={styles.detailRow}>
           <CreditCardIcon width={16} height={16} color="#101828" />
-          <Text style={styles.detailText}>{cardNumber}</Text>
+          <Text style={styles.detailText}>{formatCardNumber(cardNumber)}</Text>
         </View>
 
         <View style={styles.detailRow}>
@@ -97,22 +144,25 @@ export function CancellableSaleItem({
       </View>
 
       <View style={styles.infoContainer}>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>NSU:</Text>
-          <Text style={styles.infoValue}>{nsu}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Código Auth:</Text>
-          <Text style={styles.infoValue}>{authCode}</Text>
-        </View>
-        {status === 'cancelled' && cancellationReason && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Motivo:</Text>
-            <Text style={[styles.infoValue, styles.cancellationReasonText]}>
-              {cancellationReason}
-            </Text>
-          </View>
-        )}
+        {(status === 'CANCELED' || status === 'IN_CANCELATION') &&
+          cancelReason && (
+            <>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Motivo:</Text>
+                <Text style={[styles.infoValue, styles.cancellationReasonText]}>
+                  {translateCancelReason(cancelReason)}
+                </Text>
+              </View>
+              {status === 'CANCELED' && canceledAt && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Cancelado em:</Text>
+                  <Text style={styles.infoValue}>
+                    {formatDateTime(canceledAt)}
+                  </Text>
+                </View>
+              )}
+            </>
+          )}
       </View>
 
       <TouchableOpacity
