@@ -14,7 +14,11 @@ interface AuthContextProps {
   user: GetMeResponse | null
   isAuthenticated: boolean
   isLoading: boolean
-  auth: (cpf: string, password: string, userType: UserRole) => Promise<boolean>
+  auth: (
+    document: string,
+    password: string,
+    userType: UserRole
+  ) => Promise<boolean>
   logout: () => void
 }
 
@@ -45,17 +49,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const auth = async (
-    userCpf: string,
+    document: string,
     password: string,
     userType: UserRole
   ): Promise<boolean> => {
     setIsLoading(true)
-    const { loginByCpf, getMe } = authServices
+    const { login, getMe } = authServices
 
     try {
       // Iniciando login
+      const loginPayload =
+        userType === 'PORTATOR'
+          ? { userCpf: document, password }
+          : { userCnpj: document, password }
 
-      const loginResponse = await loginByCpf({ userCpf, password })
+      const loginResponse = await login(loginPayload)
       // Login realizado, salvando token
 
       if (loginResponse.token) {
