@@ -11,11 +11,12 @@ import { CancelIcon } from 'src/assets/cancel-icon'
 import { ChevronRightIcon } from 'src/assets/chevron-right-icon'
 import { colors } from 'src/theme/colors'
 
+import { formatCardNumber } from "src/utils"
+
 interface SaleCancellationData {
   amount: number
   installments?: number
   cardNumber: string
-  nsu: string
 }
 
 interface SaleCancellationSheetProps {
@@ -27,11 +28,11 @@ interface SaleCancellationSheetProps {
 
 const cancellationReasons = [
   { label: 'Selecione o motivo', value: '' },
-  { label: 'Solicitação do portador', value: 'customer_request' },
-  { label: 'Transação duplicada', value: 'duplicate_transaction' },
-  { label: 'Valor incorreto', value: 'incorrect_amount' },
-  { label: 'Cartão incorreto', value: 'incorrect_card' },
-  { label: 'Outro motivo', value: 'other' },
+  { label: 'Solicitação do portador', value: 'HOLDER_REQUEST' },
+  { label: 'Transação duplicada', value: 'DUPLICATE_TRANSACTION' },
+  { label: 'Valor incorreto', value: 'INCORRECT_AMOUNT' },
+  { label: 'Cartão incorreto', value: 'INCORRECT_CARD' },
+  { label: 'Outro motivo', value: 'OTHER_REASON' },
 ]
 
 export function SaleCancellationSheet({
@@ -117,11 +118,7 @@ export function SaleCancellationSheet({
                   </View>
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>Cartão:</Text>
-                    <Text style={styles.infoValue}>{saleData.cardNumber}</Text>
-                  </View>
-                  <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>NSU:</Text>
-                    <Text style={styles.infoValue}>{saleData.nsu}</Text>
+                    <Text style={styles.infoValue}>{formatCardNumber(saleData.cardNumber)}</Text>
                   </View>
                 </View>
 
