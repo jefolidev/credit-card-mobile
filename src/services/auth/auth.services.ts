@@ -1,9 +1,9 @@
 import api from '../../api/api'
-import { LoginByCpfDTO, LoginResponseDTO } from './dto/login-by-cpf-dto'
+import { LoginDTO, LoginResponseDTO } from './dto/login-by-cpf-dto'
 import { GetMeResponse, LoginResponse } from './responses.dto'
 
 export const authServices = {
-  loginByCpf: async (payload: LoginByCpfDTO): Promise<LoginResponse> => {
+  login: async (payload: LoginDTO): Promise<LoginResponse> => {
     let queryParams = ''
 
     if (payload.userCnpj) {
