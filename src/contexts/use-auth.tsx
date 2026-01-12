@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userType: UserRole
   ): Promise<boolean> => {
     setIsLoading(true)
-    const { login, getMe } = authServices
+    const { login, cnpjLogin, getMe } = authServices
 
     try {
       // Iniciando login
@@ -63,7 +63,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ? { userCpf: document, password }
           : { userCnpj: document, password }
 
-      const loginResponse = await login(loginPayload)
+      // Usar função correta baseada no tipo de usuário
+      const loginResponse =
+        userType === 'PORTATOR'
+          ? await login(loginPayload)
+          : await cnpjLogin(loginPayload)
+
       // Login realizado, salvando token
 
       if (loginResponse.token) {

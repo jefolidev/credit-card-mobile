@@ -4,15 +4,11 @@ import { GetMeResponse, LoginResponse } from './responses.dto'
 
 export const authServices = {
   login: async (payload: LoginDTO): Promise<LoginResponse> => {
-    let queryParams = ''
-
-    if (payload.userCnpj) {
-      queryParams = `cnpj=${payload.userCnpj}`
+    if (!payload.userCpf) {
+      throw new Error('CPF é obrigatório para login de portadores')
     }
 
-    if (payload.userCpf) {
-      queryParams = `cpf=${payload.userCpf}`
-    }
+    const queryParams = `cpf=${payload.userCpf}`
 
     const getUserResponse = await api.get<LoginResponseDTO[]>(
       `/sessions/login/all?${queryParams}`
@@ -27,6 +23,19 @@ export const authServices = {
 
     const { data } = await api.post<LoginResponse>(`/sessions/login`, {
       id: user.id,
+      password: payload.password,
+    })
+
+    return data
+  },
+
+  cnpjLogin: async (payload: LoginDTO): Promise<LoginResponse> => {
+    if (!payload.userCnpj) {
+      throw new Error('CNPJ é obrigatório para login de lojistas')
+    }
+
+    const { data } = await api.post<LoginResponse>(`/sessions/login/cnpj`, {
+      cnpj: payload.userCnpj,
       password: payload.password,
     })
 

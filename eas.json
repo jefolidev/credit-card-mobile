@@ -12,7 +12,11 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "ENVIRONMENT": "production",
+        "API_KEY": "https://api.inoveweb.bongdigital.com.br/"
+      }
     }
   },
   "submit": {
