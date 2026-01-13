@@ -7,6 +7,7 @@ export default {
     "userInterfaceStyle": "light",
     "plugins": [
       "expo-font",
+      "@react-native-community/datetimepicker",
       [
         "expo-camera",
         {
