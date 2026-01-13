@@ -27,7 +27,6 @@ interface SaleCancellationFilters {
   cardNumber: string
 }
 
-// Mapeamento dos motivos de cancelamento
 const cancellationReasons = [
   { label: 'Solicitação do portador', value: 'HOLDER_REQUEST' },
   { label: 'Transação duplicada', value: 'DUPLICATE_TRANSACTION' },
@@ -80,7 +79,6 @@ export function SalesCancellation({ onGoBack }: SalesCancellationProps) {
 
   const cardNumber = watch('cardNumber')
 
-  // Função para buscar vendas
   const fetchSales = useCallback(async () => {
     if (!user?.id) return
 
@@ -104,12 +102,10 @@ export function SalesCancellation({ onGoBack }: SalesCancellationProps) {
     }
   }, [user?.id, getSells])
 
-  // Carregar vendas quando o componente montar
   useEffect(() => {
     fetchSales()
   }, [fetchSales])
 
-  // Converter vendas para o formato do componente
   const salesItems = useMemo(() => sales.map(mapSellToSaleItem), [sales])
 
   const filteredSales = useMemo(() => {
@@ -143,16 +139,13 @@ export function SalesCancellation({ onGoBack }: SalesCancellationProps) {
     if (!selectedSale) return
 
     try {
-      // Chamar API de cancelamento enviando o enum value
       await cancelSell(selectedSale.id, { reason })
 
-      // Atualizar lista local removendo a venda cancelada ou recarregando
       await fetchSales()
 
       setShowCancellationSheet(false)
       setSelectedSale(null)
 
-      // Show success alert
       Alert.alert(
         'Venda Cancelada',
         `A venda ${selectedSale.id} foi cancelada com sucesso. O valor será estornado automaticamente no cartão do portador.`,

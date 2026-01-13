@@ -24,7 +24,6 @@ export function Home() {
   >([])
   const [loadingTransactions, setLoadingTransactions] = useState(false)
 
-  // Mapeamento de meses string para números
   const monthMap: { [key: string]: number } = {
     JAN: 0,
     FEV: 1,
@@ -40,7 +39,6 @@ export function Home() {
     DEZ: 11,
   }
 
-  // Função para formatar data para comparação (YYYY-MM)
   const formatMonthYear = (date: Date) => {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
       2,
@@ -48,7 +46,6 @@ export function Home() {
     )}`
   }
 
-  // Função para formatar data para exibição
   const formatDateLegend = (dateString: string) => {
     const date = new Date(dateString)
     const today = new Date()
@@ -67,7 +64,6 @@ export function Home() {
     }
   }
 
-  // Função para buscar transações do mês atual
   const loadCurrentMonthTransactions = async () => {
     if (!selectedCard || !selectedCard.bills || !isCardAuthenticated) {
       console.log('🔍 Condições não atendidas:', {
@@ -95,7 +91,6 @@ export function Home() {
         }))
       )
 
-      // Buscar fatura do mês atual
       const currentBill = selectedCard.bills.find((bill) => {
         const monthNumber = monthMap[bill.month]
         if (monthNumber === undefined) {
@@ -125,7 +120,6 @@ export function Home() {
           )
           const formattedTransactions = billDetails.sellInstallments.map(
             (installment: any) => {
-              // Converter data para string no formato correto
               const formatDate = (date: Date | string) => {
                 const dateObj = date instanceof Date ? date : new Date(date)
                 return dateObj.toISOString()
@@ -145,7 +139,6 @@ export function Home() {
 
           console.log('🔍 Transações formatadas:', formattedTransactions)
 
-          // Ordenar por data (mais recentes primeiro) e pegar apenas os últimos 5
           const sortedTransactions = formattedTransactions
             .sort((a, b) => {
               const dateA = new Date(a.date).getTime()
@@ -172,7 +165,6 @@ export function Home() {
     }
   }
 
-  // Carregar dados do cartão quando entrar na tela
   useEffect(() => {
     const loadCardData = async () => {
       if (isCardAuthenticated && selectedCard) {
@@ -189,7 +181,6 @@ export function Home() {
     loadCardData()
   }, [isCardAuthenticated, selectedCard?.id])
 
-  // useEffect separado para carregar transações quando as bills forem atualizadas
   useEffect(() => {
     if (
       isCardAuthenticated &&
@@ -200,16 +191,14 @@ export function Home() {
     }
   }, [selectedCard?.bills])
 
-  // Agrupar transações por data
   const transactionsByDate = currentMonthTransactions.reduce(
     (acc, transaction) => {
-      // Validar se transaction.date existe antes de fazer split
       if (!transaction.date) {
         console.warn('Transaction sem data encontrada:', transaction)
         return acc
       }
 
-      const date = transaction.date.split('T')[0] // Pegar apenas a data (YYYY-MM-DD)
+      const date = transaction.date.split('T')[0]
       if (!acc[date]) {
         acc[date] = []
       }
@@ -219,12 +208,10 @@ export function Home() {
     {} as Record<string, typeof currentMonthTransactions>
   )
 
-  // Ordenar datas em ordem decrescente
   const sortedDates = Object.keys(transactionsByDate).sort(
     (a, b) => new Date(b).getTime() - new Date(a).getTime()
   )
 
-  // Limitar para mostrar apenas as 2 datas mais recentes
   const limitedDates = sortedDates.slice(0, 2)
 
   return (
@@ -331,7 +318,6 @@ export function Home() {
               </View>
             </>
           ) : user?.role === 'PORTATOR' ? (
-            // Fallback para PORTADOR sem cartão selecionado
             <View style={{ padding: 20, alignItems: 'center' }}>
               <Text
                 style={{

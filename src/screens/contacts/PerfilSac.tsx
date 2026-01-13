@@ -355,7 +355,6 @@ const styles = StyleSheet.create({
     color: '#6a7282',
   },
 
-  // Horário de Atendimento
   scheduleCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
@@ -410,7 +409,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
-  // Emergência
   emergencyList: {},
   emergencyCard: {
     borderRadius: 16,
@@ -447,7 +445,6 @@ const styles = StyleSheet.create({
     color: colors.zinc[500],
   },
 
-  // Endereço
   addressCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
@@ -481,7 +478,6 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
 
-  // Dica importante
   tipCard: {
     backgroundColor: colors.purple[50],
     borderRadius: 16,

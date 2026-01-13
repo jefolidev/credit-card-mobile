@@ -37,7 +37,6 @@ interface PaymentFormData {
 }
 
 export function QrPayment({ onGoBack }: QrPaymentProps) {
-  // Remove showScanner state since camera is always visible
   const [scannedData, setScannedData] = useState<ScannedQrData | null>(null)
   const [saleDetails, setSaleDetails] =
     useState<ResponseSellByQrCodeDto | null>(null)
@@ -55,7 +54,6 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
 
   const { selectedCard, isCardAuthenticated } = useCard()
 
-  // Debug logs
   React.useEffect(() => {
     console.log('QrPayment Debug:')
     console.log('selectedCard:', selectedCard)
@@ -63,7 +61,6 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
     console.log('showPaymentModal:', showPaymentModal)
   }, [selectedCard, saleDetails, showPaymentModal])
 
-  // Iniciar timer de expiração quando QR é escaneado
   const startExpirationTimer = (expiresInSeconds: number) => {
     setTimeLeft(expiresInSeconds)
     setIsExpired(false)
@@ -100,7 +97,6 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
       .padStart(2, '0')}`
   }
 
-  // Cleanup polling quando componente desmonta
   useEffect(() => {
     return () => {
       clearPolling()
@@ -109,14 +105,11 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
   }, [])
 
   const handleQRCodeScanned = async (data: string) => {
-    // Prevent rapid state changes
     if (isLoadingDetails) return
 
-    // Não esconder o scanner, apenas mostrar loading
     setIsLoadingDetails(true)
 
     try {
-      // Parse QR code data
       const parsedData: ScannedQrData = JSON.parse(data)
 
       if (!parsedData.saleId) {
@@ -125,7 +118,6 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
         return
       }
 
-      // Verificar se o QR Code ainda não expirou
       if (parsedData.expiresIn && parsedData.expiresIn <= 0) {
         setIsLoadingDetails(false)
         Alert.alert(
@@ -151,7 +143,6 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
       console.log('Sale details fetched:', details)
       setSaleDetails(details)
 
-      // Iniciar timer de expiração se temos dados do QR
       if (scannedData?.expiresIn) {
         startExpirationTimer(scannedData.expiresIn)
       }
@@ -166,20 +157,15 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
     }
   }
 
-  // Polling para verificar se pagamento foi processado
   const startPaymentPolling = (saleId: string) => {
     currentSaleId.current = saleId
 
     pollingInterval.current = setInterval(async () => {
       try {
-        // Tenta buscar os detalhes do QR novamente
-        // Se der erro (404, 403, etc.), significa que foi processado
         await cardsServices.getDetailsQrCode(saleId)
       } catch (error: any) {
-        // Se der erro, provavelmente foi processado
         console.log('QR Code não existe mais ou foi processado:', error)
 
-        // Verificar se é erro de não encontrado ou acesso negado
         if (
           error?.status === 404 ||
           error?.status === 403 ||
@@ -190,7 +176,7 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
           handlePaymentSuccess()
         }
       }
-    }, 3000) // Verifica a cada 3 segundos
+    }, 3000)
   }
 
   const clearPolling = () => {
@@ -202,7 +188,6 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
 
   const handlePaymentSuccess = () => {
     setPaymentSuccess(true)
-    // Não precisa resetar isProcessingPayment aqui pois já foi resetado em handleConfirmPayment
 
     Alert.alert(
       'Pagamento Confirmado!',
@@ -250,10 +235,8 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
 
       console.log('Payment result:', result)
 
-      // Se o pagamento foi aceito pela API, resetar o loading
       setIsProcessingPayment(false)
 
-      // Mostrar sucesso imediatamente
       handlePaymentSuccess()
     } catch (error) {
       Alert.alert(
@@ -290,10 +273,8 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
     setTimeLeft(null)
     setIsExpired(false)
     currentSaleId.current = null
-    // Não reativar scanner, apenas fechar modal
   }
 
-  // Sempre mostrar a câmera como base com overlays
   return (
     <View style={styles.container}>
       {/* Camera Background */}
@@ -645,13 +626,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  // Bottom Sheet styles
-  // Bottom Sheet styles
   sheetContent: {
     flex: 1,
   },
 
-  // Password input styles
   passwordContainer: {
     marginVertical: 20,
   },
@@ -678,7 +656,6 @@ const styles = StyleSheet.create({
     color: colors.gray[900],
   },
 
-  // Updated button styles for bottom sheet
   buttonContainer: {
     flexDirection: 'row',
     gap: 12,
@@ -692,7 +669,6 @@ const styles = StyleSheet.create({
     maxHeight: 40,
   },
 
-  // Loading overlay styles
   loadingOverlay: {
     position: 'absolute',
     top: 0,

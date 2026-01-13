@@ -1,4 +1,5 @@
 import axios, { AxiosError, isAxiosError } from 'axios'
+import Constants from 'expo-constants'
 import { Platform } from 'react-native'
 
 // Função para obter o IP local da máquina
@@ -9,6 +10,21 @@ const getLocalIP = () => {
 
 // Base URL dinâmica por ambiente/plataforma
 const getApiUrl = () => {
+  const environment =
+    Constants.expoConfig?.extra?.ENVIRONMENT ||
+    process.env.ENVIRONMENT ||
+    'development'
+  const apiKey = Constants.expoConfig?.extra?.API_KEY || process.env.API_KEY
+
+  console.log(`🌍 Environment: ${environment}`)
+
+  // Se for produção e tiver API_KEY, usar ela
+  if (environment === 'production' && apiKey) {
+    console.log(`🔑 Using production API: ${apiKey}`)
+    return apiKey
+  }
+
+  // Caso contrário, usar desenvolvimento local
   const localIP = getLocalIP()
 
   if (Platform.OS === 'android') {
@@ -18,7 +34,7 @@ const getApiUrl = () => {
     // Para iOS Simulator - usar IP da máquina host
     return `http://${localIP}:3000`
   }
-  0 // Fallback para web/outras plataformas
+  // Fallback para web/outras plataformas
   return 'http://localhost:3000'
 }
 

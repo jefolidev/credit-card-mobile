@@ -57,23 +57,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { login, cnpjLogin, getMe } = authServices
 
     try {
-      // Iniciando login
       const loginPayload =
         userType === 'PORTATOR'
           ? { userCpf: document, password }
           : { userCnpj: document, password }
 
-      // Usar função correta baseada no tipo de usuário
       const loginResponse =
         userType === 'PORTATOR'
           ? await login(loginPayload)
           : await cnpjLogin(loginPayload)
 
-      // Login realizado, salvando token
-
       if (loginResponse.token) {
         setAuthToken(loginResponse.token)
-        // Token configurado para requisições futuras
       }
 
       const { id, email, name, role, cpf, telefoneCelular } = await getMe()
@@ -89,10 +84,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         setUser(userData)
-        // Login bem-sucedido
+
         return true
       } else {
-        // Dados do usuário incompletos
         return false
       }
     } catch (error) {

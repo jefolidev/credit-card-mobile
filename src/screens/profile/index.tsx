@@ -29,7 +29,6 @@ export function Profile() {
 
   const navigation = useNavigation()
 
-  // Mapear os meses string para números
   const monthMap: { [key: string]: number } = {
     JAN: 0,
     FEV: 1,
@@ -45,7 +44,6 @@ export function Profile() {
     DEZ: 11,
   }
 
-  // Função para formatar data para comparação (YYYY-MM)
   const formatMonthYear = (date: Date) => {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
       2,
@@ -53,7 +51,6 @@ export function Profile() {
     )}`
   }
 
-  // Função para contar transações do mês atual
   const loadCurrentMonthTransactionsCount = async () => {
     if (!selectedCard || !selectedCard.bills) {
       setCurrentMonthTransactionsCount(0)
@@ -63,7 +60,6 @@ export function Profile() {
     try {
       const currentMonth = formatMonthYear(new Date())
 
-      // Buscar fatura do mês atual
       const currentBill = selectedCard.bills.find((bill) => {
         const monthNumber = monthMap[bill.month]
         if (monthNumber === undefined) return false
@@ -88,7 +84,6 @@ export function Profile() {
     }
   }
 
-  // Carregar cartões quando a tela for aberta
   useEffect(() => {
     const loadUserCards = async () => {
       if (user) {
@@ -103,17 +98,14 @@ export function Profile() {
     loadUserCards()
   }, [user?.id, getUserCards])
 
-  // useEffect para carregar contagem de transações quando as bills forem atualizadas
   useEffect(() => {
     if (selectedCard?.bills && selectedCard.bills.length > 0) {
       loadCurrentMonthTransactionsCount()
     }
   }, [selectedCard?.bills])
 
-  // Usar os cartões do contexto em vez de chamar getUserCards diretamente
   const userCards = cards || []
 
-  // Verificar se o cartão está bloqueado
   const isCardBlocked = !selectedCard?.isActive
 
   const handleLogout = () => {

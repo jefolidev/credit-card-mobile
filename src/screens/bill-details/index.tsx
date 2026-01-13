@@ -1,7 +1,7 @@
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useEffect, useState } from 'react'
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { DocumentIcon } from 'src/assets/document-icon'
 import { BillInfoCard } from 'src/components/bill-info-card'
 import { CashAmount } from 'src/components/cash-amount'
@@ -29,7 +29,6 @@ export function BillDetails() {
   const [transactions, setTransactions] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  // Carregar detalhes da fatura quando a tela for aberta
   useEffect(() => {
     const loadBillDetails = async () => {
       if (billId) {
@@ -40,11 +39,9 @@ export function BillDetails() {
           )
           console.log('🧾 Detalhes da fatura carregados:', response)
 
-          // Mapear as vendas em parcelas para transações
           if (response && response.sellInstallments) {
             const formattedTransactions = response.sellInstallments.map(
               (installment) => {
-                // Converter data para string no formato correto
                 const formatDate = (date: Date | string) => {
                   const dateObj = date instanceof Date ? date : new Date(date)
                   return dateObj.toISOString().split('T')[0]
@@ -102,10 +99,6 @@ export function BillDetails() {
     }).format(value)
   }
 
-  // Get transactions from state loaded by useEffect
-  // const billTransactions = getTransactions(billId)
-
-  // Group transactions by date
   const transactionsByDate = transactions.reduce(
     (acc: Record<string, any[]>, transaction: any) => {
       const date = transaction.date
@@ -116,7 +109,7 @@ export function BillDetails() {
       return acc
     },
     {} as Record<string, typeof transactions>
-  ) // Sort dates in descending order
+  )
   const sortedDates = Object.keys(transactionsByDate).sort(
     (a, b) => new Date(b).getTime() - new Date(a).getTime()
   )
@@ -131,7 +124,6 @@ export function BillDetails() {
       })
       .replace(' de ', ' ')
   }
-
 
   return (
     <View style={styles.container}>

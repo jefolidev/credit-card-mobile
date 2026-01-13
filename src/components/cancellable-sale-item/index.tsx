@@ -8,28 +8,26 @@ import { UserIcon } from 'src/assets/user-icon'
 import { StatusSell } from 'src/services/sells/enum/status-sell-enum'
 import { formatCardNumber } from 'src/utils'
 
-// Função para traduzir motivos de cancelamento
 const translateCancelReason = (reason: string): string => {
   const reasonMap: Record<string, string> = {
-    'HOLDER_REQUEST': 'Solicitação do portador',
-    'DUPLICATE_TRANSACTION': 'Transação duplicada',
-    'INCORRECT_AMOUNT': 'Valor incorreto',
-    'INCORRECT_CARD': 'Cartão incorreto',
-    'OTHER_REASON': 'Outro motivo',
+    HOLDER_REQUEST: 'Solicitação do portador',
+    DUPLICATE_TRANSACTION: 'Transação duplicada',
+    INCORRECT_AMOUNT: 'Valor incorreto',
+    INCORRECT_CARD: 'Cartão incorreto',
+    OTHER_REASON: 'Outro motivo',
   }
   return reasonMap[reason] || reason
 }
 
-// Função para formatar data no formato HH:mm, DD/MM/YYYY
 const formatDateTime = (date: string | Date): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date
-  
+
   const day = String(dateObj.getDate()).padStart(2, '0')
   const month = String(dateObj.getMonth() + 1).padStart(2, '0')
   const year = dateObj.getFullYear()
   const hours = String(dateObj.getHours()).padStart(2, '0')
   const minutes = String(dateObj.getMinutes()).padStart(2, '0')
-  
+
   return `${hours}:${minutes}, ${day}/${month}/${year}`
 }
 

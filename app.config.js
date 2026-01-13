@@ -1,8 +1,10 @@
 export default {
   "expo": {
-    "name": "credit-card-app",
+    "name": "Credit Card App",
     "slug": "credit-card-app",
     "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
     "plugins": [
       "expo-font",
       [
@@ -23,10 +25,15 @@ export default {
     },
     "android": {
       "package": "com.jefkjkk.creditcardapp",
+      "versionCode": 1,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.jefkjkk.creditcardapp",
+      "buildNumber": "1.0.0"
     }
   }
 }

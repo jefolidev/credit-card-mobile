@@ -43,7 +43,6 @@ export function QRCodeScanner({
       setScanned(true)
       setIsProcessing(true)
 
-      // Add visual feedback delay
       setTimeout(() => {
         onQRCodeScanned(data)
       }, 300)
@@ -57,7 +56,6 @@ export function QRCodeScanner({
     )
   }
 
-  // Renderizar tela de carregamento de permissão
   if (hasPermission === null) {
     return (
       <View style={styles.container}>
@@ -78,7 +76,6 @@ export function QRCodeScanner({
     )
   }
 
-  // Renderizar tela de permissão negada
   if (!hasPermission) {
     return (
       <View style={styles.container}>
@@ -367,7 +364,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
 
-  // Success overlay styles
   successOverlay: {
     position: 'absolute',
     top: 0,

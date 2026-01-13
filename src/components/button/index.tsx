@@ -27,14 +27,12 @@ export function Button({
 }: ButtonProps) {
   const isGradient = variant === 'primary' || variant === 'secondary'
 
-  // Variantes com gradiente (primary/secondary)
   if (isGradient) {
     const gradientColors =
       variant === 'primary'
         ? (['#773CBD', '#550DD1', '#4E03D5'] as const)
         : (['#FF8D28', '#F93332', '#CD086A'] as const)
 
-    // Disabled para variantes com gradiente
     if (disabled) {
       return (
         <TouchableOpacity
@@ -82,7 +80,6 @@ export function Button({
     )
   }
 
-  // Variantes sólidas (success / destructive)
   if (variant === 'destructive' || variant === 'success') {
     const bg = variant === 'destructive' ? colors.red[600] : colors.emerald[600]
     const bgDisabled =
@@ -109,7 +106,6 @@ export function Button({
     )
   }
 
-  // Variante outline
   if (variant === 'outline') {
     const containerStyle = [
       styles.base,
@@ -140,7 +136,6 @@ export function Button({
     )
   }
 
-  // Fallback (sem gradiente)
   const containerStyle = [styles.base, style]
   return (
     <TouchableOpacity

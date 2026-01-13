@@ -82,7 +82,6 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
     currentInstallments
   )
 
-  // Funções do timer de expiração
   const startExpirationTimer = (expiresInSeconds: number) => {
     setTimeLeft(expiresInSeconds)
     setIsExpired(false)
@@ -119,31 +118,26 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
       .padStart(2, '0')}`
   }
 
-  // Polling para verificar pagamento
   const startPolling = (saleId: string) => {
     setCurrentSaleId(saleId)
     setPaymentProcessingState('waiting')
 
     pollingInterval.current = setInterval(async () => {
       try {
-        // Primeiro tenta buscar usando getSells (método que funcionava)
         const sellsResponse = await getSells({})
         const currentSale = sellsResponse.sells.find(
           (sell: any) => sell.id === saleId
         )
 
-        // Se não encontrou nas vendas normais, tenta buscar nos QR codes
         if (!currentSale) {
           try {
             const qrCodes = await getQrCodeSell()
             const currentQr = qrCodes.find((qr) => qr.id.toString() === saleId)
 
             if (currentQr) {
-              // QR code ainda existe mas não foi pago ainda
               console.log('QR code ainda ativo, aguardando pagamento...')
-              return // Continua polling
+              return
             } else {
-              // QR code não existe mais - pode ter sido pago ou expirado
               console.log(
                 'QR code não encontrado - assumindo que foi processado'
               )
@@ -152,14 +146,13 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
               clearExpirationTimer()
 
               setTimeout(() => {
-                // Mostrar animação de sucesso com modal
                 setPaymentProcessingState('paid')
               }, 300)
               return
             }
           } catch (qrError) {
             console.log('Erro ao buscar QR codes:', qrError)
-            // Se der erro ao buscar QR, pode ter sido processado
+
             setPaymentProcessingState('paid')
             clearPolling()
             clearExpirationTimer()
@@ -183,14 +176,11 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
 
         console.log('Status da venda encontrada:', currentSale?.status)
 
-        // Verifica status da venda encontrada
         if (currentSale && currentSale.status === 'PAID') {
           setPaymentProcessingState('paid')
           clearPolling()
           clearExpirationTimer()
 
-          // Mostrar animação de sucesso com modal
-          // Aguarda um momento para mostrar a animação
           setTimeout(() => {
             setPaymentProcessingState('paid')
           }, 300)
@@ -199,7 +189,6 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
           clearPolling()
           clearExpirationTimer()
 
-          // Mostrar animação de falha
           setTimeout(() => {
             Alert.alert(
               '❌ Pagamento Cancelado',
@@ -223,7 +212,6 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
           clearPolling()
           clearExpirationTimer()
 
-          // Mostrar status de cancelamento
           setTimeout(() => {
             Alert.alert(
               '⚠️ Pagamento em Cancelamento',
@@ -236,26 +224,22 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
                 },
                 {
                   text: 'Aguardar',
-                  onPress: () => {}, // Apenas fecha o modal
+                  onPress: () => {},
                   style: 'cancel',
                 },
               ]
             )
           }, 500)
         }
-        // Se status ainda é PENDING ou outro, continua polling
       } catch (error: any) {
         console.error('Erro ao verificar status da venda:', error)
 
-        // Se der erro 400 (Bad Request), o QR pode ter expirado ou sido processado
         if (error?.status === 400 || error?.response?.status === 400) {
-          // Tenta verificar se o QR ainda existe
           try {
             const qrCodes = await getQrCodeSell()
             const currentQr = qrCodes.find((qr) => qr.id.toString() === saleId)
 
             if (!currentQr) {
-              // QR não existe mais - assumir que foi processado
               setPaymentProcessingState('paid')
               clearPolling()
               clearExpirationTimer()
@@ -274,12 +258,11 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
                 )
               }, 500)
             } else {
-              // QR ainda existe, continua polling
               console.log('QR code ainda ativo, continuando verificação...')
             }
           } catch (qrError) {
             console.log('Erro ao verificar QR codes:', qrError)
-            // Se não consegue verificar QR, para o polling
+
             setPaymentProcessingState('error')
             clearPolling()
             clearExpirationTimer()
@@ -303,9 +286,8 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
             )
           }, 500)
         }
-        // Para outros erros, continua tentando
       }
-    }, 2500) // Verifica a cada 2.5 segundos (mais frequente)
+    }, 2500)
   }
 
   const clearPolling = () => {
@@ -326,7 +308,6 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
     onGoBack()
   }
 
-  // Cleanup polling quando componente desmonta
   useEffect(() => {
     return () => {
       clearPolling()
@@ -346,7 +327,6 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
 
       const qrCodeResponse = await createQrCode(saleData)
 
-      // Create QR code data with sale information for payment
       if (qrCodeResponse?.id) {
         const qrData = JSON.stringify({
           saleId: qrCodeResponse.id.toString(),
@@ -361,16 +341,13 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
         setShowQrCode(true)
         onConfirmSale(saleData)
 
-        // Buscar dados atualizados do QR code para obter expiresIn atual
         try {
           const qrCodes = await getQrCodeSell()
           const currentQr = qrCodes.find((qr) => qr.id === qrCodeResponse.id)
           if (currentQr && currentQr.expiresIn) {
-            // Se expiresIn é um timestamp, calcular segundos restantes
             const now = Date.now()
             const expirationTime = currentQr.expiresIn
 
-            // Se o valor é muito grande, provavelmente é um timestamp
             if (expirationTime > 1000000) {
               const secondsLeft = Math.max(
                 0,
@@ -378,11 +355,9 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
               )
               startExpirationTimer(secondsLeft)
             } else {
-              // Se é um valor pequeno, provavelmente já são segundos
               startExpirationTimer(currentQr.expiresIn)
             }
           } else {
-            // Fallback para o valor original
             const now = Date.now()
             const expirationTime = qrCodeResponse.expiresIn
 
@@ -401,7 +376,7 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
             'Erro ao buscar QR code atualizado, usando valor original:',
             error
           )
-          // Fallback com conversão se necessário
+
           const now = Date.now()
           const expirationTime = qrCodeResponse.expiresIn
 
@@ -416,7 +391,6 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
           }
         }
 
-        // Iniciar polling para detectar pagamento
         startPolling(qrCodeResponse.id.toString())
       } else {
         Alert.alert('Erro', 'Não foi possível gerar o QR Code')
@@ -1207,7 +1181,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  // Payment status styles
   paymentStatusContainer: {
     marginTop: 16,
     marginBottom: 8,

@@ -14,7 +14,6 @@ export const authServices = {
       `/sessions/login/all?${queryParams}`
     )
 
-    // A API retorna um array, então pegamos o primeiro usuário
     const user = getUserResponse.data[0]
 
     if (!user || !user.id) {

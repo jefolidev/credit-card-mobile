@@ -84,7 +84,6 @@ export function CardProvider({ children }: { children: ReactNode }) {
   const [cardToken, setCardToken] = useState<string | null>(null)
 
   const selectCard = (card: CreditCard) => {
-    // Se for um cartão diferente do atual, reset a autenticação
     if (!selectedCard || selectedCard.id !== card.id) {
       setSelectedCard(card)
       setIsCardAuthenticated(false)
@@ -136,16 +135,15 @@ export function CardProvider({ children }: { children: ReactNode }) {
     try {
       const response = await cardsServices.getCards()
 
-      // ResponseGetAllCardsUser é um array direto de cartões
       if (response && Array.isArray(response)) {
         const formattedCards = response.map((card) => ({
           id: card.id,
           cpf: '',
           cardNumber: card.cardNumber,
           cardholderName: card.name,
-          cardPassword: '', // Não deve ser armazenado
-          balance: 0, // Será obtido após autenticação
-          creditLimit: 0, // Será obtido após autenticação
+          cardPassword: '',
+          balance: 0,
+          creditLimit: 0,
           type: 'credit' as const,
           isActive: true,
           closingDate: 0,
@@ -179,7 +177,6 @@ export function CardProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Funções que requerem autenticação de cartão
   const getCardBalance = async (): Promise<ResponseGetBalanceCard> => {
     if (!isCardAuthenticated || !cardToken) {
       throw new Error('Cartão não autenticado')
@@ -188,7 +185,6 @@ export function CardProvider({ children }: { children: ReactNode }) {
     try {
       const response = await cardsServices.getBalanceCard()
 
-      // Atualizar o cartão selecionado com os dados reais
       setSelectedCard((prevCard) => {
         if (prevCard) {
           return {
@@ -215,11 +211,9 @@ export function CardProvider({ children }: { children: ReactNode }) {
     try {
       const response = await cardsServices.getBillingsCards()
 
-      // Mapear as bills do backend para o formato interno
       const formattedBills: Bill[] = response.map((billing) => {
         const [monthName, year] = billing.monthAndYear.split('/')
 
-        // Converter datas de forma segura
         const formatDate = (date: any) => {
           if (!date) return new Date().toISOString().split('T')[0]
           const dateObj = typeof date === 'string' ? new Date(date) : date
@@ -237,13 +231,10 @@ export function CardProvider({ children }: { children: ReactNode }) {
           closingDate: formatDate(billing.dateStartBilling),
           status: billing.status as BillStatus,
           cardId: selectedCard?.id || '',
-          transactions: [], // Será preenchido ao buscar detalhes da fatura
+          transactions: [],
         }
       })
 
-      // console.log(formattedBills)
-
-      // Atualizar o cartão selecionado com as bills
       setSelectedCard((prevCard) => {
         if (prevCard) {
           return {
@@ -304,7 +295,6 @@ export function CardProvider({ children }: { children: ReactNode }) {
       await cardsServices.blockCard()
       console.log('🔒 Cartão bloqueado com sucesso')
 
-      // Atualizar o estado do cartão como bloqueado
       setSelectedCard((prevCard) => {
         if (prevCard) {
           return {
@@ -331,7 +321,6 @@ export function CardProvider({ children }: { children: ReactNode }) {
       await cardsServices.unblockCard()
       console.log('🔓 Cartão desbloqueado com sucesso')
 
-      // Atualizar o estado do cartão como desbloqueado
       setSelectedCard((prevCard) => {
         if (prevCard) {
           return {

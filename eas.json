@@ -9,13 +9,20 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
     },
     "production": {
       "autoIncrement": true,
       "env": {
         "ENVIRONMENT": "production",
         "API_KEY": "https://api.inoveweb.bongdigital.com.br/"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
       }
     }
   },

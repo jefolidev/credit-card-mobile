@@ -13,8 +13,6 @@ import { CardProvider } from './contexts/use-card'
 import { SellsProvider } from './contexts/use-sells'
 import { Routes } from './routes/@index'
 
-// TODO: FAZER PAGINA DE CONTATO E LOJISTA EM SEGUIDA | MANDAR RELATORIO PRO THENISON
-
 export default function App() {
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
