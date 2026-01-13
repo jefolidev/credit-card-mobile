@@ -37,7 +37,6 @@ export function BillDetails() {
           const response: ResponseGetBillingDetails = await getBillingDetails(
             billId
           )
-          console.log('🧾 Detalhes da fatura carregados:', response)
 
           if (response && response.sellInstallments) {
             const formattedTransactions = response.sellInstallments.map(

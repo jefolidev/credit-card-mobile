@@ -18,7 +18,6 @@ export function Transactions() {
         setIsLoading(true)
         try {
           await getCardBillings()
-          console.log('📄 Bills do cartão carregadas na tela de Transactions')
         } catch (error) {
           console.error('📄 Erro ao carregar bills do cartão:', error)
         } finally {
