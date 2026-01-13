@@ -1,12 +1,9 @@
-export interface LoginDTO {
-  userCpf?: string
-  userCnpj?: string
+export interface LoginByCPFDTO {
+  cpf: string
   password: string
 }
 
-export interface LoginResponseDTO {
-  id: string
-  email: string
-  role: 'SELLER' | 'PORTATOR' | 'ADMIN' | 'SUPER_ADMIN'
-  name: string
+export interface LoginByCNPJDTO {
+  cnpj: string
+  password: string
 }
