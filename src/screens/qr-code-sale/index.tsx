@@ -135,12 +135,10 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
             const currentQr = qrCodes.find((qr) => qr.id.toString() === saleId)
 
             if (currentQr) {
-              console.log('QR code ainda ativo, aguardando pagamento...')
+             
               return
             } else {
-              console.log(
-                'QR code não encontrado - assumindo que foi processado'
-              )
+             
               setPaymentProcessingState('paid')
               clearPolling()
               clearExpirationTimer()
@@ -151,7 +149,7 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
               return
             }
           } catch (qrError) {
-            console.log('Erro ao buscar QR codes:', qrError)
+            
 
             setPaymentProcessingState('paid')
             clearPolling()
@@ -174,7 +172,7 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
           }
         }
 
-        console.log('Status da venda encontrada:', currentSale?.status)
+        
 
         if (currentSale && currentSale.status === 'PAID') {
           setPaymentProcessingState('paid')
@@ -258,10 +256,10 @@ export function QrCodeSale({ onGoBack, onConfirmSale }: QrCodeSaleProps) {
                 )
               }, 500)
             } else {
-              console.log('QR code ainda ativo, continuando verificação...')
+              
             }
           } catch (qrError) {
-            console.log('Erro ao verificar QR codes:', qrError)
+           
 
             setPaymentProcessingState('error')
             clearPolling()

@@ -54,13 +54,6 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
 
   const { selectedCard, isCardAuthenticated } = useCard()
 
-  React.useEffect(() => {
-    console.log('QrPayment Debug:')
-    console.log('selectedCard:', selectedCard)
-    console.log('saleDetails:', saleDetails)
-    console.log('showPaymentModal:', showPaymentModal)
-  }, [selectedCard, saleDetails, showPaymentModal])
-
   const startExpirationTimer = (expiresInSeconds: number) => {
     setTimeLeft(expiresInSeconds)
     setIsExpired(false)
@@ -140,7 +133,6 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
     setIsLoadingDetails(true)
     try {
       const details = await cardsServices.getDetailsQrCode(saleId)
-      console.log('Sale details fetched:', details)
       setSaleDetails(details)
 
       if (scannedData?.expiresIn) {
@@ -164,8 +156,6 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
       try {
         await cardsServices.getDetailsQrCode(saleId)
       } catch (error: any) {
-        console.log('QR Code não existe mais ou foi processado:', error)
-
         if (
           error?.status === 404 ||
           error?.status === 403 ||
@@ -232,8 +222,6 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
         scannedData.saleId,
         paymentData
       )
-
-      console.log('Payment result:', result)
 
       setIsProcessingPayment(false)
 
