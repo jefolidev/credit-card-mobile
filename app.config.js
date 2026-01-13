@@ -24,7 +24,7 @@ export default {
       "API_KEY": process.env.API_KEY || "https://api.inoveweb.bongdigital.com.br/"
     },
     "android": {
-      "package": "com.jefkjkk.creditcardapp",
+      "package": "com.inoveweb.creditcardapp",
       "versionCode": 1,
       "permissions": [
         "android.permission.CAMERA",
@@ -32,7 +32,7 @@ export default {
       ]
     },
     "ios": {
-      "bundleIdentifier": "com.jefkjkk.creditcardapp",
+      "bundleIdentifier": "com.inoveweb.creditcardapp",
       "buildNumber": "1.0.0"
     }
   }
