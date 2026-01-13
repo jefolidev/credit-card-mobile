@@ -19,6 +19,7 @@ import { CreditCard } from 'src/components/credit-card'
 import { Input } from 'src/components/input'
 import { CreditCard as CreditCardType, useCard } from 'src/contexts/use-card'
 import { colors } from 'src/theme/colors'
+import { formatCardNumber } from 'src/utils'
 import { AuthCardBodySchema } from './schema'
 
 interface CardAuthBottomSheetProps {
@@ -132,7 +133,7 @@ export function CardAuthBottomSheet({
                   <View style={styles.disabledInputContent}>
                     <CreditCardIcon color="#6B7280" width={20} height={20} />
                     <Text style={styles.disabledText}>
-                      {selectedCard.cardNumber}
+                      {formatCardNumber(selectedCard.cardNumber)}
                     </Text>
                   </View>
                 </View>

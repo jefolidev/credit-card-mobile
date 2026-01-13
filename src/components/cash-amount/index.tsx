@@ -189,7 +189,9 @@ export function CashAmount({
             )}
           </>
         ) : (
-          <Text style={cardStyles.header}>{cardNumber}</Text>
+          <Text style={cardStyles.header}>
+            {isVisible ? cardNumber : `Cartão •••• ${cardNumber.slice(-4)}`}
+          </Text>
         )}
       </View>
     </LinearGradient>
