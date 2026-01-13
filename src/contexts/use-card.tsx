@@ -109,7 +109,6 @@ export function CardProvider({ children }: { children: ReactNode }) {
         setCardToken(response.token)
         setCardAuthToken(response.token)
         setIsCardAuthenticated(true)
-        console.log(selectedCard)
 
         return true
       } else {
@@ -293,7 +292,6 @@ export function CardProvider({ children }: { children: ReactNode }) {
 
     try {
       await cardsServices.blockCard()
-      console.log('🔒 Cartão bloqueado com sucesso')
 
       setSelectedCard((prevCard) => {
         if (prevCard) {
@@ -319,7 +317,6 @@ export function CardProvider({ children }: { children: ReactNode }) {
 
     try {
       await cardsServices.unblockCard()
-      console.log('🔓 Cartão desbloqueado com sucesso')
 
       setSelectedCard((prevCard) => {
         if (prevCard) {
