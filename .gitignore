@@ -37,3 +37,4 @@ yarn-error.*
 
 # vs code
 .vscode/android/.kotlin/
+.vscode/
