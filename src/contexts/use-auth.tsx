@@ -57,20 +57,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { login, cnpjLogin, getMe } = authServices
 
     try {
-      const loginPayload =
-        userType === 'PORTATOR'
-          ? { userCpf: document, password }
-          : { userCnpj: document, password }
-
+      // Faz login e captura o token
       const loginResponse =
         userType === 'PORTATOR'
-          ? await login(loginPayload)
-          : await cnpjLogin(loginPayload)
+          ? await login({ cpf: document, password })
+          : await cnpjLogin({ cnpj: document, password })
 
       if (loginResponse.token) {
         setAuthToken(loginResponse.token)
       }
 
+      // Após autenticação bem-sucedida, busca os dados do usuário
       const { id, email, name, role, cpf, telefoneCelular } = await getMe()
       if (email && name && role) {
         const userData = {
@@ -89,8 +86,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         return false
       }
-    } catch (error) {
-      console.error('Erro no login:', error)
+    } catch (error: any) {
+      console.error('Erro no login:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+        method: error.config?.method,
+      })
       return false
     } finally {
       setIsLoading(false)
