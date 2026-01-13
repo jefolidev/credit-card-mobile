@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import {
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native'
 import { HomeIcon } from 'src/assets/home-icon'
 import { BillInfoCard } from 'src/components/bill-info-card'
 import { CashAmount } from 'src/components/cash-amount'
@@ -7,6 +13,7 @@ import { Header } from 'src/components/header'
 import TransactionItem from 'src/components/transaction-item'
 import { useAuth } from 'src/contexts/use-auth'
 import { useCard } from 'src/contexts/use-card'
+import { formatCardNumber } from 'src/utils'
 import { colors } from '../../theme/colors'
 
 export function Home() {
@@ -23,6 +30,7 @@ export function Home() {
     any[]
   >([])
   const [loadingTransactions, setLoadingTransactions] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
   const monthMap: { [key: string]: number } = {
     JAN: 0,
@@ -77,19 +85,6 @@ export function Home() {
     setLoadingTransactions(true)
     try {
       const currentMonth = formatMonthYear(new Date())
-      console.log('🔍 Buscando faturas para o mês:', currentMonth)
-      console.log(
-        '🔍 Faturas disponíveis:',
-        selectedCard.bills.map((bill) => ({
-          id: bill.id,
-          month: bill.month,
-          year: bill.year,
-          monthNumber: monthMap[bill.month],
-          formatted: formatMonthYear(
-            new Date(bill.year, monthMap[bill.month] || 0)
-          ),
-        }))
-      )
 
       const currentBill = selectedCard.bills.find((bill) => {
         const monthNumber = monthMap[bill.month]
@@ -99,45 +94,30 @@ export function Home() {
         }
 
         const billMonth = formatMonthYear(new Date(bill.year, monthNumber))
-        console.log('🔍 Comparando:', {
-          billMonth,
-          currentMonth,
-          match: billMonth === currentMonth,
-        })
+
         return billMonth === currentMonth
       })
 
-      console.log('🔍 Fatura encontrada:', currentBill)
-
       if (currentBill) {
         const billDetails = await getBillingDetails(currentBill.id)
-        console.log('🔍 Detalhes da fatura:', billDetails)
 
         if (billDetails && billDetails.sellInstallments) {
-          console.log(
-            '🔍 Parcelas encontradas:',
-            billDetails.sellInstallments.length
-          )
           const formattedTransactions = billDetails.sellInstallments.map(
             (installment: any) => {
-              const formatDate = (date: Date | string) => {
-                const dateObj = date instanceof Date ? date : new Date(date)
-                return dateObj.toISOString()
-              }
+              // Padronizar formato de data
+              const dueDate = new Date(installment.dueDate)
 
               return {
                 id: `${installment.sell.id}-${installment.installmentNumber}`,
                 title: installment.sell.shop.name,
                 description: installment.sell.description,
                 amount: installment.amount,
-                date: formatDate(installment.dueDate),
+                date: dueDate.toISOString(),
                 type: 'payment' as const,
                 installmentInfo: `${installment.installmentNumber}/${installment.sell.installments}`,
               }
             }
           )
-
-          console.log('🔍 Transações formatadas:', formattedTransactions)
 
           const sortedTransactions = formattedTransactions
             .sort((a, b) => {
@@ -147,14 +127,12 @@ export function Home() {
             })
             .slice(0, 5)
 
-          console.log('🔍 Transações formatadas:', sortedTransactions)
           setCurrentMonthTransactions(sortedTransactions)
         } else {
           console.log('🔍 Sem parcelas na fatura')
           setCurrentMonthTransactions([])
         }
       } else {
-        console.log('🔍 Nenhuma fatura encontrada para o mês atual')
         setCurrentMonthTransactions([])
       }
     } catch (error) {
@@ -171,7 +149,6 @@ export function Home() {
         try {
           await getCardBalance()
           await getCardBillings()
-          console.log('💰 Dados do cartão carregados com sucesso')
         } catch (error) {
           console.error('💰 Erro ao carregar dados do cartão:', error)
         }
@@ -198,7 +175,12 @@ export function Home() {
         return acc
       }
 
-      const date = transaction.date.split('T')[0]
+      // Usar a mesma lógica de data para agrupamento e exibição
+      const dateObj = new Date(transaction.date)
+      const date = `${dateObj.getFullYear()}-${String(
+        dateObj.getMonth() + 1
+      ).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`
+
       if (!acc[date]) {
         acc[date] = []
       }
@@ -214,6 +196,26 @@ export function Home() {
 
   const limitedDates = sortedDates.slice(0, 2)
 
+  const onRefresh = async () => {
+    if (!isCardAuthenticated || !selectedCard) return
+
+    setRefreshing(true)
+    try {
+      // Recarregar dados do cartão
+      await getCardBalance()
+      await getCardBillings()
+
+      // Recarregar transações
+      await loadCurrentMonthTransactions()
+
+      console.log('🔄 Dados recarregados com sucesso')
+    } catch (error) {
+      console.error('🔄 Erro ao recarregar dados:', error)
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Header
@@ -221,7 +223,17 @@ export function Home() {
         title="Resumo"
       />
 
-      <ScrollView style={{ flex: 1 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#007AFF']}
+            tintColor={'#007AFF'}
+          />
+        }
+      >
         <View style={{ paddingInline: 24, paddingBlock: 12, gap: 20 }}>
           <View style={{ marginBottom: 10 }}>
             <Text
@@ -251,7 +263,7 @@ export function Home() {
               <CashAmount
                 amount={selectedCard.balance}
                 creditLimit={selectedCard.creditLimit}
-                cardNumber={`Cartão •••• ${selectedCard.cardNumber.slice(-4)}`}
+                cardNumber={formatCardNumber(selectedCard.cardNumber)}
               />
 
               <View
@@ -289,7 +301,7 @@ export function Home() {
                   limitedDates.map((date) => (
                     <View key={date} style={styles.transactionWrapper}>
                       <Text style={styles.dateLegend}>
-                        {formatDateLegend(date)}
+                        {formatDateLegend(transactionsByDate[date][0].date)}
                       </Text>
                       {transactionsByDate[date].map((transaction: any) => (
                         <TransactionItem
