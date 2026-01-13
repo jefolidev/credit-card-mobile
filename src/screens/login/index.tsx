@@ -68,7 +68,7 @@ export function Login() {
       }
     } catch (error) {
       Alert.alert('Erro', 'Ocorreu um erro durante o login')
-      console.error('Erro no login:', error)
+      console.error('Erro no login:', JSON.stringify(error, null, 2))
     }
   }
 
