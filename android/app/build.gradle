@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.jefkjkk.creditcardapp'
+    namespace 'com.inoveweb.creditcardapp'
     defaultConfig {
-        applicationId 'com.jefkjkk.creditcardapp'
+        applicationId 'com.inoveweb.creditcardapp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
