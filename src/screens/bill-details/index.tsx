@@ -158,7 +158,7 @@ export function BillDetails() {
             <View style={styles.infoRow}>
               <BillInfoCard
                 title="Restante do Limite"
-                info={formatAmount(selectedCard.balance - bill.amount)}
+                info={formatAmount(selectedCard.totalLimit - bill.amount)}
               />
               <BillInfoCard
                 title="Fechamento"

@@ -42,11 +42,14 @@ export function Cards() {
 
   useEffect(() => {
     const fetchCards = async () => {
-      try {
-        const userCards = await getUserCards()
-        setCards(userCards)
-      } catch (error) {
-        console.error('Erro ao buscar cartões do usuário:', error)
+      // Só carrega cartões se não há nenhum cartão ainda ou se não há cartão selecionado
+      if (cards.length === 0 || !selectedCard) {
+        try {
+          const userCards = await getUserCards()
+          setCards(userCards)
+        } catch (error) {
+          console.error('Erro ao buscar cartões do usuário:', error)
+        }
       }
     }
 
@@ -94,7 +97,7 @@ export function Cards() {
       cardNumber: card.cardNumber,
       cardholderName: card.name,
       cpf: card.cpf || '',
-      balance: 0,
+      totalLimit: 0,
       creditLimit: 0,
       type: 'credit' as const,
       isActive: true,

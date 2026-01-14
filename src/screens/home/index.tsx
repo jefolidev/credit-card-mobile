@@ -21,7 +21,7 @@ export function Home() {
   const {
     selectedCard,
     isCardAuthenticated,
-    getCardBalance,
+    getPortatorBalance,
     getCardBillings,
     getBillingDetails,
   } = useCard()
@@ -147,7 +147,7 @@ export function Home() {
     const loadCardData = async () => {
       if (isCardAuthenticated && selectedCard) {
         try {
-          await getCardBalance()
+          await getPortatorBalance()
           await getCardBillings()
         } catch (error) {
           console.error('💰 Erro ao carregar dados do cartão:', error)
@@ -202,7 +202,7 @@ export function Home() {
     setRefreshing(true)
     try {
       // Recarregar dados do cartão
-      await getCardBalance()
+      await getPortatorBalance()
       await getCardBillings()
 
       // Recarregar transações
@@ -261,8 +261,8 @@ export function Home() {
           {user?.role === 'PORTATOR' && selectedCard ? (
             <>
               <CashAmount
-                amount={selectedCard.balance}
-                creditLimit={selectedCard.creditLimit}
+                amount={selectedCard.limitAvailable}
+                creditLimit={selectedCard.totalLimit}
                 cardNumber={formatCardNumber(selectedCard.cardNumber)}
               />
 
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
     color: colors.primaryText,
     marginBottom: 4,
   },
-  balance: {
+  totalLimit: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#16A34A',
