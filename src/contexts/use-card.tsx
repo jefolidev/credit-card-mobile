@@ -4,7 +4,6 @@ import { cardsServices } from 'src/services/cards/endpoints'
 import {
   ResponseAuthCard,
   ResponseGetAllCardsUser,
-  ResponseGetBalanceCard,
   ResponseGetBillingDetails,
   ResponseGetBillingsCards,
   ResponseGetPortatorBalance,
@@ -37,8 +36,8 @@ export interface CreditCard {
   cardNumber: string
   cpf: string
   cardholderName: string
-  balance: number
-  creditLimit: number
+  totalLimit: number
+  limitAvailable: number
   type: 'credit' | 'debit'
   isActive: boolean
   closingDate: number
@@ -54,15 +53,17 @@ interface CardContextProps {
   selectedCard: CreditCard | null
   isCardAuthenticated: boolean
   isCardLoading: boolean
+  isCurrentCardBlocked: boolean
   selectCard: (card: CreditCard) => void
   authenticateCard: (cardId: string, password: string) => Promise<boolean>
   logoutCard: () => void
   getUserCards: () => Promise<ResponseGetAllCardsUser>
-  getPortatorBalance: (searchParams: {
+  checkCardBlockStatus: () => Promise<void>
+  getPortatorBalance: () => Promise<ResponseGetPortatorBalance>
+  getPortatorBalanceBySearch: (searchParams: {
     cpf?: string
     cardNumber?: string
   }) => Promise<ResponseGetPortatorBalance>
-  getCardBalance: () => Promise<ResponseGetBalanceCard>
   getCardBillings: () => Promise<ResponseGetBillingsCards>
   getBillingDetails: (billingId: string) => Promise<ResponseGetBillingDetails>
   changeCardPassword: (
@@ -78,6 +79,7 @@ const CardContext = createContext<CardContextProps | null>(null)
 export function CardProvider({ children }: { children: ReactNode }) {
   const [cards, setCards] = useState<CreditCard[]>([])
   const [selectedCard, setSelectedCard] = useState<CreditCard | null>(null)
+  const [isCurrentCardBlocked, setIsCurrentCardBlocked] = useState(false)
 
   const [isCardAuthenticated, setIsCardAuthenticated] = useState(false)
   const [isCardLoading, setIsCardLoading] = useState(false)
@@ -110,6 +112,35 @@ export function CardProvider({ children }: { children: ReactNode }) {
         setCardAuthToken(response.token)
         setIsCardAuthenticated(true)
 
+        // Automaticamente carrega o saldo após autenticação
+        try {
+          const balanceResponse = await getPortatorBalance()
+
+          // Atualiza o selectedCard com as informações de saldo recebidas
+          setSelectedCard((prevCard) => {
+            if (prevCard) {
+              const updatedCard = {
+                ...prevCard,
+                cpf: balanceResponse.ownerCpf ?? prevCard.cpf,
+                limitAvailable: balanceResponse.limitAvailable,
+                totalLimit: balanceResponse.totalLimit,
+              }
+
+              return updatedCard
+            }
+
+            return prevCard
+          })
+
+          console.log('Saldo após autenticação:', balanceResponse)
+        } catch (balanceError) {
+          console.error(
+            '❌ Erro ao carregar saldo após autenticação:',
+            balanceError
+          )
+          // Não falha a autenticação se o saldo der erro
+        }
+
         return true
       } else {
         console.error('❌ Token não recebido na resposta')
@@ -131,21 +162,26 @@ export function CardProvider({ children }: { children: ReactNode }) {
   }
 
   const getUserCards = async (): Promise<ResponseGetAllCardsUser> => {
+    console.log('📋 getUserCards called - current selectedCard balance:', {
+      limitAvailable: selectedCard?.limitAvailable,
+      totalLimit: selectedCard?.totalLimit,
+    })
+
     try {
       const response = await cardsServices.getCards()
 
       if (response && Array.isArray(response)) {
-        const formattedCards = response.map((card) => ({
+        const formattedCards = response.map((card: any) => ({
           id: card.id,
           cpf: '',
           cardNumber: card.cardNumber,
           cardholderName: card.name,
           cardPassword: '',
-          balance: 0,
-          creditLimit: 0,
+          totalLimit: 0,
           type: 'credit' as const,
-          isActive: true,
+          isActive: card.status ? card.status === 'ACTIVE' : true,
           closingDate: 0,
+          limitAvailable: 0,
           dueDate: 0,
           period: '',
           creditReturnDate: 0,
@@ -154,6 +190,31 @@ export function CardProvider({ children }: { children: ReactNode }) {
         }))
 
         setCards(formattedCards)
+
+        // Se há um cartão selecionado, atualiza seu status preservando os valores de saldo
+        if (selectedCard) {
+          const updatedSelectedCard = formattedCards.find(
+            (c) => c.id === selectedCard.id
+          )
+          if (updatedSelectedCard) {
+            // Preserva os valores de saldo do selectedCard atual (apenas se não forem zero)
+            const preservedCard = {
+              ...updatedSelectedCard,
+              limitAvailable:
+                selectedCard.limitAvailable > 0
+                  ? selectedCard.limitAvailable
+                  : updatedSelectedCard.limitAvailable,
+              totalLimit:
+                selectedCard.totalLimit > 0
+                  ? selectedCard.totalLimit
+                  : updatedSelectedCard.totalLimit,
+              cpf: selectedCard.cpf || updatedSelectedCard.cpf,
+            }
+
+            setSelectedCard(preservedCard)
+            setIsCurrentCardBlocked(!updatedSelectedCard.isActive)
+          }
+        }
       }
 
       return response
@@ -163,12 +224,38 @@ export function CardProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const getPortatorBalance = async (params?: {
-    cpf?: string
-    cardNumber?: string
-  }): Promise<ResponseGetPortatorBalance> => {
+  const checkCardBlockStatus = async (): Promise<void> => {
     try {
-      const response = await cardsServices.getPortatorBalance(params)
+      // Recarrega os cartões para obter status atualizado
+      // O getUserCards já preserva os valores de saldo, então não precisamos chamar getPortatorBalance aqui
+      await getUserCards()
+    } catch (error) {
+      console.error('❌ Erro ao verificar status do cartão:', error)
+      // Em caso de erro, mantém o status atual
+    }
+  }
+
+  const getPortatorBalance = async (): Promise<ResponseGetPortatorBalance> => {
+    try {
+      const response = await cardsServices.getPortatorBalance()
+
+      // Atualiza o selectedCard com as informações de saldo recebidas
+      setSelectedCard((prevCard) => {
+        if (prevCard) {
+          const updatedCard = {
+            ...prevCard,
+            cpf: response.ownerCpf ?? prevCard.cpf,
+            limitAvailable: response.limitAvailable,
+            totalLimit: response.totalLimit,
+          }
+          return updatedCard
+        }
+        console.log(
+          '❌ getPortatorBalance: prevCard is null, cannot update balance'
+        )
+        return prevCard
+      })
+
       return response
     } catch (error) {
       console.error('Erro ao buscar saldo do portador:', error)
@@ -176,28 +263,18 @@ export function CardProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const getCardBalance = async (): Promise<ResponseGetBalanceCard> => {
-    if (!isCardAuthenticated || !cardToken) {
-      throw new Error('Cartão não autenticado')
-    }
-
+  const getPortatorBalanceBySearch = async (searchParams: {
+    cpf?: string
+    cardNumber?: string
+  }): Promise<ResponseGetPortatorBalance> => {
     try {
-      const response = await cardsServices.getBalanceCard()
-
-      setSelectedCard((prevCard) => {
-        if (prevCard) {
-          return {
-            ...prevCard,
-            cpf: response.cpf,
-            balance: response.limitAvailable,
-            creditLimit: response.totalLimit,
-          }
-        }
-        return prevCard
-      })
-
+      const response = await cardsServices.getPortatorBalanceBySearch(
+        searchParams
+      )
+      console.log('🔍 getPortadorBalanceBySearch response:', response)
       return response
     } catch (error) {
+      console.error('Erro ao buscar saldo por pesquisa:', error)
       throw error
     }
   }
@@ -292,17 +369,7 @@ export function CardProvider({ children }: { children: ReactNode }) {
 
     try {
       await cardsServices.blockCard()
-
-      setSelectedCard((prevCard) => {
-        if (prevCard) {
-          return {
-            ...prevCard,
-            isActive: false,
-          }
-        }
-        return prevCard
-      })
-
+      setIsCurrentCardBlocked(true)
       return true
     } catch (error) {
       console.error('❌ Erro ao bloquear cartão:', error)
@@ -317,17 +384,7 @@ export function CardProvider({ children }: { children: ReactNode }) {
 
     try {
       await cardsServices.unblockCard()
-
-      setSelectedCard((prevCard) => {
-        if (prevCard) {
-          return {
-            ...prevCard,
-            isActive: true,
-          }
-        }
-        return prevCard
-      })
-
+      setIsCurrentCardBlocked(false)
       return true
     } catch (error) {
       console.error('❌ Erro ao desbloquear cartão:', error)
@@ -342,14 +399,16 @@ export function CardProvider({ children }: { children: ReactNode }) {
         selectedCard,
         isCardAuthenticated,
         isCardLoading,
+        isCurrentCardBlocked,
         selectCard,
         authenticateCard,
         logoutCard,
         getUserCards,
-        getCardBalance,
+        checkCardBlockStatus,
         getCardBillings,
         getBillingDetails,
         getPortatorBalance,
+        getPortatorBalanceBySearch,
         changeCardPassword,
         blockCard,
         unblockCard,

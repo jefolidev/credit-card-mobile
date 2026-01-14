@@ -50,7 +50,7 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
   const [toastMessage, setToastMessage] = useState('')
   const [showToast, setShowToast] = useState(false)
 
-  const { getPortatorBalance } = useCard()
+  const { getPortatorBalanceBySearch } = useCard()
 
   const { control, watch, setValue } = useForm<SearchFormData>({
     defaultValues: {
@@ -117,7 +117,7 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
         searchParams.cardNumber = searchText.replace(/\s/g, '')
       }
 
-      const result = await getPortatorBalance(searchParams)
+      const result = await getPortatorBalanceBySearch(searchParams)
 
       if (result) {
         setFoundCard(result)
@@ -206,7 +206,7 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
       cpf: foundCard.ownerCpf,
       cardType: 'Portador',
       status: 'active' as const,
-      balance: {
+      totalLimit: {
         totalLimit,
         availableBalance,
         usedBalance,
@@ -360,6 +360,10 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
                     value={value}
                     onChangeText={handleInputChange}
                     keyboardType={searchType === 'cpf' ? 'numeric' : 'numeric'}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    selectionColor={colors.primary}
+                    textContentType="none"
                   />
                 )}
               />
@@ -543,6 +547,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Arimo_400Regular',
     color: '#101828',
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
   searchButton: {
     paddingHorizontal: 24,

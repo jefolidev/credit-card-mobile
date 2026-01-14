@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useEffect, useState } from 'react'
 import {
   Alert,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,7 +11,6 @@ import {
   View,
 } from 'react-native'
 import ChevronRightIcon from 'src/assets/chevron-right-icon'
-import IdentificationIcon from 'src/assets/identification-icon'
 import KeyIcon from 'src/assets/key-icon'
 import { LockIcon } from 'src/assets/lock-icon'
 import { UnlockIcon } from 'src/assets/unlock-icon'
@@ -22,10 +22,19 @@ import { colors } from '../../theme/colors'
 
 export function Profile() {
   const { user, logout } = useAuth()
-  const { selectedCard, logoutCard, cards, getUserCards, getBillingDetails } =
-    useCard()
+  const {
+    selectedCard,
+    logoutCard,
+    cards,
+    getUserCards,
+    getBillingDetails,
+    checkCardBlockStatus,
+    isCurrentCardBlocked,
+    getPortatorBalance,
+  } = useCard()
   const [currentMonthTransactionsCount, setCurrentMonthTransactionsCount] =
     useState(0)
+  const [refreshing, setRefreshing] = useState(false)
 
   const navigation = useNavigation()
 
@@ -60,7 +69,7 @@ export function Profile() {
     try {
       const currentMonth = formatMonthYear(new Date())
 
-      const currentBill = selectedCard.bills.find((bill) => {
+      const currentBill = selectedCard.bills.find((bill: any) => {
         const monthNumber = monthMap[bill.month]
         if (monthNumber === undefined) return false
 
@@ -84,9 +93,26 @@ export function Profile() {
     }
   }
 
+  const onRefresh = async () => {
+    setRefreshing(true)
+    try {
+      // Recarrega todos os dados da página
+      await getUserCards() // Recarrega cartões e status
+
+      // Carrega o saldo do portador - agora atualiza automaticamente o selectedCard
+      await getPortatorBalance()
+
+      // Verifica o status de bloqueio
+      await checkCardBlockStatus()
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
   useEffect(() => {
     const loadUserCards = async () => {
-      if (user) {
+      if (user && cards.length === 0) {
+        // Só carrega se não há cartões ainda
         try {
           await getUserCards()
         } catch (error) {
@@ -96,17 +122,40 @@ export function Profile() {
     }
 
     loadUserCards()
-  }, [user?.id, getUserCards])
+  }, [user?.id])
+
+  useEffect(() => {
+    const loadCardBalance = async () => {
+      if (
+        selectedCard &&
+        isCurrentCardBlocked === false &&
+        (selectedCard.limitAvailable === 0 || selectedCard.totalLimit === 0)
+      ) {
+        try {
+          console.log('🔄 Carregando saldo do cartão selecionado...')
+          await getPortatorBalance()
+        } catch (error) {
+          console.error('❌ Erro ao carregar saldo do cartão:', error)
+        }
+      }
+    }
+
+    loadCardBalance()
+  }, [selectedCard?.id, isCurrentCardBlocked])
 
   useEffect(() => {
     if (selectedCard?.bills && selectedCard.bills.length > 0) {
       loadCurrentMonthTransactionsCount()
     }
-  }, [selectedCard?.bills])
+  }, [
+    selectedCard?.bills,
+    selectedCard?.limitAvailable,
+    selectedCard?.totalLimit,
+  ])
 
   const userCards = cards || []
 
-  const isCardBlocked = !selectedCard?.isActive
+  const isCardBlocked = isCurrentCardBlocked
 
   const handleLogout = () => {
     Alert.alert('Sair', 'Tem certeza que deseja sair?', [
@@ -129,7 +178,17 @@ export function Profile() {
     <View style={styles.container}>
       <Header icon={<UserIcon />} title="Perfil" />
 
-      <ScrollView style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+      >
         <View style={styles.section}>
           {/* Nome do portador */}
           <View
@@ -212,7 +271,7 @@ export function Profile() {
                   flexWrap: 'wrap',
                 }}
               >
-                {selectedCard?.creditLimit.toLocaleString('pt-BR', {
+                {selectedCard?.totalLimit.toLocaleString('pt-BR', {
                   style: 'currency',
                   currency: 'BRL',
                 })}
@@ -220,20 +279,6 @@ export function Profile() {
               <Text style={{ color: colors.primary, fontSize: 14 }}>
                 Limite Total
               </Text>
-            </View>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Informações Adicionais</Text>
-
-            <View style={styles.infoCardRow}>
-              <View style={styles.infoIconCircle}>
-                <IdentificationIcon width={24} height={24} />
-              </View>
-              <View style={styles.infoTexts}>
-                <Text style={styles.label}>CPF</Text>
-                <Text style={styles.value}>{selectedCard?.cpf}</Text>
-              </View>
             </View>
           </View>
         </View>

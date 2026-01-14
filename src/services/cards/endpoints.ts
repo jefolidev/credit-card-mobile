@@ -36,8 +36,21 @@ export const cardsServices = {
 */
 
   getBalanceCard: async (): Promise<ResponseGetBalanceCard> => {
-    const { data } = await api.get('/buyer/card/balance')
-    return data
+    try {
+      const { data } = await api.get('/buyer/card/balance')
+      return data
+    } catch (error: any) {
+      console.error('❌ Erro ao buscar saldo do cartão:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers,
+      })
+      throw error
+    }
   },
 
   getBillingsCards: async (): Promise<ResponseGetBillingsCards> => {
@@ -45,14 +58,45 @@ export const cardsServices = {
     return data
   },
 
-  getPortatorBalance: async (query?: {
+  getPortatorBalance: async (): Promise<ResponseGetPortatorBalance> => {
+    try {
+      const { data } = await api.get('/buyer/card/balance')
+      return data
+    } catch (error: any) {
+      console.error('❌ Erro ao buscar saldo do portador:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers,
+      })
+      throw error
+    }
+  },
+
+  getPortatorBalanceBySearch: async (searchParams: {
     cpf?: string
     cardNumber?: string
   }): Promise<ResponseGetPortatorBalance> => {
-    const { data } = await api.get('/seller/portator/balance', {
-      params: query,
-    })
-    return data
+    try {
+      const { data } = await api.get('/seller/portator/balance', {
+        params: searchParams,
+      })
+      return data
+    } catch (error: any) {
+      console.error('❌ Erro ao buscar saldo por pesquisa:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers,
+      })
+      throw error
+    }
   },
 
   getBillingsDetailsCard: async (

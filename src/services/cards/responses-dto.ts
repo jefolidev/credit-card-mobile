@@ -1,9 +1,12 @@
 import { StatusBilling } from './enum/status-billing-enum'
 
+type STATUS_USER_CARD = 'ACTIVE' | 'INACTIVE' | 'BLOCKED'
+
 export type ResponseGetAllCardsUser = {
   id: string
   cardNumber: string
   name: string
+  status: STATUS_USER_CARD
 }[]
 
 export type ResponseAuthCard = {
@@ -11,9 +14,11 @@ export type ResponseAuthCard = {
 }
 
 export type ResponseGetBalanceCard = {
-  limitAvailable: number
-  name: string
   cpf: string
+  limitAvailable: number
+  limitInstallments: number
+  name: string
+  status: STATUS_USER_CARD
   totalLimit: number
 }
 

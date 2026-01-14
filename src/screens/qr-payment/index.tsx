@@ -98,7 +98,8 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
   }, [])
 
   const handleQRCodeScanned = async (data: string) => {
-    if (isLoadingDetails) return
+    // Previne múltiplas execuções
+    if (isLoadingDetails || scannedData || showPaymentModal) return
 
     setIsLoadingDetails(true)
 
@@ -107,7 +108,11 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
 
       if (!parsedData.saleId) {
         setIsLoadingDetails(false)
-        Alert.alert('Erro', 'QR Code inválido')
+        Alert.alert(
+          'QR Code Inválido',
+          'Não foi possível ler este QR Code. Verifique se ele está correto e tente novamente.',
+          [{ text: 'Tentar Novamente', onPress: onGoBack }]
+        )
         return
       }
 
@@ -115,7 +120,8 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
         setIsLoadingDetails(false)
         Alert.alert(
           'QR Code Expirado',
-          'Este QR Code expirou. Por favor, solicite um novo QR Code para o pagamento.'
+          'Este QR Code já expirou. Solicite um novo QR Code ao estabelecimento e tente novamente.',
+          [{ text: 'Entendi', onPress: onGoBack }]
         )
         return
       }
@@ -124,7 +130,11 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
       await fetchSaleDetails(parsedData.saleId)
     } catch (error) {
       setIsLoadingDetails(false)
-      Alert.alert('Erro', 'Não foi possível ler o QR Code')
+      Alert.alert(
+        'Erro na Leitura',
+        'Não foi possível ler o QR Code. Verifique se a imagem está nítida e tente novamente.',
+        [{ text: 'Tentar Novamente', onPress: onGoBack }]
+      )
       console.error('Erro ao processar QR Code:', error)
     }
   }
@@ -141,7 +151,11 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
 
       setShowPaymentModal(true)
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível carregar os detalhes da venda')
+      Alert.alert(
+        'Erro de Conexão',
+        'Não foi possível carregar os detalhes da compra. Verifique sua conexão e tente novamente.',
+        [{ text: 'Tentar Novamente', onPress: onGoBack }]
+      )
       console.error('Erro ao buscar detalhes da venda:', error)
       setScannedData(null)
     } finally {
@@ -200,13 +214,18 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
     if (isExpired) {
       Alert.alert(
         'QR Code Expirado',
-        'Este QR Code expirou. Solicite um novo QR Code.'
+        'Este QR Code já expirou. Solicite um novo QR Code ao estabelecimento.',
+        [{ text: 'Entendi', onPress: handleCloseModal }]
       )
       return
     }
 
     if (!cardPassword || cardPassword.length !== 4) {
-      Alert.alert('Erro', 'Digite a senha de 4 dígitos do cartão')
+      Alert.alert(
+        'Senha Necessária',
+        'Por favor, digite a senha de 4 dígitos do seu cartão para continuar.',
+        [{ text: 'OK' }]
+      )
       return
     }
 
@@ -228,8 +247,9 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
       handlePaymentSuccess()
     } catch (error) {
       Alert.alert(
-        'Erro',
-        'Não foi possível processar o pagamento. Verifique sua senha.'
+        'Erro no Pagamento',
+        'Não foi possível processar o pagamento. Verifique sua senha e tente novamente.',
+        [{ text: 'Tentar Novamente' }]
       )
       console.error('Erro no pagamento:', error)
       setIsProcessingPayment(false)
