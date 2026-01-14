@@ -1,9 +1,9 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import React, { useCallback, useState } from 'react'
 import { Alert, Text, TextInput, View } from 'react-native'
+import { useCard } from 'src/contexts/use-card'
 import { BaseSheet, baseSheetStyles } from '../../../../components/base-sheet'
 import { Button } from '../../../../components/button'
-import { useCard } from 'src/contexts/use-card'
 
 export function ChangePasswordBottomSheet() {
   const navigation = useNavigation()
@@ -96,31 +96,47 @@ export function ChangePasswordBottomSheet() {
       <View style={baseSheetStyles.fieldGroup}>
         <Text style={baseSheetStyles.label}>Senha atual</Text>
         <TextInput
-          placeholder="••••••"
+          placeholder="••••"
           value={current}
-          onChangeText={setCurrent}
+          onChangeText={(text) => {
+            // Só aceita números e máximo 4 dígitos
+            const numericText = text.replace(/[^0-9]/g, '')
+            setCurrent(numericText)
+          }}
           style={baseSheetStyles.input}
           secureTextEntry
+          keyboardType="numeric"
+          maxLength={4}
         />
       </View>
       <View style={baseSheetStyles.fieldGroup}>
         <Text style={baseSheetStyles.label}>Nova senha</Text>
         <TextInput
-          placeholder="••••••"
+          placeholder="••••"
           value={next}
-          onChangeText={setNext}
+          onChangeText={(text) => {
+            const numericText = text.replace(/[^0-9]/g, '')
+            setNext(numericText)
+          }}
           style={baseSheetStyles.input}
           secureTextEntry
+          keyboardType="numeric"
+          maxLength={4}
         />
       </View>
       <View style={baseSheetStyles.fieldGroup}>
         <Text style={baseSheetStyles.label}>Confirmar nova senha</Text>
         <TextInput
-          placeholder="••••••"
+          placeholder="••••"
           value={confirm}
-          onChangeText={setConfirm}
+          onChangeText={(text) => {
+            const numericText = text.replace(/[^0-9]/g, '')
+            setConfirm(numericText)
+          }}
           style={baseSheetStyles.input}
           secureTextEntry
+          keyboardType="numeric"
+          maxLength={4}
         />
       </View>
 

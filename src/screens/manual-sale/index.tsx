@@ -431,19 +431,31 @@ export function ManualSale({ onGoBack, onContinueToPayment }: ManualSaleProps) {
                             required: 'Senha é obrigatória',
                             minLength: {
                               value: 4,
-                              message: 'Senha deve ter pelo menos 4 dígitos',
+                              message: 'Senha deve ter 4 dígitos',
+                            },
+                            maxLength: {
+                              value: 4,
+                              message: 'Senha deve ter 4 dígitos',
+                            },
+                            pattern: {
+                              value: /^[0-9]{4}$/,
+                              message: 'Senha deve conter apenas números',
                             },
                           }}
                           render={({ field: { onChange, value } }) => (
                             <TextInput
                               style={styles.input}
                               value={value}
-                              onChangeText={onChange}
+                              onChangeText={(text) => {
+                                // Permite apenas números
+                                const numbersOnly = text.replace(/[^0-9]/g, '')
+                                onChange(numbersOnly)
+                              }}
                               placeholder="••••"
                               keyboardType="numeric"
                               secureTextEntry
                               placeholderTextColor={colors.gray[400]}
-                              maxLength={6}
+                              maxLength={4}
                             />
                           )}
                         />
