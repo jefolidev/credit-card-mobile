@@ -132,7 +132,6 @@ export function Profile() {
         (selectedCard.limitAvailable === 0 || selectedCard.totalLimit === 0)
       ) {
         try {
-          console.log('🔄 Carregando saldo do cartão selecionado...')
           await getPortatorBalance()
         } catch (error) {
           console.error('❌ Erro ao carregar saldo do cartão:', error)

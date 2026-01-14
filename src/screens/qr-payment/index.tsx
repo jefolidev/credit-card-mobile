@@ -38,6 +38,7 @@ interface PaymentFormData {
 
 export function QrPayment({ onGoBack }: QrPaymentProps) {
   const [scannedData, setScannedData] = useState<ScannedQrData | null>(null)
+  const [activeSaleId, setActiveSaleId] = useState<string | null>(null)
   const [saleDetails, setSaleDetails] =
     useState<ResponseSellByQrCodeDto | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
@@ -98,15 +99,42 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
   }, [])
 
   const handleQRCodeScanned = async (data: string) => {
-    // Previne múltiplas execuções
     if (isLoadingDetails || scannedData || showPaymentModal) return
 
     setIsLoadingDetails(true)
 
     try {
-      const parsedData: ScannedQrData = JSON.parse(data)
+      let saleId: string
+      let parsedData: ScannedQrData | null = null
 
-      if (!parsedData.saleId) {
+      // Tenta fazer parse como JSON (formato do app)
+      try {
+        const jsonData = JSON.parse(data)
+
+        if (jsonData.saleId) {
+          // É um JSON válido com saleId - formato do app
+          parsedData = jsonData
+          saleId = jsonData.saleId
+
+          // Verifica expiração apenas se vier do app (que tem essa informação)
+          if (parsedData?.expiresIn && parsedData.expiresIn <= Date.now()) {
+            setIsLoadingDetails(false)
+            Alert.alert(
+              'QR Code Expirado',
+              'Este QR Code já expirou. Solicite um novo QR Code ao estabelecimento e tente novamente.',
+              [{ text: 'Entendi', onPress: onGoBack }]
+            )
+            return
+          }
+        } else {
+          throw new Error('JSON sem saleId')
+        }
+      } catch (jsonError) {
+        // Não é JSON válido, trata como saleId direto (formato web)
+        saleId = data.trim()
+      }
+
+      if (!saleId) {
         setIsLoadingDetails(false)
         Alert.alert(
           'QR Code Inválido',
@@ -116,26 +144,52 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
         return
       }
 
-      if (parsedData.expiresIn && parsedData.expiresIn <= 0) {
-        setIsLoadingDetails(false)
-        Alert.alert(
-          'QR Code Expirado',
-          'Este QR Code já expirou. Solicite um novo QR Code ao estabelecimento e tente novamente.',
-          [{ text: 'Entendi', onPress: onGoBack }]
-        )
-        return
-      }
-
+      // Salva o saleId sempre e os dados completos apenas se vier do app
+      setActiveSaleId(saleId)
       setScannedData(parsedData)
-      await fetchSaleDetails(parsedData.saleId)
+      await fetchSaleDetails(saleId)
     } catch (error) {
       setIsLoadingDetails(false)
-      Alert.alert(
-        'Erro na Leitura',
-        'Não foi possível ler o QR Code. Verifique se a imagem está nítida e tente novamente.',
-        [{ text: 'Tentar Novamente', onPress: onGoBack }]
-      )
-      console.error('Erro ao processar QR Code:', error)
+
+      let alertTitle = 'Erro na Leitura'
+      let alertMessage = 'Ocorreu um erro inesperado. Tente novamente.'
+
+      if (error instanceof SyntaxError) {
+        alertTitle = 'QR Code Inválido'
+        alertMessage =
+          'O QR Code lido não possui um formato válido. Verifique se é um QR Code de pagamento válido e tente novamente.'
+      } else if (error instanceof Error) {
+        // Log detalhado do erro para debug
+        console.error('Erro ao processar QR Code:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name,
+          qrData: data,
+        })
+
+        if (
+          error.message.includes('network') ||
+          error.message.includes('fetch')
+        ) {
+          alertTitle = 'Erro de Conexão'
+          alertMessage =
+            'Problema de conectividade. Verifique sua internet e tente novamente.'
+        } else if (error.message.includes('timeout')) {
+          alertTitle = 'Tempo Esgotado'
+          alertMessage =
+            'A operação demorou muito para responder. Tente novamente.'
+        } else {
+          alertMessage =
+            'Não foi possível processar o QR Code. Verifique se a imagem está nítida e tente novamente.'
+        }
+      } else {
+        // Erro desconhecido
+        console.error('Erro desconhecido ao processar QR Code:', error)
+      }
+
+      Alert.alert(alertTitle, alertMessage, [
+        { text: 'Tentar Novamente', onPress: onGoBack },
+      ])
     }
   }
 
@@ -209,7 +263,23 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
   }
 
   const handleConfirmPayment = async () => {
-    if (!selectedCard || !scannedData) return
+    if (!selectedCard) {
+      Alert.alert(
+        'Cartão Necessário',
+        'Por favor, selecione um cartão para continuar com o pagamento.',
+        [{ text: 'OK' }]
+      )
+      return
+    }
+
+    if (!activeSaleId) {
+      Alert.alert(
+        'Erro',
+        'Informações da venda não encontradas. Tente escanear o QR Code novamente.',
+        [{ text: 'OK', onPress: onGoBack }]
+      )
+      return
+    }
 
     if (isExpired) {
       Alert.alert(
@@ -237,10 +307,7 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
         password: cardPassword,
       }
 
-      const result = await cardsServices.payQrCode(
-        scannedData.saleId,
-        paymentData
-      )
+      const result = await cardsServices.payQrCode(activeSaleId, paymentData)
 
       setIsProcessingPayment(false)
 
@@ -261,6 +328,7 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
     clearExpirationTimer()
     setShowPaymentModal(false)
     setScannedData(null)
+    setActiveSaleId(null)
     setSaleDetails(null)
     setCardPassword('')
     setPaymentSuccess(false)
@@ -275,6 +343,7 @@ export function QrPayment({ onGoBack }: QrPaymentProps) {
     clearExpirationTimer()
     setShowPaymentModal(false)
     setScannedData(null)
+    setActiveSaleId(null)
     setSaleDetails(null)
     setCardPassword('')
     setPaymentSuccess(false)
