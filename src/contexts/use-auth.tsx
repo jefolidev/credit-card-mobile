@@ -54,14 +54,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userType: UserRole
   ): Promise<boolean> => {
     setIsLoading(true)
-    const { login, cnpjLogin, getMe } = authServices
+    const { cpfLogin, sellerLogin, getMe } = authServices
 
     try {
-      // Faz login e captura o token
-      const loginResponse =
-        userType === 'PORTATOR'
-          ? await login({ cpf: document, password })
-          : await cnpjLogin({ cnpj: document, password })
+      // Usa o tipo de usuário selecionado nos radio buttons
+      const isPortator = userType === UserRole.PORTATOR
+
+      const loginResponse = isPortator
+        ? await cpfLogin({ cpf: document, password })
+        : await sellerLogin({
+            // Para lojistas, detecta se é CPF ou CNPJ
+            ...(document.replace(/\D/g, '').length === 11
+              ? { cpf: document }
+              : { cnpj: document }),
+            password,
+          })
 
       if (loginResponse.token) {
         setAuthToken(loginResponse.token)
@@ -72,7 +79,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (email && name && role) {
         const userData = {
           id,
-          userType,
           name,
           role,
           email,

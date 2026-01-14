@@ -28,25 +28,36 @@ export function Login() {
 
   const { auth, isLoading } = useAuth()
 
-  const { handleSubmit, setValue, watch, reset } = useForm<LoginBodySchema>({
-    defaultValues: {
-      cpf: '',
-      password: '',
-    },
-  })
+  const { handleSubmit, setValue, watch, reset, clearErrors } =
+    useForm<LoginBodySchema>({
+      defaultValues: {
+        document: '',
+        password: '',
+      },
+    })
 
-  const cpf = watch('cpf')
+  const document = watch('document')
   const password = watch('password')
 
   const handleDocumentChange = (text: string) => {
-    const maskedDocument =
-      userType === 'PORTATOR' ? applyCpfMask(text) : applyCnpjMask(text)
-    setValue('cpf', maskedDocument)
+    let maskedDocument: string
+
+    if (userType === 'PORTATOR') {
+      maskedDocument = applyCpfMask(text)
+    } else {
+      // Para lojistas, detecta automaticamente se é CPF ou CNPJ pelo número de dígitos
+      const digitsOnly = text.replace(/\D/g, '')
+      maskedDocument =
+        digitsOnly.length <= 11 ? applyCpfMask(text) : applyCnpjMask(text)
+    }
+
+    setValue('document', maskedDocument)
   }
 
   const handleUserTypeChange = (newUserType: UserRole) => {
     setUserType(newUserType)
-    setValue('cpf', '') // Limpa o campo ao trocar o tipo
+    setValue('document', '') // Limpa o campo ao trocar o tipo
+    clearErrors('document')
   }
 
   const userTypeOptions = [
@@ -55,14 +66,22 @@ export function Login() {
   ]
 
   const handleLogin = async (userData: LoginBodySchema) => {
-    const cleanedDocument =
-      userType === 'PORTATOR' ? cleanCpf(cpf) : cleanCnpj(cpf)
+    let cleanedDocument: string
+
+    if (userType === 'PORTATOR') {
+      cleanedDocument = cleanCpf(userData.document)
+    } else {
+      const digitsOnly = userData.document.replace(/\D/g, '')
+      cleanedDocument =
+        digitsOnly.length <= 11
+          ? cleanCpf(userData.document)
+          : cleanCnpj(userData.document)
+    }
 
     try {
       const success = await auth(cleanedDocument, userData.password, userType)
 
       if (success) {
-        // Login realizado com sucesso
       } else {
         Alert.alert('Erro', 'Credenciais inválidos')
       }
@@ -101,8 +120,8 @@ export function Login() {
               <Input
                 placeholder={
                   userType === 'PORTATOR'
-                    ? '000.000.000-00'
-                    : '00.000.000/0000-00'
+                    ? 'Insira seu CPF'
+                    : 'Insira o CNPJ/CPF'
                 }
                 leftIcon={
                   userType === 'PORTATOR' ? (
@@ -111,11 +130,11 @@ export function Login() {
                     <SupplierIcon width={20} height={20} color="#99A1AF" />
                   )
                 }
-                value={cpf}
+                value={document}
                 onChangeText={handleDocumentChange}
                 keyboardType="numeric"
                 autoCapitalize="none"
-                maxLength={userType === 'PORTATOR' ? 14 : 18}
+                maxLength={userType === 'PORTATOR' ? 14 : 18} // CNPJ é maior (18), aceita ambos para lojistas
               />
             </View>
             <View style={{ gap: 8 }}>

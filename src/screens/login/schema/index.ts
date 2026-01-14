@@ -1,11 +1,11 @@
 import { z } from 'zod'
 
 export const loginBodySchema = z.object({
-  cpf: z
+  document: z
     .string()
-    .min(11, 'CPF must be at least 11 characters long')
-    .max(14, 'CPF must be at most 14 characters long'),
-  password: z.string().min(6, 'Password must be at least 6 characters long'),
+    .min(11, 'Documento deve ter pelo menos 11 caracteres')
+    .max(18, 'Documento deve ter no máximo 18 caracteres'),
+  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
 })
 
 export type LoginBodySchema = z.infer<typeof loginBodySchema>

@@ -4,6 +4,12 @@ export interface LoginByCPFDTO {
 }
 
 export interface LoginByCNPJDTO {
-  cnpj: string
+  cnpj?: string
+  cpf?: string
+  password: string
+}
+
+export interface LoginByDocumentDTO {
+  document: string
   password: string
 }
