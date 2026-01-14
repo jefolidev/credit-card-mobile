@@ -30,7 +30,6 @@ export const authServices = {
         throw new Error('CPF ou CNPJ é obrigatório para login de lojistas')
       }
 
-      // Detecta se é CPF ou CNPJ baseado no documento fornecido
       const document = payload.cnpj || payload.cpf || ''
       const cleanDocument = document.replace(/\D/g, '')
       const isCPF = cleanDocument.length === 11
@@ -41,7 +40,7 @@ export const authServices = {
       }
 
       // Usa endpoint diferente baseado no tipo de documento
-      const endpoint = isCPF ? '/sessions/login/cpf' : '/sessions/login/cnpj'
+      const endpoint = '/sessions/login/cnpj'
 
       const { data } = await api.post<LoginResponse>(endpoint, requestPayload)
       return data
