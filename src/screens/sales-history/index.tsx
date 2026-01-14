@@ -48,7 +48,7 @@ interface SalesHistoryProps {
 export function SalesHistory({ onGoBack }: SalesHistoryProps) {
   const { user } = useAuth()
   const { getSells } = useSells()
-  const [sales, setSales] = useState<ResponseGetSell[]>([])
+  const [allSales, setAllSales] = useState<ResponseGetSell[]>([])
   const [loading, setLoading] = useState(false)
   const [activeFilter, setActiveFilter] = useState<FilterStatus>('all')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
@@ -75,33 +75,60 @@ export function SalesHistory({ onGoBack }: SalesHistoryProps) {
     return isNaN(date.getTime()) ? null : date
   }
 
+  const convertToISODate = (
+    dateString: string,
+    isEndDate = false
+  ): string | undefined => {
+    if (!dateString || dateString.length !== 10) return undefined
+    const [day, month, year] = dateString.split('/')
+
+    if (isEndDate) {
+      // Para data final, inclui o final do dia (23:59:59.999Z)
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(
+        2,
+        '0'
+      )}T23:59:59.999Z`
+    } else {
+      // Para data inicial, usa o início do dia (00:00:00.000Z)
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(
+        2,
+        '0'
+      )}T00:00:00.000Z`
+    }
+  }
+
   const fetchSales = useCallback(async () => {
     if (!user?.id) return
 
     setLoading(true)
     try {
+      const startDateISO = advancedFilters.startDate
+        ? convertToISODate(advancedFilters.startDate, false)
+        : undefined
+      const endDateISO = advancedFilters.endDate
+        ? convertToISODate(advancedFilters.endDate, true)
+        : undefined
+
       const filters = {
         userId: user.id,
-
         minAmount: advancedFilters.minAmount
           ? parseCurrencyToNumber(advancedFilters.minAmount).toString()
           : undefined,
         maxAmount: advancedFilters.maxAmount
           ? parseCurrencyToNumber(advancedFilters.maxAmount).toString()
           : undefined,
-        startDate: advancedFilters.startDate || undefined,
-        endDate: advancedFilters.endDate || undefined,
-        status: activeFilter !== 'all' ? activeFilter : undefined,
+        ...(startDateISO && { startDate: startDateISO }),
+        ...(endDateISO && { endDate: endDateISO }),
         asc: advancedFilters.asc,
         limit: '50',
         page: '1',
       }
 
       const response = await getSells(filters)
-      setSales(response.sells || [])
+      setAllSales(response.sells || [])
     } catch (error) {
       console.error('Erro ao buscar vendas:', error)
-      setSales([])
+      setAllSales([])
     } finally {
       setLoading(false)
     }
@@ -112,7 +139,7 @@ export function SalesHistory({ onGoBack }: SalesHistoryProps) {
     advancedFilters.startDate,
     advancedFilters.endDate,
     advancedFilters.asc,
-    activeFilter,
+    // Removido activeFilter da dependência
   ])
 
   useEffect(() => {
@@ -120,11 +147,17 @@ export function SalesHistory({ onGoBack }: SalesHistoryProps) {
   }, [fetchSales])
 
   const filteredSales = useMemo(() => {
-    let filteredData = sales
+    let filteredData = allSales
 
+    // Aplicar filtro de status
+    if (activeFilter !== 'all') {
+      filteredData = filteredData.filter((sale) => sale.status === activeFilter)
+    }
+
+    // Aplicar filtro de busca por texto
     if (searchText?.trim()) {
       const searchLower = searchText.toLowerCase()
-      filteredData = sales.filter(
+      filteredData = filteredData.filter(
         (sale) =>
           sale.description?.toLowerCase().includes(searchLower) ||
           sale.id.toLowerCase().includes(searchLower) ||
@@ -134,7 +167,7 @@ export function SalesHistory({ onGoBack }: SalesHistoryProps) {
     }
 
     return filteredData
-  }, [sales, searchText])
+  }, [allSales, searchText, activeFilter])
 
   const clearAdvancedFilters = () => {
     reset({
@@ -156,21 +189,21 @@ export function SalesHistory({ onGoBack }: SalesHistoryProps) {
   )
 
   const getFilterButtons = (): FilterButton[] => {
-    const authorizedCount = sales.filter(
+    const authorizedCount = allSales.filter(
       (sale) => sale.status === 'PAID'
     ).length
-    const inCancellationCount = sales.filter(
+    const inCancellationCount = allSales.filter(
       (sale) => sale.status === 'IN_CANCELATION'
     ).length
-    const cancelledCount = sales.filter(
+    const cancelledCount = allSales.filter(
       (sale) => sale.status === 'CANCELED'
     ).length
 
     return [
       {
         key: 'all',
-        label: `Todas (${sales.length})`,
-        count: sales.length,
+        label: `Todas (${allSales.length})`,
+        count: allSales.length,
       },
       {
         key: 'PAID',
@@ -296,7 +329,7 @@ export function SalesHistory({ onGoBack }: SalesHistoryProps) {
           {/* Header Info */}
           <View style={styles.headerInfo}>
             <Text style={styles.title}>Vendas realizadas</Text>
-            <Text style={styles.subtitle}>{sales.length} transações</Text>
+            <Text style={styles.subtitle}>{allSales.length} transações</Text>
           </View>
 
           {/* Search Input */}
