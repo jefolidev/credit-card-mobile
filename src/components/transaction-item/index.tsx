@@ -49,6 +49,14 @@ export function TransactionItem({
     }
   }
 
+  const truncateDescription = (text: string, maxWords: number = 5) => {
+    const words = text.trim().split(/\s+/)
+    if (words.length <= maxWords) {
+      return text
+    }
+    return words.slice(0, maxWords).join(' ') + '...'
+  }
+
   const formatAmount = (value: number) => {
     const formattedValue = new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -88,7 +96,7 @@ export function TransactionItem({
           </Text>
           {description && (
             <Text style={styles.description} numberOfLines={2}>
-              {description}
+              {truncateDescription(description)}
             </Text>
           )}
           <Text style={styles.date}>
@@ -140,19 +148,18 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    gap: 2,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
   },
   mainInfo: {
     gap: 2,
+    flex: 1,
   },
   title: {
     fontSize: 15,
     fontFamily: 'Inter_600SemiBold',
     color: colors.primaryText,
-    flex: 1,
-    marginRight: 8,
   },
   amount: {
     fontSize: 14,
@@ -169,17 +176,14 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   secondaryInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    color: colors.gray[300],
+    justifyContent: 'center',
+    alignItems: 'flex-end',
   },
   description: {
     fontSize: 12,
     fontFamily: 'Inter_400Regular',
     color: colors.gray[400],
-    flex: 1,
-    marginRight: 8,
+    flexWrap: 'wrap',
   },
   date: {
     fontSize: 11,

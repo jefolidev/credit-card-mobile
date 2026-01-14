@@ -11,7 +11,7 @@ interface CardData {
   cpf: string
   cardType: string
   status: 'active' | 'inactive'
-  balance: {
+  totalLimit: {
     totalLimit: number
     availableBalance: number
     usedBalance: number

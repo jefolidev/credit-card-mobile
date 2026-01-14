@@ -45,6 +45,11 @@ export function QRCodeScanner({
 
       setTimeout(() => {
         onQRCodeScanned(data)
+        // Reset após 2 segundos para permitir nova leitura se necessário
+        setTimeout(() => {
+          setScanned(false)
+          setIsProcessing(false)
+        }, 2000)
       }, 300)
     }
   }

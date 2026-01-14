@@ -1,5 +1,13 @@
 import React, { JSX } from 'react'
-import { StyleSheet, TouchableOpacity, View, ViewProps } from 'react-native'
+import {
+  Dimensions,
+  Platform,
+  StatusBar,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  ViewProps,
+} from 'react-native'
 import { ArrowLeftIcon } from 'src/assets/arrow-left'
 import { colors } from 'src/theme/colors'
 import { ButtonIcon } from '../button-icon'
@@ -23,8 +31,18 @@ export function Header({
   rightButton,
   ...rest
 }: HeaderProps) {
+  const { height: screenHeight } = Dimensions.get('window')
+  const safeTopPadding = Platform.select({
+    ios: screenHeight > 800 ? 44 + 16 : 20 + 16,
+    android: StatusBar.currentHeight ? StatusBar.currentHeight + 24 : 40,
+    default: 48,
+  })
+
   return (
-    <View style={headerStyles.container} {...rest}>
+    <View
+      style={[headerStyles.container, { paddingTop: safeTopPadding }]}
+      {...rest}
+    >
       {showBackButton || onBackPress ? (
         <TouchableOpacity onPress={onBackPress} style={headerStyles.backButton}>
           <ArrowLeftIcon width={24} height={24} color={colors.primaryText} />

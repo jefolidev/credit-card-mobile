@@ -4,7 +4,9 @@ import { useForm } from 'react-hook-form'
 import {
   Alert,
   Dimensions,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -97,80 +99,90 @@ export function CardAuthBottomSheet({
       transparent={true}
       onRequestClose={handleClose}
     >
-      <View style={styles.overlay}>
-        <TouchableOpacity
-          style={styles.backdrop}
-          activeOpacity={1}
-          onPress={handleClose}
-        />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
+        <View style={styles.overlay}>
+          <TouchableOpacity
+            style={styles.backdrop}
+            activeOpacity={1}
+            onPress={handleClose}
+          />
 
-        <View style={styles.bottomSheet}>
-          {/* Header com indicador */}
-          <View style={styles.header}>
-            <View style={styles.handle} />
-            <Text style={styles.title}>Acesse seu cartão</Text>
-          </View>
-
-          <ScrollView
-            style={styles.content}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Componente do Cartão */}
-            <View style={styles.cardContainer}>
-              <CreditCard
-                cardNumber={selectedCard.cardNumber}
-                cardOwner={selectedCard.cardholderName}
-                cardType={selectedCard.type === 'credit' ? 'Crédito' : 'Débito'}
-              />
+          <View style={styles.bottomSheet}>
+            {/* Header com indicador */}
+            <View style={styles.header}>
+              <View style={styles.handle} />
+              <Text style={styles.title}>Acesse seu cartão</Text>
             </View>
 
-            {/* Formulário */}
-            <View style={styles.formContainer}>
-              {/* Campo do Número do Cartão (Desabilitado) */}
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Número do Cartão</Text>
-                <View style={[styles.inputField, styles.disabledInput]}>
-                  <View style={styles.disabledInputContent}>
-                    <CreditCardIcon color="#6B7280" width={20} height={20} />
-                    <Text style={styles.disabledText}>
-                      {formatCardNumber(selectedCard.cardNumber)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Campo da Senha */}
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Senha do Cartão (4 dígitos)</Text>
-                <Input
-                  placeholder="Digite sua senha"
-                  value={watch('password')}
-                  onChangeText={(text) => setValue('password', text)}
-                  secureTextEntry={!showPassword}
-                  keyboardType="numeric"
-                  maxLength={4}
-                  leftIcon={<LockIcon />}
-                  rightIcon={
-                    <TouchableOpacity onPress={togglePasswordVisibility}>
-                      <EyeIcon closed={!showPassword} color="#99A1AF" />
-                    </TouchableOpacity>
+            <ScrollView
+              style={styles.content}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
+            >
+              {/* Componente do Cartão */}
+              <View style={styles.cardContainer}>
+                <CreditCard
+                  cardNumber={selectedCard.cardNumber}
+                  cardOwner={selectedCard.cardholderName}
+                  cardType={
+                    selectedCard.type === 'credit' ? 'Crédito' : 'Débito'
                   }
-                  style={{ marginBottom: 12 }}
                 />
               </View>
 
-              {/* Botão de Entrar */}
-              <Button
-                onPress={handleSubmit(handleAuthenticate)}
-                disabled={isCardLoading || watch('password').length !== 4}
-                style={styles.authButton}
-              >
-                {isCardLoading ? 'Autenticando...' : 'Entrar'}
-              </Button>
-            </View>
-          </ScrollView>
+              {/* Formulário */}
+              <View style={styles.formContainer}>
+                {/* Campo do Número do Cartão (Desabilitado) */}
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Número do Cartão</Text>
+                  <View style={[styles.inputField, styles.disabledInput]}>
+                    <View style={styles.disabledInputContent}>
+                      <CreditCardIcon color="#6B7280" width={20} height={20} />
+                      <Text style={styles.disabledText}>
+                        {formatCardNumber(selectedCard.cardNumber)}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Campo da Senha */}
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Senha do Cartão (4 dígitos)</Text>
+                  <Input
+                    placeholder="Digite sua senha"
+                    value={watch('password')}
+                    onChangeText={(text) => setValue('password', text)}
+                    secureTextEntry={!showPassword}
+                    keyboardType="numeric"
+                    maxLength={4}
+                    leftIcon={<LockIcon />}
+                    rightIcon={
+                      <TouchableOpacity onPress={togglePasswordVisibility}>
+                        <EyeIcon closed={!showPassword} color="#99A1AF" />
+                      </TouchableOpacity>
+                    }
+                    style={{ marginBottom: 12 }}
+                  />
+                </View>
+
+                {/* Botão de Entrar */}
+                <Button
+                  onPress={handleSubmit(handleAuthenticate)}
+                  disabled={isCardLoading || watch('password').length !== 4}
+                  style={styles.authButton}
+                >
+                  {isCardLoading ? 'Autenticando...' : 'Entrar'}
+                </Button>
+              </View>
+            </ScrollView>
+          </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   )
 }
@@ -188,8 +200,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: height * 0.95,
-    minHeight: height * 0.85,
+    minHeight: height * 0.85, // Altura mínima maior
+    maxHeight: height * 0.98, // Quase tela toda
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -198,6 +210,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
+    flex: 1,
   },
   header: {
     alignItems: 'center',
@@ -221,7 +234,10 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 25,
-    paddingBottom: 20,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 40, // Espaço extra no final
   },
   cardContainer: {
     marginVertical: 32,

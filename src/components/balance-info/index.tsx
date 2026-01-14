@@ -11,7 +11,7 @@ interface BalanceData {
 }
 
 interface BalanceInfoProps {
-  balance: BalanceData
+  totalLimit: BalanceData
 }
 
 export function BalanceInfo({ balance }: BalanceInfoProps) {
