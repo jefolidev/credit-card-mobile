@@ -6,12 +6,9 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from 'react-native'
 import { DocumentIcon } from 'src/assets/document-icon'
-import { FilterIcon } from 'src/assets/filter-icon'
-import { FilterPanel } from 'src/components'
 import {
   CancellableSaleItem,
   CancellableSaleItemProps,
@@ -209,40 +206,6 @@ export function SalesCancellation({ onGoBack }: SalesCancellationProps) {
               )}
             />
           </View>
-
-          <TouchableOpacity
-            style={[
-              styles.filterToggleButton,
-              hasActiveAdvancedFilters && styles.filterToggleButtonActive,
-            ]}
-            onPress={() => setShowAdvancedFilters(!showAdvancedFilters)}
-          >
-            <FilterIcon
-              width={20}
-              height={20}
-              color={hasActiveAdvancedFilters ? 'white' : colors.gray[600]}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* Advanced Filters Panel */}
-        <FilterPanel
-          control={control}
-          visible={showAdvancedFilters}
-          onClear={clearAdvancedFilters}
-          showAllFields={false}
-        />
-
-        {/* Info Alert */}
-        <View style={styles.alertContainer}>
-          <DocumentIcon width={20} height={20} color="#1c398e" />
-          <View style={styles.alertContent}>
-            <Text style={styles.alertTitle}>Importante</Text>
-            <Text style={styles.alertDescription}>
-              Você pode cancelar vendas realizadas em até 24 horas. O valor será
-              estornado automaticamente no cartão do portador.
-            </Text>
-          </View>
         </View>
 
         {/* Sales List */}
@@ -292,17 +255,16 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   searchInputWrapper: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
-    borderWidth: 1.483,
+    borderWidth: 1.25,
     borderColor: '#d1d5dc',
     borderRadius: 14,
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    height: 51,
+    height: 50,
     gap: 12,
-    flex: 1,
   },
   searchInput: {
     flex: 1,

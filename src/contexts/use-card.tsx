@@ -58,7 +58,7 @@ interface CardContextProps {
   authenticateCard: (cardId: string, password: string) => Promise<boolean>
   logoutCard: () => void
   getUserCards: () => Promise<ResponseGetAllCardsUser>
-  checkCardBlockStatus: () => Promise<void>
+  checkCardBlockStatus: () => Promise<ResponseGetAllCardsUser>
   getPortatorBalance: () => Promise<ResponseGetPortatorBalance>
   getPortatorBalanceBySearch: (searchParams: {
     cpf?: string
@@ -224,14 +224,12 @@ export function CardProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const checkCardBlockStatus = async (): Promise<void> => {
+  const checkCardBlockStatus = async (): Promise<ResponseGetAllCardsUser> => {
     try {
-      // Recarrega os cartões para obter status atualizado
-      // O getUserCards já preserva os valores de saldo, então não precisamos chamar getPortatorBalance aqui
-      await getUserCards()
+      return await getUserCards()
     } catch (error) {
       console.error('❌ Erro ao verificar status do cartão:', error)
-      // Em caso de erro, mantém o status atual
+      throw error
     }
   }
 

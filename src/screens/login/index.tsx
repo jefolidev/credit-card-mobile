@@ -115,7 +115,7 @@ export function Login() {
           <View style={styles.inputWrapper}>
             <View style={{ gap: 8 }}>
               <Text style={styles.label}>
-                {userType === 'PORTATOR' ? 'CPF' : 'CNPJ'}
+                {userType === 'PORTATOR' ? 'CPF' : 'CNPJ/CPF'}
               </Text>
               <Input
                 placeholder={

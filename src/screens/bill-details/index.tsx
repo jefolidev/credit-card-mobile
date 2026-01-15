@@ -170,10 +170,6 @@ export function BillDetails() {
                 title="Vencimento"
                 info={new Date(bill.dueDate).toLocaleDateString('pt-BR')}
               />
-              <BillInfoCard
-                title="Subsídios disponíveis"
-                info={formatAmount(bill.amount * 0.15)}
-              />
             </View>
           </View>
         </View>
