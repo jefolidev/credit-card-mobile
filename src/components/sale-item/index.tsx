@@ -114,18 +114,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderWidth: 1.45,
     borderRadius: 14,
-    padding: 17.45,
-    gap: 12,
+    padding: 24,
+    gap: 16,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    height: 40,
+    height: 48,
   },
   headerLeft: {
     flex: 1,
-    gap: 4,
+    gap: 10,
   },
   id: {
     fontSize: 14,
@@ -153,12 +153,12 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   details: {
-    gap: 8,
+    gap: 12,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 20,
+    height: 24,
     gap: 8,
   },
   detailText: {
