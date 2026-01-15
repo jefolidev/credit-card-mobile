@@ -1,6 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import colors from 'src/theme/colors'
 
 interface NavigationItem {
@@ -28,6 +29,8 @@ export function NavigateBar({
   qrCodeIcon,
   onQrCodePress,
 }: NavigateBarProps) {
+  const insets = useSafeAreaInsets()
+
   const handleItemPress = (item: NavigationItem) => {
     if (item.onPress) {
       item.onPress()
@@ -52,7 +55,9 @@ export function NavigateBar({
   const rightItems = items.slice(2)
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, { paddingBottom: Math.max(12, insets.bottom) }]}
+    >
       {/* Primeira metade dos itens */}
       {leftItems.map((item) => {
         const isActive = activeItemId
@@ -125,7 +130,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
     paddingTop: 12,
-    paddingBottom: 12,
     paddingHorizontal: 16,
     borderTopWidth: 1,
     borderTopColor: colors.gray[100],
@@ -171,6 +175,7 @@ const styles = StyleSheet.create({
   qrButtonContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 16,
   },
   qrButton: {
     width: 56,
