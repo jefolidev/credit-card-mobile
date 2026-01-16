@@ -59,7 +59,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // Usa o tipo de usuário selecionado nos radio buttons
       const isPortator = userType === UserRole.PORTATOR
-      console.log(isPortator)
 
       const loginResponse = isPortator
         ? await cpfLogin({ cpf: document, password })
