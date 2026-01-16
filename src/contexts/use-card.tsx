@@ -63,6 +63,7 @@ interface CardContextProps {
   getPortatorBalanceBySearch: (searchParams: {
     cpf?: string
     cardNumber?: string
+    password: string
   }) => Promise<ResponseGetPortatorBalance>
   getCardBillings: () => Promise<ResponseGetBillingsCards>
   getBillingDetails: (billingId: string) => Promise<ResponseGetBillingDetails>
@@ -131,8 +132,6 @@ export function CardProvider({ children }: { children: ReactNode }) {
 
             return prevCard
           })
-
-          console.log('Saldo após autenticação:', balanceResponse)
         } catch (balanceError) {
           console.error(
             '❌ Erro ao carregar saldo após autenticação:',
@@ -162,11 +161,6 @@ export function CardProvider({ children }: { children: ReactNode }) {
   }
 
   const getUserCards = async (): Promise<ResponseGetAllCardsUser> => {
-    console.log('📋 getUserCards called - current selectedCard balance:', {
-      limitAvailable: selectedCard?.limitAvailable,
-      totalLimit: selectedCard?.totalLimit,
-    })
-
     try {
       const response = await cardsServices.getCards()
 
@@ -248,9 +242,6 @@ export function CardProvider({ children }: { children: ReactNode }) {
           }
           return updatedCard
         }
-        console.log(
-          '❌ getPortatorBalance: prevCard is null, cannot update balance'
-        )
         return prevCard
       })
 
@@ -262,14 +253,15 @@ export function CardProvider({ children }: { children: ReactNode }) {
   }
 
   const getPortatorBalanceBySearch = async (searchParams: {
-    cpf?: string
     cardNumber?: string
+    password: string
   }): Promise<ResponseGetPortatorBalance> => {
     try {
-      const response = await cardsServices.getPortatorBalanceBySearch(
+      const response = await cardsServices.getPortadorBalanceBySearch(
         searchParams
       )
-      console.log('🔍 getPortadorBalanceBySearch response:', response)
+      console.log('response', response)
+
       return response
     } catch (error) {
       console.error('Erro ao buscar saldo por pesquisa:', error)
