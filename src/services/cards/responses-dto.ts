@@ -24,10 +24,14 @@ export type ResponseGetBalanceCard = {
 
 export type ResponseGetPortatorBalance = {
   cardNumber: string
-  ownerName: string
-  ownerCpf: string
+  ownerName?: string
+  ownerCpf?: string
+  name?: string
+  cpf?: string
   limitAvailable: number
   totalLimit: number
+  limitInstallments?: number
+  status?: STATUS_USER_CARD
 }
 
 export type ResponseGetBillingsCards = {
