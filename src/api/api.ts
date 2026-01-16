@@ -1,7 +1,18 @@
 import axios from 'axios'
-import { API_BASE_URL } from 'src/utils/constants'
+import Constants from 'expo-constants'
+import { DEV_API_BASE_URL, PROD_API_BASE_URL } from 'src/utils/constants'
 
-// Base URL baseada na plataforma
+const environment = Constants.expoConfig?.extra?.ENVIRONMENT || 'development'
+
+const getAPIBaseURL = () => {
+  if (environment === 'production') {
+    return PROD_API_BASE_URL
+  }
+
+  return DEV_API_BASE_URL
+}
+
+const API_BASE_URL = getAPIBaseURL()
 
 let authToken: string | null = null
 let cardAuthToken: string | null = null
