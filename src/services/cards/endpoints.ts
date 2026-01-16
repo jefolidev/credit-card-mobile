@@ -76,13 +76,14 @@ export const cardsServices = {
     }
   },
 
-  getPortatorBalanceBySearch: async (searchParams: {
-    cpf?: string
+  getPortadorBalanceBySearch: async (searchParams: {
     cardNumber?: string
+    password: string
   }): Promise<ResponseGetPortatorBalance> => {
     try {
-      const { data } = await api.get('/seller/portator/balance', {
-        params: searchParams,
+      const { data } = await api.post('/sells/get-limit', {
+        cardNumber: searchParams.cardNumber,
+        password: searchParams.password,
       })
       return data
     } catch (error: any) {
