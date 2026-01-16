@@ -74,11 +74,6 @@ export function Home() {
 
   const loadCurrentMonthTransactions = async () => {
     if (!selectedCard || !selectedCard.bills || !isCardAuthenticated) {
-      console.log('🔍 Condições não atendidas:', {
-        selectedCard: !!selectedCard,
-        bills: !!selectedCard?.bills,
-        isCardAuthenticated,
-      })
       return
     }
 
@@ -89,7 +84,6 @@ export function Home() {
       const currentBill = selectedCard.bills.find((bill) => {
         const monthNumber = monthMap[bill.month]
         if (monthNumber === undefined) {
-          console.log('🔍 Mês desconhecido:', bill.month)
           return false
         }
 
@@ -129,7 +123,6 @@ export function Home() {
 
           setCurrentMonthTransactions(sortedTransactions)
         } else {
-          console.log('🔍 Sem parcelas na fatura')
           setCurrentMonthTransactions([])
         }
       } else {
@@ -208,7 +201,6 @@ export function Home() {
       // Recarregar transações
       await loadCurrentMonthTransactions()
 
-      console.log('🔄 Dados recarregados com sucesso')
     } catch (error) {
       console.error('🔄 Erro ao recarregar dados:', error)
     } finally {
