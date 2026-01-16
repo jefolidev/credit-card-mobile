@@ -3,7 +3,6 @@ import { Controller, useForm } from 'react-hook-form'
 import {
   ActivityIndicator,
   Keyboard,
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,7 +19,6 @@ import { useCard } from 'src/contexts/use-card'
 import { ResponseGetPortatorBalance } from 'src/services/cards/responses-dto'
 import { colors } from 'src/theme/colors'
 import { formatCardNumber } from 'src/utils'
-import { getErrorMessage } from './utils'
 
 const formatCurrency = (value: number): string => {
   return new Intl.NumberFormat('pt-BR', {
@@ -31,6 +29,7 @@ const formatCurrency = (value: number): string => {
 
 interface SearchFormData {
   searchText: string
+  password: string
 }
 
 interface BalanceInquiryProps {
@@ -46,19 +45,20 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [showToast, setShowToast] = useState(false)
-  const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [cardPassword, setCardPassword] = useState('')
-  const [isVerifyingPassword, setIsVerifyingPassword] = useState(false)
 
-  const { getPortatorBalanceBySearch } = useCard()
+  const { selectCard, authenticateCard, getPortatorBalanceBySearch } = useCard()
 
   const { control, watch, setValue } = useForm<SearchFormData>({
     defaultValues: {
       searchText: '',
+      password: '',
     },
   })
 
+  console.log('foundCard', foundCard)
+
   const searchText = watch('searchText')
+  const password = watch('password')
 
   const showToastMessage = (message: string) => {
     setToastMessage(message)
@@ -78,7 +78,25 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
   }
 
   const handleSearch = async () => {
-    if (!searchText.trim()) return
+    if (!searchText.trim()) {
+      showToastMessage('Por favor, insira o número do cartão.')
+      return
+    }
+
+    if (searchText.length < 16) {
+      showToastMessage('Por favor, insira o número do cartão completo.')
+      return
+    }
+
+    if (!password.trim()) {
+      showToastMessage('Por favor, digite a senha do cartão.')
+      return
+    }
+
+    if (password.length !== 4) {
+      showToastMessage('A senha deve ter 4 dígitos.')
+      return
+    }
 
     setIsLoading(true)
     setSearchPerformed(true)
@@ -86,66 +104,65 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
     try {
       const searchParams = {
         cardNumber: searchText.replace(/\s/g, ''),
+        password: password,
       }
 
       const result = await getPortatorBalanceBySearch(searchParams)
 
       if (result) {
-        setFoundCard(result)
+        setFoundCard({
+          ...result,
+          cardNumber: searchText.replace(/\s/g, ''),
+        })
+        setIsExpanded(true)
       } else {
         setFoundCard(null)
-        showToastMessage(
-          'Nenhum cartão foi encontrado com os dados informados.'
-        )
+        showToastMessage('Cartão não encontrado.')
       }
     } catch (error: any) {
       console.error('Erro ao buscar saldo:', error)
       setFoundCard(null)
 
-      showToastMessage(getErrorMessage(error))
+      // Trata erro de validação específico
+      if (error?.response?.status === 400) {
+        const errorData = error?.response?.data
+        if (errorData?.message && typeof errorData.message === 'object') {
+          // Se a mensagem é um objeto com validações
+          const validationErrors = []
+          if (errorData.message.cardNumber) {
+            validationErrors.push('Número do cartão inválido')
+          }
+          if (errorData.message.password) {
+            validationErrors.push('Senha inválida')
+          }
+          showToastMessage(validationErrors.join('. ') || 'Dados inválidos.')
+        } else {
+          showToastMessage(
+            'Dados inválidos. Verifique o número do cartão e a senha.'
+          )
+        }
+      } else if (
+        error?.response?.status === 401 ||
+        error?.response?.status === 403
+      ) {
+        showToastMessage(
+          'Senha incorreta. Verifique os dados e tente novamente.'
+        )
+      } else {
+        const errorMessage =
+          typeof error?.response?.data?.message === 'string'
+            ? error.response.data.message
+            : 'Erro ao consultar saldo. Verifique os dados e tente novamente.'
+        showToastMessage(errorMessage)
+      }
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleCardPress = () => {
-    if (!isExpanded) {
-      setShowPasswordModal(true)
-    } else {
-      setIsExpanded(false)
-    }
-  }
-
-  const handlePasswordSubmit = async () => {
-    if (!cardPassword || cardPassword.length !== 4) {
-      showToastMessage('Por favor, digite a senha de 4 dígitos do cartão.')
-      return
-    }
-
-    setIsVerifyingPassword(true)
-
-    try {
-      // Simular verificação de senha - substitua pela sua lógica de validação
-      // Por exemplo: await cardServices.verifyCardPassword(foundCard?.cardNumber, cardPassword)
-
-      // Simulação: senha correta é "1234" (substitua pela sua lógica)
-      if (cardPassword === '1234') {
-        setShowPasswordModal(false)
-        setIsExpanded(true)
-        setCardPassword('')
-      } else {
-        showToastMessage('Senha incorreta. Tente novamente.')
-      }
-    } catch (error) {
-      showToastMessage('Erro ao verificar senha. Tente novamente.')
-    } finally {
-      setIsVerifyingPassword(false)
-    }
-  }
-
-  const handleCancelPassword = () => {
-    setShowPasswordModal(false)
-    setCardPassword('')
+    // Simplesmente alterna o estado expandido
+    setIsExpanded(!isExpanded)
   }
 
   const getSearchIcon = () => {
@@ -165,8 +182,8 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
     const cardData = {
       id: foundCard.cardNumber,
       cardNumber: foundCard.cardNumber,
-      holderName: foundCard.ownerName,
-      cpf: foundCard.ownerCpf,
+      name: foundCard.name || foundCard.ownerName || 'Portador do Cartão',
+      cpf: foundCard.cpf || foundCard.ownerCpf || '•••.•••.•••-••',
       cardType: 'Portador',
       status: 'active' as const,
       totalLimit: {
@@ -185,7 +202,7 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
         >
           <CreditCard
             cardNumber={cardData.cardNumber}
-            cardOwner={cardData.holderName}
+            cardOwner={cardData.name}
             cpf={cardData.cpf}
             shouldRenderNumber={true}
           />
@@ -303,41 +320,71 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
         >
           {/* Search Input */}
           <View style={styles.searchContainer}>
-            <View style={styles.searchInputWrapper}>
-              {getSearchIcon()}
-              <Controller
-                control={control}
-                name="searchText"
-                render={({ field: { value } }) => (
-                  <TextInput
-                    style={styles.searchInput}
-                    placeholder="Digite o número do cartão"
-                    placeholderTextColor="#99a1af"
-                    value={value}
-                    onChangeText={handleInputChange}
-                    keyboardType={'numeric'}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    selectionColor={colors.primary}
-                    textContentType="none"
-                  />
-                )}
-              />
+            <View style={styles.inputsContainer}>
+              <View style={styles.searchInputWrapper}>
+                {getSearchIcon()}
+                <Controller
+                  control={control}
+                  name="searchText"
+                  render={({ field: { value } }) => (
+                    <TextInput
+                      style={styles.searchInput}
+                      placeholder="Digite o número do cartão"
+                      placeholderTextColor="#99a1af"
+                      value={value}
+                      onChangeText={handleInputChange}
+                      keyboardType={'numeric'}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      selectionColor={colors.primary}
+                      textContentType="none"
+                    />
+                  )}
+                />
+              </View>
+
+              <View style={styles.searchInputWrapper}>
+                <Text style={{ fontSize: 20, color: colors.gray[400] }}>
+                  🔑
+                </Text>
+                <Controller
+                  control={control}
+                  name="password"
+                  render={({ field: { value } }) => (
+                    <TextInput
+                      style={styles.searchInput}
+                      placeholder="Senha do cartão (4 dígitos)"
+                      placeholderTextColor="#99a1af"
+                      value={value}
+                      onChangeText={(text) => {
+                        const numbersOnly = text.replace(/[^0-9]/g, '')
+                        setValue('password', numbersOnly)
+                      }}
+                      keyboardType="numeric"
+                      secureTextEntry
+                      maxLength={4}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      selectionColor={colors.primary}
+                    />
+                  )}
+                />
+              </View>
             </View>
             <TouchableOpacity
               style={[
                 styles.searchButton,
-                searchText.trim()
+                searchText.trim() && password.trim()
                   ? styles.searchButtonActive
                   : styles.searchButtonInactive,
               ]}
               onPress={handleSearch}
-              disabled={!searchText.trim() || isLoading}
+              disabled={!searchText.trim() || !password.trim() || isLoading}
             >
               <Text
                 style={[
                   styles.searchButtonText,
-                  searchText.trim()
+                  searchText.trim() && password.trim()
                     ? styles.searchButtonTextActive
                     : styles.searchButtonTextInactive,
                 ]}
@@ -373,74 +420,6 @@ export function BalanceInquiry({ onGoBack }: BalanceInquiryProps) {
             </View>
           </View>
         )}
-
-        {/* Password Modal */}
-        <Modal
-          visible={showPasswordModal}
-          transparent
-          animationType="slide"
-          onRequestClose={handleCancelPassword}
-        >
-          <TouchableWithoutFeedback onPress={handleCancelPassword}>
-            <View style={styles.modalOverlay}>
-              <TouchableWithoutFeedback>
-                <View style={styles.passwordModalContent}>
-                  <Text style={styles.modalTitle}>Senha do Cartão</Text>
-                  <Text style={styles.modalDescription}>
-                    Digite a senha de 4 dígitos para visualizar as informações
-                    do cartão
-                  </Text>
-
-                  <View style={styles.passwordContainer}>
-                    <View style={styles.passwordInputContainer}>
-                      <Text style={{ fontSize: 20, color: colors.gray[400] }}>
-                        🔑
-                      </Text>
-                      <TextInput
-                        style={styles.passwordInput}
-                        value={cardPassword}
-                        onChangeText={(text) => {
-                          const numbersOnly = text.replace(/[^0-9]/g, '')
-                          setCardPassword(numbersOnly)
-                        }}
-                        placeholder="••••"
-                        keyboardType="numeric"
-                        secureTextEntry
-                        placeholderTextColor={colors.gray[400]}
-                        maxLength={4}
-                        autoFocus
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.modalButtonContainer}>
-                    <TouchableOpacity
-                      style={styles.modalCancelButton}
-                      onPress={handleCancelPassword}
-                    >
-                      <Text style={styles.modalCancelButtonText}>Cancelar</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[
-                        styles.modalConfirmButton,
-                        (cardPassword.length !== 4 || isVerifyingPassword) &&
-                          styles.modalButtonDisabled,
-                      ]}
-                      onPress={handlePasswordSubmit}
-                      disabled={
-                        cardPassword.length !== 4 || isVerifyingPassword
-                      }
-                    >
-                      <Text style={styles.modalConfirmButtonText}>
-                        {isVerifyingPassword ? 'Verificando...' : 'Confirmar'}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </TouchableWithoutFeedback>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
       </View>
     </TouchableWithoutFeedback>
   )
@@ -548,9 +527,10 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   searchContainer: {
-    flexDirection: 'row',
     gap: 16,
-    alignItems: 'center',
+  },
+  inputsContainer: {
+    gap: 12,
   },
   searchInputWrapper: {
     flex: 1,
@@ -687,90 +667,5 @@ const styles = StyleSheet.create({
     fontFamily: 'Arimo_400Regular',
     textAlign: 'center',
     lineHeight: 20,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  passwordModalContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    paddingTop: 32,
-    paddingBottom: 24,
-    paddingHorizontal: 24,
-    width: '100%',
-    maxWidth: 400,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.primaryText,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  modalDescription: {
-    fontSize: 14,
-    color: colors.gray[600],
-    textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 20,
-  },
-  passwordContainer: {
-    marginBottom: 32,
-  },
-  passwordInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.gray[50],
-    borderWidth: 1,
-    borderColor: colors.gray[200],
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    gap: 12,
-  },
-  passwordInput: {
-    flex: 1,
-    fontSize: 18,
-    color: colors.primaryText,
-    textAlign: 'center',
-    letterSpacing: 8,
-  },
-  modalButtonContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  modalCancelButton: {
-    flex: 1,
-    height: 50,
-    backgroundColor: colors.gray[200],
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalCancelButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: colors.primaryText,
-  },
-  modalConfirmButton: {
-    flex: 1,
-    height: 50,
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalConfirmButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#FFFFFF',
-  },
-  modalButtonDisabled: {
-    backgroundColor: colors.gray[300],
-    opacity: 0.6,
   },
 })
