@@ -56,7 +56,6 @@ export function Login() {
 
   const handleUserTypeChange = (newUserType: UserRole) => {
     setUserType(newUserType)
-    setValue('document', '') // Limpa o campo ao trocar o tipo
     clearErrors('document')
   }
 
