@@ -1,8 +1,9 @@
 export default {
   "expo": {
-    "name": "Credit Card App",
-    "slug": "credit-card-app",
-    "version": "1.0.0",
+    "name": "Inoveweb Mobile",
+    "slug": "inoveweb-mobile",
+    "version": "1.0.1",
+    "icon": "./public/icon.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "plugins": [
@@ -27,6 +28,10 @@ export default {
     "android": {
       "package": "com.inoveweb.creditcardapp",
       "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./public/images/icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
