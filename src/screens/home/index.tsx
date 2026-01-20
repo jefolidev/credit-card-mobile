@@ -1,3 +1,9 @@
+import dayjs from 'dayjs'
+import 'dayjs/locale/pt-br'
+import isToday from 'dayjs/plugin/isToday'
+import isYesterday from 'dayjs/plugin/isYesterday'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import utc from 'dayjs/plugin/utc'
 import { useEffect, useState } from 'react'
 import {
   RefreshControl,
@@ -15,6 +21,13 @@ import { useAuth } from 'src/contexts/use-auth'
 import { useCard } from 'src/contexts/use-card'
 import { formatCardNumber } from 'src/utils'
 import { colors } from '../../theme/colors'
+
+// Configurar day.js
+dayjs.extend(relativeTime)
+dayjs.extend(isToday)
+dayjs.extend(isYesterday)
+dayjs.extend(utc)
+dayjs.locale('pt-br')
 
 export function Home() {
   const { user, logout } = useAuth()
@@ -48,27 +61,18 @@ export function Home() {
   }
 
   const formatMonthYear = (date: Date) => {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-      2,
-      '0'
-    )}`
+    return dayjs(date).format('YYYY-MM')
   }
 
   const formatDateLegend = (dateString: string) => {
-    const date = new Date(dateString)
-    const today = new Date()
-    const yesterday = new Date(today)
-    yesterday.setDate(yesterday.getDate() - 1)
+    const date = dayjs.utc(dateString)
 
-    if (date.toDateString() === today.toDateString()) {
+    if (date.isToday()) {
       return 'Hoje'
-    } else if (date.toDateString() === yesterday.toDateString()) {
+    } else if (date.isYesterday()) {
       return 'Ontem'
     } else {
-      return date.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-      })
+      return date.format('DD/MM')
     }
   }
 
@@ -79,7 +83,7 @@ export function Home() {
 
     setLoadingTransactions(true)
     try {
-      const currentMonth = formatMonthYear(new Date())
+      const currentMonth = formatMonthYear(dayjs().toDate())
 
       const currentBill = selectedCard.bills.find((bill) => {
         const monthNumber = monthMap[bill.month]
@@ -87,7 +91,9 @@ export function Home() {
           return false
         }
 
-        const billMonth = formatMonthYear(new Date(bill.year, monthNumber))
+        const billMonth = formatMonthYear(
+          dayjs().year(bill.year).month(monthNumber).toDate(),
+        )
 
         return billMonth === currentMonth
       })
@@ -98,8 +104,8 @@ export function Home() {
         if (billDetails && billDetails.sellInstallments) {
           const formattedTransactions = billDetails.sellInstallments.map(
             (installment: any) => {
-              // Padronizar formato de data
-              const dueDate = new Date(installment.dueDate)
+              // Padronizar formato de data com day.js
+              const dueDate = dayjs(installment.dueDate)
 
               return {
                 id: `${installment.sell.id}-${installment.installmentNumber}`,
@@ -110,13 +116,13 @@ export function Home() {
                 type: 'payment' as const,
                 installmentInfo: `${installment.installmentNumber}/${installment.sell.installments}`,
               }
-            }
+            },
           )
 
           const sortedTransactions = formattedTransactions
             .sort((a, b) => {
-              const dateA = new Date(a.date).getTime()
-              const dateB = new Date(b.date).getTime()
+              const dateA = dayjs(a.date).valueOf()
+              const dateB = dayjs(b.date).valueOf()
               return dateB - dateA
             })
             .slice(0, 5)
@@ -169,10 +175,9 @@ export function Home() {
       }
 
       // Usar a mesma lógica de data para agrupamento e exibição
-      const dateObj = new Date(transaction.date)
-      const date = `${dateObj.getFullYear()}-${String(
-        dateObj.getMonth() + 1
-      ).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`
+      // Garantir que use a data UTC para evitar problemas de fuso horário
+      const dateObj = dayjs.utc(transaction.date)
+      const date = dateObj.format('YYYY-MM-DD')
 
       if (!acc[date]) {
         acc[date] = []
@@ -180,11 +185,11 @@ export function Home() {
       acc[date].push(transaction)
       return acc
     },
-    {} as Record<string, typeof currentMonthTransactions>
+    {} as Record<string, typeof currentMonthTransactions>,
   )
 
   const sortedDates = Object.keys(transactionsByDate).sort(
-    (a, b) => new Date(b).getTime() - new Date(a).getTime()
+    (a, b) => dayjs(b).valueOf() - dayjs(a).valueOf(),
   )
 
   const limitedDates = sortedDates.slice(0, 2)
@@ -200,7 +205,6 @@ export function Home() {
 
       // Recarregar transações
       await loadCurrentMonthTransactions()
-
     } catch (error) {
       console.error('🔄 Erro ao recarregar dados:', error)
     } finally {

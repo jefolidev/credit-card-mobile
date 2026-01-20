@@ -1,8 +1,15 @@
+import dayjs from 'dayjs'
+import 'dayjs/locale/pt-br'
+import utc from 'dayjs/plugin/utc'
 import React from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import TriangleDownIcon from 'src/assets/triangle-down-icon'
 import TriangleUpIcon from 'src/assets/triangle-up-icon'
 import colors from 'src/theme/colors'
+
+// Configurar day.js
+dayjs.extend(utc)
+dayjs.locale('pt-br')
 
 type TransactionType = 'debit' | 'credit' | 'payment' | 'transfer'
 
@@ -99,19 +106,7 @@ export function TransactionItem({
               {truncateDescription(description)}
             </Text>
           )}
-          <Text style={styles.date}>
-            {new Date(date)
-              .toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: 'short',
-              })
-              .replace(' de ', ' ')
-              .replace(
-                /^(\d+)\s(\w)/,
-                (match, day, firstLetter) =>
-                  `${day} ${firstLetter.toUpperCase()}`
-              )}
-          </Text>
+          <Text style={styles.date}>{dayjs.utc(date).format('DD MMM')}</Text>
         </View>
 
         <View style={styles.secondaryInfo}>
