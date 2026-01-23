@@ -20,7 +20,7 @@ export default {
     ],
     "extra": {
       "eas": {
-        "projectId": "aa73d0f6-96d0-476e-819a-9632118bfd04"
+        "projectId": "a9f99e2a-936b-4e4b-b1b4-04c7f94ff59c"
       },
       "ENVIRONMENT": process.env.ENVIRONMENT || "development",
       "API_KEY": process.env.API_KEY || "https://api.inoveweb.bongdigital.com.br/"
