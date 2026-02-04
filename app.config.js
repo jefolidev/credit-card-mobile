@@ -3,7 +3,7 @@ export default {
     "name": "Inoveweb Mobile",
     "slug": "inoveweb-mobile",
     "version": "1.0.1",
-    "icon": "./public/icon.png",
+    "icon": "./public/images/icon.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "plugins": [
