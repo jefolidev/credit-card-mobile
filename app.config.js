@@ -2,7 +2,7 @@ export default {
   "expo": {
     "name": "Inoveweb Mobile",
     "slug": "inoveweb-mobile",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "icon": "./public/images/icon.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
